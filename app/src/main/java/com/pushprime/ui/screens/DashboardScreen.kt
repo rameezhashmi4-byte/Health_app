@@ -1,0 +1,278 @@
+package com.pushprime.ui.screens
+
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import com.pushprime.data.LocalStore
+import com.pushprime.model.Session
+import com.pushprime.ui.components.PushUpCounter
+import com.pushprime.ui.components.ProgressRing
+import com.pushprime.ui.theme.PushPrimeColors
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.*
+
+/**
+ * Dashboard Screen
+ * Push-up counter, progress ring, streak tracker, workout time
+ */
+@Composable
+fun DashboardScreen(
+    localStore: LocalStore,
+    onNavigateToCoaching: () -> Unit,
+    onNavigateToCompete: () -> Unit,
+    onNavigateToGroup: () -> Unit,
+    onNavigateToMotivation: () -> Unit
+) {
+    var pushupCount by remember { mutableStateOf(0) }
+    var isActive by remember { mutableStateOf(false) }
+    var elapsedTime by remember { mutableStateOf(0L) }
+    var timerJob by remember { mutableStateOf<Job?>(null) }
+    val coroutineScope = rememberCoroutineScope()
+    
+    val user by localStore.user.collectAsState()
+    val sessions by localStore.sessions.collectAsState()
+    val todayTotal = remember(sessions) { localStore.getTodayTotalPushups() }
+    val todayTime = remember(sessions) { localStore.getTodayTotalTime() }
+    val streak = remember(sessions) { localStore.getStreak() }
+    val dailyGoal = user?.dailyGoal ?: 0
+    
+    fun startTimer() {
+        timerJob?.cancel()
+        timerJob = coroutineScope.launch {
+            while (isActive) {
+                delay(1000)
+                elapsedTime++
+            }
+        }
+    }
+    
+    fun stopTimer() {
+        timerJob?.cancel()
+        if (pushupCount > 0 && elapsedTime > 0) {
+            val session = Session(
+                id = System.currentTimeMillis().toString(),
+                username = user?.username ?: "User",
+                pushups = pushupCount,
+                workoutTime = elapsedTime.toInt(),
+                timestamp = System.currentTimeMillis(),
+                country = user?.country ?: "US",
+                date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+            )
+            localStore.saveSession(session)
+        }
+    }
+    
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(PushPrimeColors.Background)
+    ) {
+        // Top Bar
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "PushPrime",
+                style = MaterialTheme.typography.headlineLarge,
+                fontWeight = FontWeight.Bold,
+                color = PushPrimeColors.OnSurface
+            )
+            Row {
+                IconButton(onClick = onNavigateToCoaching) {
+                    Icon(Icons.Default.Person, contentDescription = "Coaching")
+                }
+                IconButton(onClick = onNavigateToMotivation) {
+                    Icon(Icons.Default.Newspaper, contentDescription = "Motivation")
+                }
+            }
+        }
+        
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp)
+        ) {
+            // Streak Card with emoji
+            item {
+                StreakCard(streak = streak)
+            }
+            
+            // Progress Ring and Stats Row
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    ProgressRing(
+                        current = todayTotal + pushupCount,
+                        goal = dailyGoal,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = formatTime((todayTime + elapsedTime).toInt()),
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = PushPrimeColors.OnSurface
+                        )
+                        Text(
+                            text = "Workout Time",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = PushPrimeColors.OnSurfaceVariant
+                        )
+                    }
+                }
+            }
+            
+            // Push-Up Counter
+            item {
+                PushUpCounter(
+                    pushupCount = pushupCount,
+                    isActive = isActive,
+                    elapsedTime = elapsedTime,
+                    onIncrement = { if (isActive) pushupCount++ },
+                    onStart = {
+                        isActive = true
+                        elapsedTime = 0L
+                        startTimer()
+                    },
+                    onStop = {
+                        isActive = false
+                        stopTimer()
+                    },
+                    onReset = {
+                        pushupCount = 0
+                        elapsedTime = 0L
+                        isActive = false
+                        timerJob?.cancel()
+                    }
+                )
+            }
+            
+            // Navigation Cards
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    NavigationCard(
+                        title = "Compete",
+                        icon = Icons.Default.EmojiEvents,
+                        onClick = onNavigateToCompete,
+                        modifier = Modifier.weight(1f)
+                    )
+                    NavigationCard(
+                        title = "Group",
+                        icon = Icons.Default.Group,
+                        onClick = onNavigateToGroup,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun StreakCard(streak: Int) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(28.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = PushPrimeColors.Warning.copy(alpha = 0.15f)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(24.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column {
+                Text(
+                    text = "🔥 Streak: $streak days!",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = PushPrimeColors.OnSurface
+                )
+                Text(
+                    text = "Keep it going!",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = PushPrimeColors.OnSurfaceVariant
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun NavigationCard(
+    title: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        onClick = onClick,
+        modifier = modifier,
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = PushPrimeColors.Surface
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = title,
+                tint = PushPrimeColors.Primary,
+                modifier = Modifier.size(32.dp)
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = PushPrimeColors.OnSurface
+            )
+        }
+    }
+}
+
+fun formatTime(seconds: Int): String {
+    val hours = seconds / 3600
+    val minutes = (seconds % 3600) / 60
+    val secs = seconds % 60
+    return if (hours > 0) {
+        String.format("%d:%02d:%02d", hours, minutes, secs)
+    } else {
+        String.format("%d:%02d", minutes, secs)
+    }
+}

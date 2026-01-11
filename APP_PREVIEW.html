@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liberis Health Tracker - App Preview</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #FAFAFA 0%, #F5F5F5 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .phone-frame {
+            width: 375px;
+            height: 812px;
+            background: #000;
+            border-radius: 40px;
+            padding: 8px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            position: relative;
+        }
+        
+        .screen {
+            width: 100%;
+            height: 100%;
+            background: #FAFAFA;
+            border-radius: 32px;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .screen-header {
+            background: #FFFFFF;
+            padding: 16px;
+            border-bottom: 1px solid #E2E8F0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .screen-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1A1F36;
+        }
+        
+        .screen-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+        }
+        
+        .card {
+            background: #FFFFFF;
+            border-radius: 24px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1A1F36;
+            margin-bottom: 12px;
+        }
+        
+        .progress-card {
+            background: linear-gradient(135deg, #E6F9F5 0%, #F0FDFA 100%);
+        }
+        
+        .progress-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .progress-number {
+            font-size: 36px;
+            font-weight: 700;
+            color: #1A1F36;
+        }
+        
+        .progress-subtitle {
+            font-size: 14px;
+            color: #4A5568;
+            margin-top: 4px;
+        }
+        
+        .circular-progress {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 6px solid #E2E8F0;
+            border-top-color: #00D4AA;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .stats-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .stat-card {
+            flex: 1;
+            background: #F5F5F5;
+            border-radius: 16px;
+            padding: 16px;
+            text-align: center;
+        }
+        
+        .stat-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        
+        .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1A1F36;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #4A5568;
+            margin-top: 4px;
+        }
+        
+        .chart-container {
+            height: 200px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            gap: 8px;
+            margin-top: 16px;
+        }
+        
+        .chart-bar {
+            flex: 1;
+            background: linear-gradient(180deg, #00D4AA 0%, #00B894 100%);
+            border-radius: 8px 8px 0 0;
+            min-height: 20px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            padding-bottom: 8px;
+        }
+        
+        .chart-label {
+            font-size: 10px;
+            color: #4A5568;
+            margin-top: 4px;
+        }
+        
+        .chart-value {
+            font-size: 11px;
+            font-weight: 600;
+            color: #1A1F36;
+        }
+        
+        .pushup-tracker {
+            background: #FFFFFF;
+            border-radius: 24px;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .pushup-counter {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0,212,170,0.2) 0%, rgba(0,212,170,0.05) 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            margin: 16px auto;
+        }
+        
+        .pushup-number {
+            font-size: 48px;
+            font-weight: 700;
+            color: #00D4AA;
+        }
+        
+        .pushup-label {
+            font-size: 14px;
+            color: #4A5568;
+        }
+        
+        .timer {
+            font-size: 18px;
+            color: #4A5568;
+            margin-bottom: 16px;
+        }
+        
+        .button-primary {
+            background: linear-gradient(90deg, #00D4AA 0%, #00B894 100%);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            padding: 16px;
+            font-size: 18px;
+            font-weight: 600;
+            width: 100%;
+            margin-top: 16px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,212,170,0.3);
+        }
+        
+        .button-primary:active {
+            transform: scale(0.98);
+        }
+        
+        .button-secondary {
+            background: #F5F5F5;
+            color: #1A1F36;
+            border: 1px solid #E2E8F0;
+            border-radius: 16px;
+            padding: 12px 16px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        
+        .nav-tabs {
+            display: flex;
+            background: #FFFFFF;
+            border-top: 1px solid #E2E8F0;
+            padding: 8px;
+        }
+        
+        .nav-tab {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            color: #4A5568;
+            font-size: 12px;
+            cursor: pointer;
+            border-radius: 12px;
+        }
+        
+        .nav-tab.active {
+            background: #E6F9F5;
+            color: #00D4AA;
+            font-weight: 600;
+        }
+        
+        .welcome-screen {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            background: linear-gradient(135deg, #E6F9F5 0%, #FAFAFA 100%);
+        }
+        
+        .logo {
+            width: 120px;
+            height: 120px;
+            border-radius: 24px;
+            background: linear-gradient(135deg, #00D4AA 0%, #00B894 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 64px;
+            margin-bottom: 32px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .welcome-title {
+            font-size: 36px;
+            font-weight: 700;
+            color: #1A1F36;
+            margin-bottom: 16px;
+        }
+        
+        .welcome-subtitle {
+            font-size: 18px;
+            color: #4A5568;
+            margin-bottom: 48px;
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-frame">
+        <div class="screen">
+            <!-- Welcome Screen -->
+            <div id="welcome-screen" class="welcome-screen">
+                <div class="logo">💪</div>
+                <div class="welcome-title">Liberis Health</div>
+                <div class="welcome-subtitle">Track your fitness journey</div>
+                <button class="button-primary" onclick="showDashboard()">Get Started</button>
+            </div>
+            
+            <!-- Dashboard Screen -->
+            <div id="dashboard-screen" class="hidden">
+                <div class="screen-header">
+                    <div class="screen-title">Dashboard</div>
+                    <div style="display: flex; gap: 8px;">
+                        <span style="font-size: 20px;">📹</span>
+                        <span style="font-size: 20px;">⚙️</span>
+                    </div>
+                </div>
+                
+                <div class="screen-content">
+                    <!-- Today's Progress -->
+                    <div class="card progress-card">
+                        <div class="card-title">Today's Progress</div>
+                        <div class="progress-row">
+                            <div>
+                                <div class="progress-number">25</div>
+                                <div class="progress-subtitle">of 50 pushups</div>
+                            </div>
+                            <div class="circular-progress" style="animation: none; border-top-color: #00D4AA; transform: rotate(180deg);"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Weekly Chart -->
+                    <div class="card">
+                        <div class="card-title">Weekly Progress</div>
+                        <div class="chart-container">
+                            <div class="chart-bar" style="height: 60%;">
+                                <div class="chart-value">12</div>
+                                <div class="chart-label">Mon</div>
+                            </div>
+                            <div class="chart-bar" style="height: 80%;">
+                                <div class="chart-value">18</div>
+                                <div class="chart-label">Tue</div>
+                            </div>
+                            <div class="chart-bar" style="height: 100%;">
+                                <div class="chart-value">25</div>
+                                <div class="chart-label">Wed</div>
+                            </div>
+                            <div class="chart-bar" style="height: 70%;">
+                                <div class="chart-value">15</div>
+                                <div class="chart-label">Thu</div>
+                            </div>
+                            <div class="chart-bar" style="height: 90%;">
+                                <div class="chart-value">22</div>
+                                <div class="chart-label">Fri</div>
+                            </div>
+                            <div class="chart-bar" style="height: 50%;">
+                                <div class="chart-value">10</div>
+                                <div class="chart-label">Sat</div>
+                            </div>
+                            <div class="chart-bar" style="height: 40%;">
+                                <div class="chart-value">8</div>
+                                <div class="chart-label">Sun</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Quick Stats -->
+                    <div class="stats-row">
+                        <div class="stat-card">
+                            <div class="stat-icon">💪</div>
+                            <div class="stat-value">110</div>
+                            <div class="stat-label">Total</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">⭐</div>
+                            <div class="stat-value">25</div>
+                            <div class="stat-label">Best</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">🔥</div>
+                            <div class="stat-value">7</div>
+                            <div class="stat-label">Streak</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Pushup Tracker -->
+                    <div class="card pushup-tracker">
+                        <div class="card-title">Pushup Session</div>
+                        <div class="timer">0:45</div>
+                        <div class="pushup-counter">
+                            <div class="pushup-number">12</div>
+                            <div class="pushup-label">pushups</div>
+                        </div>
+                        <button class="button-primary">Add Pushup</button>
+                        <div style="display: flex; gap: 8px; margin-top: 12px;">
+                            <button class="button-secondary" style="flex: 1;">Reset</button>
+                            <button class="button-secondary" style="flex: 1; background: #00D4AA; color: white;">Stop</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function showDashboard() {
+            document.getElementById('welcome-screen').classList.add('hidden');
+            document.getElementById('dashboard-screen').classList.remove('hidden');
+        }
+        
+        // Animate chart bars on load
+        window.addEventListener('load', function() {
+            const bars = document.querySelectorAll('.chart-bar');
+            bars.forEach((bar, index) => {
+                setTimeout(() => {
+                    bar.style.transition = 'height 0.5s ease';
+                }, index * 100);
+            });
+        });
+        
+        // Simulate pushup counter
+        let pushupCount = 12;
+        const pushupNumber = document.querySelector('.pushup-number');
+        const addButton = document.querySelector('.button-primary');
+        
+        if (addButton && pushupNumber) {
+            addButton.addEventListener('click', function() {
+                pushupCount++;
+                pushupNumber.textContent = pushupCount;
+                pushupNumber.style.animation = 'pulse 0.3s ease';
+                setTimeout(() => {
+                    pushupNumber.style.animation = '';
+                }, 300);
+            });
+        }
+    </script>
+</body>
+</html>
