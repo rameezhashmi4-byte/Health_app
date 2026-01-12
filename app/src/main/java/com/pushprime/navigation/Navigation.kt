@@ -31,6 +31,10 @@ sealed class Screen(val route: String) {
     // Today Plan
     object TodayPlan : Screen("today_plan")
     
+    // Spotify
+    object SpotifyLogin : Screen("spotify_login")
+    object SpotifyBrowser : Screen("spotify_browser")
+    
     // Legacy/Other
     object Coaching : Screen("coaching")
     object GroupSession : Screen("group_session")

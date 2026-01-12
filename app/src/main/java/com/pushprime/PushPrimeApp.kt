@@ -67,6 +67,15 @@ fun PushPrimeApp() {
         }
     }
     
+    // Initialize Spotify Helper
+    val spotifyHelper = remember {
+        try {
+            com.pushprime.data.SpotifyHelper(context)
+        } catch (e: Exception) {
+            null
+        }
+    }
+    
     // Show error if LocalStore failed (critical component)
     if (localStore == null) {
         ErrorScreen(message = "Failed to initialize app storage")
@@ -75,14 +84,16 @@ fun PushPrimeApp() {
     
     // Determine if we should show bottom nav (only on main tabs)
     // Use remember to avoid recalculating on every recomposition
+    // Also check if we're on a nested route that should hide bottom nav
     val showBottomNav = remember(currentRoute) {
-        currentRoute in listOf(
+        val mainTabs = listOf(
             Screen.Home.route,
             Screen.Workout.route,
             Screen.Progress.route,
             Screen.Compete.route,
             Screen.Profile.route
         )
+        currentRoute in mainTabs && !currentRoute.orEmpty().contains("/")
     }
     
     androidx.compose.material3.Scaffold(
@@ -91,18 +102,43 @@ fun PushPrimeApp() {
                 BottomNavigationBar(
                     currentRoute = currentRoute,
                     onNavigate = { route ->
-                        // Smooth navigation with animations
-                        navController.navigate(route) {
-                            // Pop up to the start destination of the graph to
-                            // avoid building up a large stack of destinations
-                            popUpTo(navController.graph.findStartDestination().id) {
-                                saveState = true
+                        // Ensure navigation is always fluid - don't block on main tabs
+                        try {
+                            // Always allow navigation between main tabs
+                            val mainTabs = listOf(
+                                Screen.Home.route,
+                                Screen.Workout.route,
+                                Screen.Progress.route,
+                                Screen.Compete.route,
+                                Screen.Profile.route
+                            )
+                            
+                            // If navigating to a main tab, clear back stack to that tab
+                            if (route in mainTabs) {
+                                navController.navigate(route) {
+                                    // Pop up to the start destination
+                                    popUpTo(navController.graph.findStartDestination().id) {
+                                        saveState = true
+                                        inclusive = false
+                                    }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            } else {
+                                // For nested routes, just navigate normally
+                                navController.navigate(route) {
+                                    launchSingleTop = true
+                                }
                             }
-                            // Avoid multiple copies of the same destination when
-                            // reselecting the same item
-                            launchSingleTop = true
-                            // Restore state when reselecting a previously selected item
-                            restoreState = true
+                        } catch (e: Exception) {
+                            // If navigation fails, try simple navigation
+                            try {
+                                navController.navigate(route) {
+                                    launchSingleTop = true
+                                }
+                            } catch (e2: Exception) {
+                                // Silently handle navigation errors - don't crash
+                            }
                         }
                     }
                 )
@@ -188,6 +224,9 @@ fun PushPrimeApp() {
                     onNavigateToPhotoVault = {
                         navController.navigate(Screen.PhotoVault.route)
                     },
+                    onNavigateToSpotify = {
+                        navController.navigate(Screen.SpotifyLogin.route)
+                    },
                     onNavigateBack = {} // Main tab - no back needed
                 )
             }
@@ -210,6 +249,7 @@ fun PushPrimeApp() {
                     WorkoutPlayerScreen(
                         sessionId = sessionId,
                         localStore = localStore,
+                        spotifyHelper = spotifyHelper,
                         onNavigateBack = {
                             navController.popBackStack()
                         }
@@ -355,6 +395,32 @@ fun PushPrimeApp() {
                         navController.navigate(Screen.WorkoutPlayer.createRoute(null)) {
                             popUpTo(Screen.TodayPlan.route) { inclusive = true }
                         }
+                    }
+                )
+            }
+            
+            composable(Screen.SpotifyLogin.route) {
+                SpotifyLoginScreen(
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    },
+                    onConnectClick = {
+                        spotifyHelper?.connect()
+                        navController.navigate(Screen.SpotifyBrowser.route) {
+                            popUpTo(Screen.SpotifyLogin.route) { inclusive = true }
+                        }
+                    }
+                )
+            }
+            
+            composable(Screen.SpotifyBrowser.route) {
+                SpotifyBrowserScreen(
+                    spotifyHelper = spotifyHelper,
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    },
+                    onPlaylistSelected = { uri ->
+                        // Playlist selected - can navigate back or stay
                     }
                 )
             }

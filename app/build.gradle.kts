@@ -130,7 +130,9 @@ dependencies {
     // Photo Picker
     implementation("androidx.activity:activity-ktx:1.8.1")
     
-    // Spotify App Remote (Optional - for V1)
+    // Spotify App Remote - Note: Requires Spotify Maven repository
+    // Uncomment and add Spotify Maven repo to settings.gradle.kts when ready
+    // For now, using placeholder implementation
     // implementation("com.spotify.android:appremote2:2.0.2")
     
     // Testing

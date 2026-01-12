@@ -8,6 +8,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,6 +41,7 @@ import java.util.*
 fun WorkoutPlayerScreen(
     sessionId: Long?,
     localStore: LocalStore,
+    spotifyHelper: com.pushprime.data.SpotifyHelper?,
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -70,10 +72,28 @@ fun WorkoutPlayerScreen(
     var sessionStartTime by remember { mutableStateOf<Long?>(null) }
     var isSessionActive by remember { mutableStateOf(false) }
     
-    // Spotify state
-    var isSpotifyConnected by remember { mutableStateOf(false) }
-    var isMusicPlaying by remember { mutableStateOf(false) }
-    var currentTrack by remember { mutableStateOf<String?>(null) }
+    // Spotify state - use actual SpotifyHelper if available
+    val isSpotifyConnected = if (spotifyHelper != null) {
+        spotifyHelper.isConnected.collectAsState(initial = false).value
+    } else {
+        remember { mutableStateOf(false) }.value
+    }
+    
+    val spotifyCurrentTrack = if (spotifyHelper != null) {
+        spotifyHelper.currentTrack.collectAsState(initial = null).value
+    } else {
+        remember { mutableStateOf<com.pushprime.data.Track?>(null) }.value
+    }
+    
+    val isMusicPlaying = if (spotifyHelper != null) {
+        spotifyHelper.isPlaying.collectAsState(initial = false).value
+    } else {
+        remember { mutableStateOf(false) }.value
+    }
+    
+    val currentTrack = remember(spotifyCurrentTrack) {
+        spotifyCurrentTrack?.name ?: "No track"
+    }
     
     // Start session when screen loads
     LaunchedEffect(Unit) {
@@ -163,12 +183,14 @@ fun WorkoutPlayerScreen(
                 isPlaying = isMusicPlaying,
                 currentTrack = currentTrack,
                 onConnectClick = {
-                    // TODO: Open Spotify connection
-                    isSpotifyConnected = true
-                    currentTrack = "Workout Mix"
+                    // Navigate to Spotify login - handled by parent
                 },
                 onPlayPauseClick = {
-                    isMusicPlaying = !isMusicPlaying
+                    if (isMusicPlaying) {
+                        spotifyHelper?.pause()
+                    } else {
+                        spotifyHelper?.resume()
+                    }
                 }
             )
         }

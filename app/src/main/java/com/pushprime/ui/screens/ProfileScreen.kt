@@ -29,6 +29,7 @@ fun ProfileScreen(
     localStore: LocalStore,
     onNavigateToCoaching: () -> Unit,
     onNavigateToPhotoVault: () -> Unit,
+    onNavigateToSpotify: () -> Unit,
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -154,7 +155,7 @@ fun ProfileScreen(
                     title = "Music",
                     subtitle = "Spotify integration",
                     icon = Icons.Default.MusicNote,
-                    onClick = { /* TODO: Open Spotify settings */ }
+                    onClick = onNavigateToSpotify
                 )
             }
             
