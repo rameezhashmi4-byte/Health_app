@@ -1,5 +1,6 @@
 package com.pushprime.ui.screens
 
+import android.content.Context
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -11,10 +12,17 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.pushprime.data.ExerciseRepository
 import com.pushprime.data.LocalStore
+import com.pushprime.model.ExerciseLog
+import com.pushprime.model.ExerciseType
 import com.pushprime.model.Session
+import com.pushprime.ui.components.DailyExerciseSummary
+import com.pushprime.ui.components.ExerciseLogger
+import com.pushprime.ui.components.ExerciseSelector
 import com.pushprime.ui.components.PushUpCounter
 import com.pushprime.ui.components.ProgressRing
 import com.pushprime.ui.theme.PushPrimeColors
@@ -26,7 +34,8 @@ import java.util.*
 
 /**
  * Dashboard Screen
- * Push-up counter, progress ring, streak tracker, workout time
+ * Multi-exercise tracking with Room database
+ * Supports: Push-ups, Sit-ups, Squats, Pull-ups, Plank, etc.
  */
 @Composable
 fun DashboardScreen(
@@ -34,8 +43,17 @@ fun DashboardScreen(
     onNavigateToCoaching: () -> Unit,
     onNavigateToCompete: () -> Unit,
     onNavigateToGroup: () -> Unit,
-    onNavigateToMotivation: () -> Unit
+    onNavigateToMotivation: () -> Unit,
+    onNavigateToMetrics: () -> Unit = {}
 ) {
+    val context = LocalContext.current
+    val exerciseRepository = remember { ExerciseRepository(context) }
+    
+    // Exercise selection state
+    var selectedExercise by remember { mutableStateOf<ExerciseType?>(null) }
+    var dailySummary by remember { mutableStateOf<Map<String, Int>>(emptyMap()) }
+    
+    // Legacy push-up counter state (for backward compatibility)
     var pushupCount by remember { mutableStateOf(0) }
     var isActive by remember { mutableStateOf(false) }
     var elapsedTime by remember { mutableStateOf(0L) }
@@ -48,6 +66,11 @@ fun DashboardScreen(
     val todayTime = remember(sessions) { localStore.getTodayTotalTime() }
     val streak = remember(sessions) { localStore.getStreak() }
     val dailyGoal = user?.dailyGoal ?: 0
+    
+    // Load daily summary
+    LaunchedEffect(Unit) {
+        dailySummary = exerciseRepository.getDailySummary()
+    }
     
     fun startTimer() {
         timerJob?.cancel()
@@ -72,6 +95,23 @@ fun DashboardScreen(
                 date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
             )
             localStore.saveSession(session)
+        }
+    }
+    
+    // Handle exercise log save
+    fun onExerciseLogged(repsOrDuration: Int, intensity: Int) {
+        if (selectedExercise != null) {
+            coroutineScope.launch {
+                val exerciseLog = ExerciseLog(
+                    exerciseName = selectedExercise!!.displayName,
+                    repsOrDuration = repsOrDuration,
+                    intensity = intensity,
+                    workoutDuration = 0 // Can be enhanced later
+                )
+                exerciseRepository.insertLog(exerciseLog)
+                // Refresh summary
+                dailySummary = exerciseRepository.getDailySummary()
+            }
         }
     }
     
@@ -109,9 +149,80 @@ fun DashboardScreen(
             contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            // Streak Card with emoji
+            // Streak Card
             item {
                 StreakCard(streak = streak)
+            }
+            
+            // Daily Exercise Summary
+            item {
+                DailyExerciseSummary(summary = dailySummary)
+            }
+            
+            // Exercise Selector
+            item {
+                ExerciseSelector(
+                    selectedExercise = selectedExercise,
+                    onExerciseSelected = { exercise ->
+                        selectedExercise = exercise
+                    }
+                )
+            }
+            
+            // Exercise Logger (shown when exercise is selected)
+            if (selectedExercise != null) {
+                item {
+                    ExerciseLogger(
+                        exercise = selectedExercise!!,
+                        onLogSaved = { repsOrDuration, intensity ->
+                            onExerciseLogged(repsOrDuration, intensity)
+                        }
+                    )
+                }
+            }
+            
+            // Legacy Push-Up Counter (for backward compatibility)
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(24.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = PushPrimeColors.Surface
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier.padding(20.dp)
+                    ) {
+                        Text(
+                            text = "Quick Push-up Counter",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = PushPrimeColors.OnSurface
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        PushUpCounter(
+                            pushupCount = pushupCount,
+                            isActive = isActive,
+                            elapsedTime = elapsedTime,
+                            onIncrement = { if (isActive) pushupCount++ },
+                            onStart = {
+                                isActive = true
+                                elapsedTime = 0L
+                                startTimer()
+                            },
+                            onStop = {
+                                isActive = false
+                                stopTimer()
+                            },
+                            onReset = {
+                                pushupCount = 0
+                                elapsedTime = 0L
+                                isActive = false
+                                timerJob?.cancel()
+                            }
+                        )
+                    }
+                }
             }
             
             // Progress Ring and Stats Row
@@ -145,37 +256,18 @@ fun DashboardScreen(
                 }
             }
             
-            // Push-Up Counter
-            item {
-                PushUpCounter(
-                    pushupCount = pushupCount,
-                    isActive = isActive,
-                    elapsedTime = elapsedTime,
-                    onIncrement = { if (isActive) pushupCount++ },
-                    onStart = {
-                        isActive = true
-                        elapsedTime = 0L
-                        startTimer()
-                    },
-                    onStop = {
-                        isActive = false
-                        stopTimer()
-                    },
-                    onReset = {
-                        pushupCount = 0
-                        elapsedTime = 0L
-                        isActive = false
-                        timerJob?.cancel()
-                    }
-                )
-            }
-            
             // Navigation Cards
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
+                    NavigationCard(
+                        title = "Metrics",
+                        icon = Icons.Default.TrendingUp,
+                        onClick = onNavigateToMetrics,
+                        modifier = Modifier.weight(1f)
+                    )
                     NavigationCard(
                         title = "Compete",
                         icon = Icons.Default.EmojiEvents,

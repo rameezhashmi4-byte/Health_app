@@ -2,6 +2,7 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("com.google.gms.google-services") apply false
+    id("kotlin-kapt")
 }
 
 android {
@@ -97,6 +98,17 @@ dependencies {
     
     // DataStore (for SharedPreferences alternative)
     implementation("androidx.datastore:datastore-preferences:1.0.0")
+    
+    // Health Connect (Samsung Health integration) - Optional
+    // Note: Only works on devices with Health Connect installed
+    // Comment out if causing build issues - app will work without it
+    // implementation("androidx.health.connect:connect-client:1.1.0-alpha11")
+    
+    // Room Database
+    val roomVersion = "2.6.1"
+    implementation("androidx.room:room-runtime:$roomVersion")
+    implementation("androidx.room:room-ktx:$roomVersion")
+    kapt("androidx.room:room-compiler:$roomVersion")
     
     // Networking
     implementation("com.squareup.retrofit2:retrofit:2.9.0")

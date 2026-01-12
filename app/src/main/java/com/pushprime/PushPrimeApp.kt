@@ -5,6 +5,7 @@ import androidx.compose.runtime.*
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.pushprime.data.ExerciseRepository
 import com.pushprime.data.FirebaseHelper
 import com.pushprime.data.LocalStore
 import com.pushprime.network.VoipService
@@ -70,6 +71,9 @@ fun PushPrimeApp() {
                 },
                 onNavigateToMotivation = {
                     navController.navigate(Screen.Motivation.route)
+                },
+                onNavigateToMetrics = {
+                    navController.navigate(Screen.Metrics.route)
                 }
             )
         }
@@ -108,6 +112,15 @@ fun PushPrimeApp() {
         
         composable(Screen.Motivation.route) {
             MotivationScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+        
+        composable(Screen.Metrics.route) {
+            MetricsScreen(
+                localStore = localStore,
                 onNavigateBack = {
                     navController.popBackStack()
                 }
