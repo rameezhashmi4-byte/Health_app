@@ -10,6 +10,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.pushprime.data.SessionDao
+import com.pushprime.data.WeeklyAggregationResult
+import com.pushprime.data.MonthlyAggregationResult
 import com.pushprime.ui.components.FeedCard
 import com.pushprime.ui.theme.PushPrimeColors
 import java.text.SimpleDateFormat
@@ -57,11 +59,13 @@ fun AnalyticsScreen(
         }
     }
     
-    val weeklyData by sessionDao.getWeeklyAggregation(startDate, endDate)
-        .collectAsState(initial = emptyList())
+    var weeklyData by remember { mutableStateOf<List<WeeklyAggregationResult>>(emptyList()) }
+    var monthlyData by remember { mutableStateOf<List<MonthlyAggregationResult>>(emptyList()) }
     
-    val monthlyData by sessionDao.getMonthlyAggregationByType(startDate, endDate)
-        .collectAsState(initial = emptyList())
+    LaunchedEffect(startDate, endDate) {
+        weeklyData = sessionDao.getWeeklyAggregation(startDate, endDate)
+        monthlyData = sessionDao.getMonthlyAggregationByType(startDate, endDate)
+    }
     
     val totalSessions = remember(weeklyData) {
         weeklyData.sumOf { it.count }
@@ -142,7 +146,7 @@ fun AnalyticsScreen(
                     title = "Activity Breakdown",
                     icon = Icons.Default.PieChart
                 ) {
-                    monthlyData.forEach { data ->
+                    monthlyData.forEach { data: MonthlyAggregationResult ->
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -177,7 +181,7 @@ fun AnalyticsScreen(
                             color = PushPrimeColors.OnSurfaceVariant
                         )
                     } else {
-                        weeklyData.forEach { dayData ->
+                        weeklyData.forEach { dayData: WeeklyAggregationResult ->
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()

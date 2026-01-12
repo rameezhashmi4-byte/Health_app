@@ -7,6 +7,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -109,7 +110,7 @@ fun HomeScreen(
                             )
                         }
                         CircularProgressIndicator(
-                            progress = { (todayTotal.toFloat() / dailyGoal).coerceIn(0f, 1f) },
+                            progress = (todayTotal.toFloat() / dailyGoal).coerceIn(0f, 1f),
                             modifier = Modifier.size(48.dp),
                             color = PushPrimeColors.Primary
                         )
@@ -227,8 +228,3 @@ fun WorkoutTag(text: String) {
     }
 }
 
-fun formatTime(seconds: Int): String {
-    val minutes = seconds / 60
-    val secs = seconds % 60
-    return String.format("%d:%02d", minutes, secs)
-}

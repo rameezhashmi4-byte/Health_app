@@ -19,7 +19,7 @@ import androidx.compose.ui.platform.LocalContext
  * Progress Screen
  * Hub with Overview/Calendar/Analytics tabs
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun ProgressScreen(
     onNavigateBack: () -> Unit,
