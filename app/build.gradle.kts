@@ -130,6 +130,13 @@ dependencies {
     // Photo Picker
     implementation("androidx.activity:activity-ktx:1.8.1")
     
+    // WorkManager for notifications
+    val workVersion = "2.9.0"
+    implementation("androidx.work:work-runtime-ktx:$workVersion")
+    
+    // Permissions (for notifications)
+    implementation("com.google.accompanist:accompanist-permissions:0.32.0")
+    
     // Spotify App Remote - Note: Requires Spotify Maven repository
     // Uncomment and add Spotify Maven repo to settings.gradle.kts when ready
     // For now, using placeholder implementation

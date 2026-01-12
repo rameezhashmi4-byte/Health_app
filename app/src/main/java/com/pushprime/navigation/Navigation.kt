@@ -35,6 +35,9 @@ sealed class Screen(val route: String) {
     object SpotifyLogin : Screen("spotify_login")
     object SpotifyBrowser : Screen("spotify_browser")
     
+    // Settings
+    object NotificationSettings : Screen("notification_settings")
+    
     // Legacy/Other
     object Coaching : Screen("coaching")
     object GroupSession : Screen("group_session")

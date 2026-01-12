@@ -30,6 +30,7 @@ fun ProfileScreen(
     onNavigateToCoaching: () -> Unit,
     onNavigateToPhotoVault: () -> Unit,
     onNavigateToSpotify: () -> Unit,
+    onNavigateToNotificationSettings: () -> Unit,
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -164,7 +165,7 @@ fun ProfileScreen(
                     title = "Notifications",
                     subtitle = "Workout reminders",
                     icon = Icons.Default.Notifications,
-                    onClick = { /* TODO: Open notification settings */ }
+                    onClick = onNavigateToNotificationSettings
                 )
             }
             

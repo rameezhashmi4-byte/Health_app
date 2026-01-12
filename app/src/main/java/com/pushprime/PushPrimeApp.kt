@@ -11,6 +11,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import kotlinx.coroutines.launch
 import com.pushprime.data.AppDatabase
 import com.pushprime.data.FirebaseHelper
 import com.pushprime.data.LocalStore
@@ -83,9 +84,10 @@ fun PushPrimeApp() {
     }
     
     // Determine if we should show bottom nav (only on main tabs)
-    // Use remember to avoid recalculating on every recomposition
-    // Also check if we're on a nested route that should hide bottom nav
-    val showBottomNav = remember(currentRoute) {
+    // Use LaunchedEffect to ensure it updates reactively
+    var showBottomNav by remember { mutableStateOf(true) }
+    
+    LaunchedEffect(currentRoute) {
         val mainTabs = listOf(
             Screen.Home.route,
             Screen.Workout.route,
@@ -93,7 +95,7 @@ fun PushPrimeApp() {
             Screen.Compete.route,
             Screen.Profile.route
         )
-        currentRoute in mainTabs && !currentRoute.orEmpty().contains("/")
+        showBottomNav = currentRoute in mainTabs && !currentRoute.orEmpty().contains("/")
     }
     
     androidx.compose.material3.Scaffold(
@@ -102,42 +104,47 @@ fun PushPrimeApp() {
                 BottomNavigationBar(
                     currentRoute = currentRoute,
                     onNavigate = { route ->
-                        // Ensure navigation is always fluid - don't block on main tabs
-                        try {
-                            // Always allow navigation between main tabs
-                            val mainTabs = listOf(
-                                Screen.Home.route,
-                                Screen.Workout.route,
-                                Screen.Progress.route,
-                                Screen.Compete.route,
-                                Screen.Profile.route
-                            )
-                            
-                            // If navigating to a main tab, clear back stack to that tab
-                            if (route in mainTabs) {
-                                navController.navigate(route) {
-                                    // Pop up to the start destination
-                                    popUpTo(navController.graph.findStartDestination().id) {
-                                        saveState = true
-                                        inclusive = false
-                                    }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            } else {
-                                // For nested routes, just navigate normally
-                                navController.navigate(route) {
-                                    launchSingleTop = true
-                                }
-                            }
-                        } catch (e: Exception) {
-                            // If navigation fails, try simple navigation
+                        // Ensure navigation is always fluid - never block
+                        // Use LaunchedEffect to prevent blocking the UI thread
+                        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main).launch {
                             try {
-                                navController.navigate(route) {
-                                    launchSingleTop = true
+                                // Always allow navigation between main tabs
+                                val mainTabs = listOf(
+                                    Screen.Home.route,
+                                    Screen.Workout.route,
+                                    Screen.Progress.route,
+                                    Screen.Compete.route,
+                                    Screen.Profile.route
+                                )
+                                
+                                // If navigating to a main tab, clear back stack to that tab
+                                if (route in mainTabs && currentRoute != route) {
+                                    navController.navigate(route) {
+                                        // Pop up to the start destination
+                                        popUpTo(navController.graph.findStartDestination().id) {
+                                            saveState = true
+                                            inclusive = false
+                                        }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
+                                } else if (route !in mainTabs) {
+                                    // For nested routes, just navigate normally
+                                    navController.navigate(route) {
+                                        launchSingleTop = true
+                                    }
                                 }
-                            } catch (e2: Exception) {
-                                // Silently handle navigation errors - don't crash
+                            } catch (e: Exception) {
+                                // If navigation fails, try simple navigation
+                                try {
+                                    if (currentRoute != route) {
+                                        navController.navigate(route) {
+                                            launchSingleTop = true
+                                        }
+                                    }
+                                } catch (e2: Exception) {
+                                    // Silently handle navigation errors - don't crash
+                                }
                             }
                         }
                     }
@@ -226,6 +233,9 @@ fun PushPrimeApp() {
                     },
                     onNavigateToSpotify = {
                         navController.navigate(Screen.SpotifyLogin.route)
+                    },
+                    onNavigateToNotificationSettings = {
+                        navController.navigate(Screen.NotificationSettings.route)
                     },
                     onNavigateBack = {} // Main tab - no back needed
                 )
@@ -421,6 +431,14 @@ fun PushPrimeApp() {
                     },
                     onPlaylistSelected = { uri ->
                         // Playlist selected - can navigate back or stay
+                    }
+                )
+            }
+            
+            composable(Screen.NotificationSettings.route) {
+                NotificationSettingsScreen(
+                    onNavigateBack = {
+                        navController.popBackStack()
                     }
                 )
             }
