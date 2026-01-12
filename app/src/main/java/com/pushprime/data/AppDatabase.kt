@@ -4,20 +4,35 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import com.pushprime.model.CollageEntity
 import com.pushprime.model.ExerciseLog
+import com.pushprime.model.PhotoEntryEntity
+import com.pushprime.model.SessionEntity
+import com.pushprime.model.SetEntity
 
 /**
  * App Database
  * Room database for local storage
- * Future: Can sync with Firebase "exercise_logs" collection
+ * Unified storage for exercises, sessions, sets, photos, and collages
+ * Future: Can sync with Firebase collections
  */
 @Database(
-    entities = [ExerciseLog::class],
-    version = 1,
+    entities = [
+        ExerciseLog::class,
+        SessionEntity::class,
+        SetEntity::class,
+        PhotoEntryEntity::class,
+        CollageEntity::class
+    ],
+    version = 2,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun exerciseLogDao(): ExerciseLogDao
+    abstract fun sessionDao(): SessionDao
+    abstract fun setDao(): SetDao
+    abstract fun photoEntryDao(): PhotoEntryDao
+    abstract fun collageDao(): CollageDao
     
     companion object {
         @Volatile
