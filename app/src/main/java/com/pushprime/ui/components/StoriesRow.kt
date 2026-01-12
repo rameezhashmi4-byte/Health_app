@@ -3,6 +3,8 @@ package com.pushprime.ui.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -30,13 +32,14 @@ fun StoriesRow(
         StoryItem(StoryType.BEFORE_AFTER, "Before/After", "📸")
     )
     
-    Row(
+    LazyRow(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(vertical = 12.dp),
+        contentPadding = PaddingValues(horizontal = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        stories.forEach { story ->
+        items(stories) { story ->
             StoryCircle(
                 story = story,
                 onClick = { onStoryClick(story.type) },

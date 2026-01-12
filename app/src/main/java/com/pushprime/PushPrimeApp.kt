@@ -198,13 +198,24 @@ fun PushPrimeApp() {
                 )
             ) { backStackEntry ->
                 val sessionIdStr = backStackEntry.arguments?.getString("sessionId")
-                // TODO: Create WorkoutPlayerScreen
-                ErrorScreen(
-                    message = "Workout Player - Coming soon!",
-                    onNavigateBack = {
-                        navController.popBackStack()
-                    }
-                )
+                val sessionId = sessionIdStr?.toLongOrNull()
+                
+                if (localStore != null) {
+                    WorkoutPlayerScreen(
+                        sessionId = sessionId,
+                        localStore = localStore,
+                        onNavigateBack = {
+                            navController.popBackStack()
+                        }
+                    )
+                } else {
+                    ErrorScreen(
+                        message = "Failed to initialize workout player",
+                        onNavigateBack = {
+                            navController.popBackStack()
+                        }
+                    )
+                }
             }
             
             composable(Screen.ExerciseLibrary.route) {
