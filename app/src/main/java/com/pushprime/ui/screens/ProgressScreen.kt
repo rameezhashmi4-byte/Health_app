@@ -14,6 +14,7 @@ import com.pushprime.data.AppDatabase
 import com.pushprime.data.SessionDao
 import com.pushprime.ui.theme.PushPrimeColors
 import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.launch
 
 /**
  * Progress Screen
@@ -43,8 +44,22 @@ fun ProgressScreen(
     
     val pagerState = rememberPagerState(pageCount = { 3 })
     var selectedTabIndex by remember { mutableStateOf(0) }
+    val coroutineScope = rememberCoroutineScope()
     
     val tabs = listOf("Overview", "Calendar", "Analytics")
+    
+    // Sync pager with tab selection
+    LaunchedEffect(selectedTabIndex) {
+        coroutineScope.launch {
+            pagerState.animateScrollToPage(selectedTabIndex)
+        }
+    }
+    
+    LaunchedEffect(pagerState.currentPage) {
+        if (selectedTabIndex != pagerState.currentPage) {
+            selectedTabIndex = pagerState.currentPage
+        }
+    }
     
     Scaffold(
         topBar = {
@@ -54,11 +69,6 @@ fun ProgressScreen(
                         text = "Progress",
                         fontWeight = FontWeight.Bold
                     )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-                    }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = PushPrimeColors.Surface

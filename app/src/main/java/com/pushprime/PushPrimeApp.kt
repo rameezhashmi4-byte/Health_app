@@ -159,9 +159,7 @@ fun PushPrimeApp() {
             composable(Screen.Progress.route) {
                 if (database != null) {
                     ProgressScreen(
-                        onNavigateBack = {
-                            navController.popBackStack()
-                        },
+                        onNavigateBack = {}, // Main tab - no back needed
                         onDayClick = { date ->
                             navController.navigate(Screen.CalendarDayDetail.createRoute(date))
                         }
@@ -175,24 +173,49 @@ fun PushPrimeApp() {
                 CompeteScreen(
                     localStore = localStore,
                     firebaseHelper = firebaseHelper,
-                    onNavigateBack = {
-                        navController.popBackStack()
-                    }
+                    onNavigateBack = {} // Main tab - no back needed
                 )
             }
             
             composable(Screen.Profile.route) {
                 // TODO: Create ProfileScreen
-                // For now, show a placeholder or redirect to Coaching
+                // For now, show Coaching screen as placeholder
                 CoachingScreen(
                     localStore = localStore,
+                    onNavigateBack = {} // Main tab - no back needed
+                )
+            }
+            
+            // ========== NESTED ROUTES ==========
+            
+            composable(
+                route = Screen.WorkoutPlayer.route,
+                arguments = listOf(
+                    navArgument("sessionId") {
+                        type = NavType.StringType
+                        nullable = true
+                    }
+                )
+            ) { backStackEntry ->
+                val sessionIdStr = backStackEntry.arguments?.getString("sessionId")
+                // TODO: Create WorkoutPlayerScreen
+                ErrorScreen(
+                    message = "Workout Player - Coming soon!",
                     onNavigateBack = {
                         navController.popBackStack()
                     }
                 )
             }
             
-            // ========== NESTED ROUTES ==========
+            composable(Screen.ExerciseLibrary.route) {
+                // TODO: Create ExerciseLibraryScreen
+                ErrorScreen(
+                    message = "Exercise Library - Coming soon!",
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    }
+                )
+            }
             
             composable(Screen.SportsSelection.route) {
                 SportsSelectionScreen(

@@ -25,6 +25,7 @@ import kotlinx.coroutines.launch
  * Compete Screen
  * Local and global leaderboards with toggle
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CompeteScreen(
     localStore: LocalStore,
@@ -54,34 +55,32 @@ fun CompeteScreen(
         }
     }
     
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(PushPrimeColors.Background)
-    ) {
-        // Top Bar
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = onNavigateBack) {
-                Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-            }
-            Text(
-                text = "Leaderboard",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-                color = PushPrimeColors.OnSurface
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = "Compete",
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = PushPrimeColors.Surface
+                )
             )
         }
-        
-        // Toggle Buttons
-        Row(
+    ) { paddingValues ->
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 8.dp),
+                .fillMaxSize()
+                .padding(paddingValues)
+                .background(PushPrimeColors.Background)
+        ) {
+                // Toggle Buttons
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             FilterChip(
@@ -105,8 +104,8 @@ fun CompeteScreen(
             )
         }
         
-        // Leaderboard List
-        if (isLoading) {
+            // Leaderboard List
+            if (isLoading) {
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
@@ -176,6 +175,7 @@ fun CompeteScreen(
                     }
                 }
             }
+        }
         }
     }
 }
