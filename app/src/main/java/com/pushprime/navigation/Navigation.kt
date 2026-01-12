@@ -28,6 +28,9 @@ sealed class Screen(val route: String) {
     object PhotoVault : Screen("photo_vault")
     object CollageCreator : Screen("collage_creator")
     
+    // Today Plan
+    object TodayPlan : Screen("today_plan")
+    
     // Legacy/Other
     object Coaching : Screen("coaching")
     object GroupSession : Screen("group_session")

@@ -91,6 +91,7 @@ fun PushPrimeApp() {
                 BottomNavigationBar(
                     currentRoute = currentRoute,
                     onNavigate = { route ->
+                        // Smooth navigation with animations
                         navController.navigate(route) {
                             // Pop up to the start destination of the graph to
                             // avoid building up a large stack of destinations
@@ -136,8 +137,9 @@ fun PushPrimeApp() {
                         navController.navigate(Screen.SportsSelection.route)
                     },
                     onNavigateToTodayPlan = {
-                        // TODO: Navigate to TodayPlanScreen when created
-                        navController.navigate(Screen.Workout.route)
+                        navController.navigate(Screen.TodayPlan.route) {
+                            launchSingleTop = true
+                        }
                     }
                 )
             }
@@ -178,10 +180,14 @@ fun PushPrimeApp() {
             }
             
             composable(Screen.Profile.route) {
-                // TODO: Create ProfileScreen
-                // For now, show Coaching screen as placeholder
-                CoachingScreen(
+                ProfileScreen(
                     localStore = localStore,
+                    onNavigateToCoaching = {
+                        navController.navigate(Screen.Coaching.route)
+                    },
+                    onNavigateToPhotoVault = {
+                        navController.navigate(Screen.PhotoVault.route)
+                    },
                     onNavigateBack = {} // Main tab - no back needed
                 )
             }
@@ -219,11 +225,13 @@ fun PushPrimeApp() {
             }
             
             composable(Screen.ExerciseLibrary.route) {
-                // TODO: Create ExerciseLibraryScreen
-                ErrorScreen(
-                    message = "Exercise Library - Coming soon!",
+                ExerciseLibraryScreen(
                     onNavigateBack = {
                         navController.popBackStack()
+                    },
+                    onExerciseSelected = { exercise ->
+                        // Navigate to workout player with exercise
+                        navController.navigate(Screen.WorkoutPlayer.createRoute(null))
                     }
                 )
             }
@@ -231,8 +239,10 @@ fun PushPrimeApp() {
             composable(Screen.SportsSelection.route) {
                 SportsSelectionScreen(
                     onSportSelected = { sport ->
-                        // TODO: Start sport session
-                        navController.popBackStack()
+                        // Start sport workout session
+                        navController.navigate(Screen.WorkoutPlayer.createRoute(null)) {
+                            popUpTo(Screen.SportsSelection.route) { inclusive = true }
+                        }
                     },
                     onNavigateBack = {
                         navController.popBackStack()
@@ -252,8 +262,11 @@ fun PushPrimeApp() {
             }
             
             composable(Screen.CollageCreator.route) {
-                // TODO: Create CollageCreatorScreen
-                ErrorScreen(message = "Collage Creator coming soon!")
+                CollageCreatorScreen(
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    }
+                )
             }
             
             composable(
@@ -265,8 +278,22 @@ fun PushPrimeApp() {
                 )
             ) { backStackEntry ->
                 val date = backStackEntry.arguments?.getString("date") ?: ""
-                // TODO: Create CalendarDayDetailScreen
-                ErrorScreen(message = "Day detail for $date - Coming soon!")
+                if (database != null) {
+                    CalendarDayDetailScreen(
+                        date = date,
+                        sessionDao = database.sessionDao(),
+                        onNavigateBack = {
+                            navController.popBackStack()
+                        }
+                    )
+                } else {
+                    ErrorScreen(
+                        message = "Database not available",
+                        onNavigateBack = {
+                            navController.popBackStack()
+                        }
+                    )
+                }
             }
             
             // ========== LEGACY SCREENS (for backward compatibility) ==========
@@ -315,6 +342,19 @@ fun PushPrimeApp() {
                     localStore = localStore,
                     onNavigateBack = {
                         navController.popBackStack()
+                    }
+                )
+            }
+            
+            composable(Screen.TodayPlan.route) {
+                TodayPlanScreen(
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    },
+                    onStartWorkout = {
+                        navController.navigate(Screen.WorkoutPlayer.createRoute(null)) {
+                            popUpTo(Screen.TodayPlan.route) { inclusive = true }
+                        }
                     }
                 )
             }
