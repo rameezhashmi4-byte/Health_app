@@ -178,41 +178,38 @@ fun HomeScreen(
             
             // Recent Session Card
             item {
+                val currentSession = recentSession
                 FeedCard(
                     title = "Recent Session",
-                    subtitle = remember(recentSession) {
-                        if (recentSession != null) {
+                    subtitle = remember(currentSession) {
+                        currentSession?.let {
                             try {
-                                dateFormatter.format(Date(recentSession.timestamp))
+                                dateFormatter.format(Date(it.timestamp))
                             } catch (e: Exception) {
                                 "Recent session"
                             }
-                        } else {
-                            "No sessions yet"
-                        }
+                        } ?: "No sessions yet"
                     },
                     icon = Icons.Default.History,
                     onClick = onNavigateToProgress
                 ) {
-                    if (recentSession != null) {
+                    currentSession?.let { session ->
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = "${recentSession.pushups} push-ups",
+                                text = "${session.pushups} push-ups",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.SemiBold
                             )
                             Text(
-                                text = remember(recentSession) {
-                                    formatTime(recentSession.workoutTime)
-                                },
+                                text = formatTime(session.workoutTime),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = PushPrimeColors.OnSurfaceVariant
                             )
                         }
-                    } else {
+                    } ?: run {
                         Text(
                             text = "Start your first workout!",
                             style = MaterialTheme.typography.bodyMedium,
@@ -254,10 +251,4 @@ fun WorkoutTag(text: String) {
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
         )
     }
-}
-
-fun formatTime(seconds: Int): String {
-    val minutes = seconds / 60
-    val secs = seconds % 60
-    return String.format("%d:%02d", minutes, secs)
 }
