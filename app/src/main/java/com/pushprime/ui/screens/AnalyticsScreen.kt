@@ -24,10 +24,15 @@ import java.util.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AnalyticsScreen(
-    sessionDao: SessionDao,
+    sessionDao: SessionDao?,
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    if (sessionDao == null) {
+        ErrorScreen(message = "Database not available")
+        return
+    }
+    
     var selectedPeriod by remember { mutableStateOf<AnalyticsPeriod>(AnalyticsPeriod.WEEKLY) }
     
     val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())

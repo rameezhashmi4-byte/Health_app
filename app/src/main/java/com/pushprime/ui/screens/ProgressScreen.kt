@@ -27,8 +27,19 @@ fun ProgressScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val database = remember { AppDatabase.getDatabase(context) }
-    val sessionDao = remember { database.sessionDao() }
+    val database = remember { 
+        try {
+            AppDatabase.getDatabase(context)
+        } catch (e: Exception) {
+            null
+        }
+    }
+    val sessionDao = remember(database) { database?.sessionDao() }
+    
+    if (database == null || sessionDao == null) {
+        ErrorScreen(message = "Database not available")
+        return
+    }
     
     val pagerState = rememberPagerState(pageCount = { 3 })
     var selectedTabIndex by remember { mutableStateOf(0) }
@@ -100,9 +111,14 @@ fun ProgressScreen(
 
 @Composable
 fun ProgressOverviewScreen(
-    sessionDao: SessionDao,
+    sessionDao: SessionDao?,
     modifier: Modifier = Modifier
 ) {
+    if (sessionDao == null) {
+        ErrorScreen(message = "Database not available")
+        return
+    }
+    
     // Simplified overview - can be enhanced
     Box(
         modifier = modifier.fillMaxSize(),

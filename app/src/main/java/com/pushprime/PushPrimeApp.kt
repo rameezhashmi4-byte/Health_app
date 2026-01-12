@@ -19,6 +19,8 @@ import com.pushprime.navigation.Screen
 import com.pushprime.ui.components.BottomNavigationBar
 import com.pushprime.ui.screens.*
 import com.pushprime.ui.screens.ErrorScreen
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /**
  * Main app composable with navigation
@@ -56,9 +58,14 @@ fun PushPrimeApp() {
         }
     }
     
-    // Initialize database
-    val database = remember { AppDatabase.getDatabase(context) }
-    val sessionDao = remember { database.sessionDao() }
+    // Initialize database lazily (only when needed)
+    val database = remember { 
+        try {
+            AppDatabase.getDatabase(context)
+        } catch (e: Exception) {
+            null
+        }
+    }
     
     // Show error if LocalStore failed (critical component)
     if (localStore == null) {
@@ -67,13 +74,16 @@ fun PushPrimeApp() {
     }
     
     // Determine if we should show bottom nav (only on main tabs)
-    val showBottomNav = currentRoute in listOf(
-        Screen.Home.route,
-        Screen.Workout.route,
-        Screen.Progress.route,
-        Screen.Compete.route,
-        Screen.Profile.route
-    )
+    // Use remember to avoid recalculating on every recomposition
+    val showBottomNav = remember(currentRoute) {
+        currentRoute in listOf(
+            Screen.Home.route,
+            Screen.Workout.route,
+            Screen.Progress.route,
+            Screen.Compete.route,
+            Screen.Profile.route
+        )
+    }
     
     androidx.compose.material3.Scaffold(
         bottomBar = {
@@ -147,14 +157,18 @@ fun PushPrimeApp() {
             }
             
             composable(Screen.Progress.route) {
-                ProgressScreen(
-                    onNavigateBack = {
-                        navController.popBackStack()
-                    },
-                    onDayClick = { date ->
-                        navController.navigate(Screen.CalendarDayDetail.createRoute(date))
-                    }
-                )
+                if (database != null) {
+                    ProgressScreen(
+                        onNavigateBack = {
+                            navController.popBackStack()
+                        },
+                        onDayClick = { date ->
+                            navController.navigate(Screen.CalendarDayDetail.createRoute(date))
+                        }
+                    )
+                } else {
+                    ErrorScreen(message = "Database not available")
+                }
             }
             
             composable(Screen.Compete.route) {

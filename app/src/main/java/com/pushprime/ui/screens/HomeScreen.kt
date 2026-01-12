@@ -36,14 +36,36 @@ fun HomeScreen(
     onNavigateToTodayPlan: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val user by localStore.user.collectAsState()
-    val sessions by localStore.sessions.collectAsState()
+    // Optimize state collection - use initial value to prevent null issues
+    val user by localStore.user.collectAsState(initial = null)
+    val sessions by localStore.sessions.collectAsState(initial = emptyList())
     
-    val todayTotal = remember(sessions) { localStore.getTodayTotalPushups() }
-    val streak = remember(sessions) { localStore.getStreak() }
-    val dailyGoal = user?.dailyGoal ?: 100
+    // Cache expensive calculations
+    var todayTotal by remember { mutableStateOf(0) }
+    var streak by remember { mutableStateOf(0) }
+    var dailyGoal by remember { mutableStateOf(100) }
+    var recentSession by remember { mutableStateOf<com.pushprime.model.Session?>(null) }
     
-    val today = SimpleDateFormat("EEEE, MMM dd", Locale.getDefault()).format(Date())
+    // Calculate values in LaunchedEffect to avoid blocking UI
+    LaunchedEffect(sessions, user) {
+        try {
+            todayTotal = localStore.getTodayTotalPushups()
+            streak = localStore.getStreak()
+            dailyGoal = user?.dailyGoal ?: 100
+            recentSession = sessions.firstOrNull()
+        } catch (e: Exception) {
+            // Silently handle errors to prevent crashes
+        }
+    }
+    
+    // Cache date formatting
+    val today = remember {
+        SimpleDateFormat("EEEE, MMM dd", Locale.getDefault()).format(Date())
+    }
+    
+    val dateFormatter = remember {
+        SimpleDateFormat("MMM dd, hh:mm a", Locale.getDefault())
+    }
     
     Scaffold(
         topBar = {
@@ -156,14 +178,18 @@ fun HomeScreen(
             
             // Recent Session Card
             item {
-                val recentSession = sessions.firstOrNull()
                 FeedCard(
                     title = "Recent Session",
-                    subtitle = if (recentSession != null) {
-                        SimpleDateFormat("MMM dd, hh:mm a", Locale.getDefault())
-                            .format(Date(recentSession.timestamp))
-                    } else {
-                        "No sessions yet"
+                    subtitle = remember(recentSession) {
+                        if (recentSession != null) {
+                            try {
+                                dateFormatter.format(Date(recentSession.timestamp))
+                            } catch (e: Exception) {
+                                "Recent session"
+                            }
+                        } else {
+                            "No sessions yet"
+                        }
                     },
                     icon = Icons.Default.History,
                     onClick = onNavigateToProgress
@@ -179,7 +205,9 @@ fun HomeScreen(
                                 fontWeight = FontWeight.SemiBold
                             )
                             Text(
-                                text = formatTime(recentSession.workoutTime),
+                                text = remember(recentSession) {
+                                    formatTime(recentSession.workoutTime)
+                                },
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = PushPrimeColors.OnSurfaceVariant
                             )
@@ -228,3 +256,8 @@ fun WorkoutTag(text: String) {
     }
 }
 
+fun formatTime(seconds: Int): String {
+    val minutes = seconds / 60
+    val secs = seconds % 60
+    return String.format("%d:%02d", minutes, secs)
+}

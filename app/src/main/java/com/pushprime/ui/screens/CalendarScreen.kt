@@ -26,11 +26,15 @@ import java.util.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CalendarScreen(
-    sessionDao: SessionDao,
+    sessionDao: SessionDao?,
     onDayClick: (String) -> Unit,
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    if (sessionDao == null) {
+        ErrorScreen(message = "Database not available")
+        return
+    }
     val calendar = remember { Calendar.getInstance() }
     val currentMonth = remember { calendar.get(Calendar.MONTH) }
     val currentYear = remember { calendar.get(Calendar.YEAR) }
