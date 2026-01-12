@@ -11,15 +11,24 @@ import kotlinx.coroutines.tasks.await
  * Manages Firebase Firestore operations for global leaderboard
  * Collection: "user_sessions"
  * Fields: pushups (int), workoutTime (int), timestamp (auto), username (string)
+ * MVP: Safe initialization - returns empty results if Firebase not configured
  */
 class FirebaseHelper {
-    private val db = FirebaseFirestore.getInstance()
+    private val db: FirebaseFirestore? = try {
+        FirebaseFirestore.getInstance()
+    } catch (e: Exception) {
+        null // Firebase not configured - work in offline mode
+    }
     private val collectionName = "user_sessions"
+    val isAvailable: Boolean get() = db != null
     
     /**
      * Save session to Firebase
      */
     suspend fun saveSession(session: Session): Result<Unit> {
+        if (db == null) {
+            return Result.failure(Exception("Firebase not configured"))
+        }
         return try {
             val data = hashMapOf(
                 "username" to session.username,
@@ -44,6 +53,9 @@ class FirebaseHelper {
      * Get global leaderboard (top N entries)
      */
     suspend fun getGlobalLeaderboard(limit: Int = 100): List<LeaderboardEntry> {
+        if (db == null) {
+            return emptyList() // Firebase not available - return empty
+        }
         return try {
             val snapshot = db.collection(collectionName)
                 .orderBy("pushups", Query.Direction.DESCENDING)
@@ -72,6 +84,9 @@ class FirebaseHelper {
      * Get user's best session
      */
     suspend fun getUserBestSession(username: String): LeaderboardEntry? {
+        if (db == null) {
+            return null // Firebase not available
+        }
         return try {
             val snapshot = db.collection(collectionName)
                 .whereEqualTo("username", username)

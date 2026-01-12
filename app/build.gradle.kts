@@ -20,6 +20,13 @@ android {
             useSupportLibrary = true
         }
     }
+    
+    // Chrome OS / Large Screen Support
+    splits {
+        abi {
+            isEnable = false // Keep single APK for easier Chrome OS distribution
+        }
+    }
 
     buildTypes {
         release {
@@ -36,12 +43,13 @@ android {
     }
     kotlinOptions {
         jvmTarget = "17"
+        freeCompilerArgs += "-opt-in=androidx.compose.material3.ExperimentalMaterial3Api"
     }
     buildFeatures {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.4"
+        kotlinCompilerExtensionVersion = "1.5.8"
     }
     packaging {
         resources {
@@ -69,6 +77,7 @@ dependencies {
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
+    implementation("androidx.compose.material:material-icons-extended")
     
     // Navigation
     implementation("androidx.navigation:navigation-compose:2.7.5")

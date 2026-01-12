@@ -10,6 +10,7 @@ import com.pushprime.data.LocalStore
 import com.pushprime.network.VoipService
 import com.pushprime.navigation.Screen
 import com.pushprime.ui.screens.*
+import com.pushprime.ui.screens.ErrorScreen
 
 /**
  * Main app composable with navigation
@@ -19,10 +20,37 @@ fun PushPrimeApp() {
     val navController = rememberNavController()
     val context = androidx.compose.ui.platform.LocalContext.current
     
-    // Initialize data stores
-    val localStore = remember { LocalStore(context) }
-    val firebaseHelper = remember { FirebaseHelper() }
-    val voipService = remember { VoipService(context) }
+    // Initialize data stores - safe initialization for MVP
+    val localStore = remember { 
+        try {
+            LocalStore(context)
+        } catch (e: Exception) {
+            // Fallback if LocalStore fails
+            null
+        }
+    }
+    
+    // Firebase and Voip are optional - app works without them
+    val firebaseHelper = remember { 
+        try {
+            FirebaseHelper()
+        } catch (e: Exception) {
+            null // Firebase not configured - app works in offline mode
+        }
+    }
+    val voipService = remember { 
+        try {
+            VoipService(context)
+        } catch (e: Exception) {
+            null // Voip not configured - group sessions disabled
+        }
+    }
+    
+    // Show error if LocalStore failed (critical component)
+    if (localStore == null) {
+        ErrorScreen(message = "Failed to initialize app storage")
+        return
+    }
     
     NavHost(
         navController = navController,
@@ -58,7 +86,7 @@ fun PushPrimeApp() {
         composable(Screen.Compete.route) {
             CompeteScreen(
                 localStore = localStore,
-                firebaseHelper = firebaseHelper,
+                firebaseHelper = firebaseHelper, // Can be null - handled in screen
                 onNavigateBack = {
                     navController.popBackStack()
                 }
@@ -66,12 +94,16 @@ fun PushPrimeApp() {
         }
         
         composable(Screen.GroupSession.route) {
-            GroupSessionScreen(
-                voipService = voipService,
-                onNavigateBack = {
-                    navController.popBackStack()
-                }
-            )
+            if (voipService != null) {
+                GroupSessionScreen(
+                    voipService = voipService,
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    }
+                )
+            } else {
+                ErrorScreen(message = "Group sessions require Twilio configuration")
+            }
         }
         
         composable(Screen.Motivation.route) {

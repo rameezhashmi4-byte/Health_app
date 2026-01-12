@@ -15,7 +15,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.pushprime.network.NewsService
 import com.pushprime.network.QuoteService
-import com.pushprime.ui.components.NewsCard
 import com.pushprime.ui.components.QuoteCard
 import com.pushprime.ui.theme.PushPrimeColors
 import kotlinx.coroutines.launch

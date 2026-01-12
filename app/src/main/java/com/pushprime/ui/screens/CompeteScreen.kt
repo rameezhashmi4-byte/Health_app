@@ -28,7 +28,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun CompeteScreen(
     localStore: LocalStore,
-    firebaseHelper: FirebaseHelper,
+    firebaseHelper: FirebaseHelper?,
     onNavigateBack: () -> Unit
 ) {
     var showLocal by remember { mutableStateOf(true) }
@@ -41,10 +41,15 @@ fun CompeteScreen(
         if (showLocal) {
             localLeaderboard = localStore.getLocalLeaderboard()
         } else {
-            isLoading = true
-            coroutineScope.launch {
-                globalLeaderboard = firebaseHelper.getGlobalLeaderboard(limit = 100)
-                isLoading = false
+            if (firebaseHelper?.isAvailable == true) {
+                isLoading = true
+                coroutineScope.launch {
+                    globalLeaderboard = firebaseHelper.getGlobalLeaderboard(limit = 100)
+                    isLoading = false
+                }
+            } else {
+                // Firebase not available - show message
+                globalLeaderboard = emptyList()
             }
         }
     }
@@ -88,10 +93,15 @@ fun CompeteScreen(
             )
             FilterChip(
                 selected = !showLocal,
-                onClick = { showLocal = false },
+                onClick = { 
+                    if (firebaseHelper?.isAvailable == true) {
+                        showLocal = false
+                    }
+                },
                 label = { Text("Global") },
                 modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(20.dp)
+                shape = RoundedCornerShape(20.dp),
+                enabled = firebaseHelper?.isAvailable == true
             )
         }
         
@@ -106,7 +116,36 @@ fun CompeteScreen(
         } else {
             val leaderboard = if (showLocal) localLeaderboard else globalLeaderboard
             
-            if (leaderboard.isEmpty()) {
+            // Show message if Firebase not available and trying to view global
+            if (!showLocal && firebaseHelper?.isAvailable != true) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.padding(20.dp)
+                    ) {
+                        Text(
+                            text = "Global Leaderboard",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = PushPrimeColors.OnSurface
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = "Firebase not configured",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = PushPrimeColors.OnSurfaceVariant
+                        )
+                        Text(
+                            text = "Global leaderboard requires Firebase setup",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = PushPrimeColors.OnSurfaceVariant
+                        )
+                    }
+                }
+            } else if (leaderboard.isEmpty()) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
