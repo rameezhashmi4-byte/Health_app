@@ -1,6 +1,12 @@
 package com.pushprime.navigation
 
 sealed class Screen(val route: String) {
+    // Auth flow
+    object Splash : Screen("splash")
+    object Onboarding : Screen("onboarding")
+    object Auth : Screen("auth")
+    object Account : Screen("account")
+
     // Main Bottom Nav Tabs
     object Home : Screen("home")
     object Workout : Screen("workout")

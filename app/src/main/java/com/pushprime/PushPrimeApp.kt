@@ -1,9 +1,7 @@
 package com.pushprime
 
-import android.content.Context
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
-import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -17,11 +15,11 @@ import com.pushprime.data.FirebaseHelper
 import com.pushprime.data.LocalStore
 import com.pushprime.network.VoipService
 import com.pushprime.navigation.Screen
+import com.pushprime.auth.AuthViewModel
+import com.pushprime.auth.AuthViewModelFactory
 import com.pushprime.ui.components.BottomNavigationBar
 import com.pushprime.ui.screens.*
 import com.pushprime.ui.screens.ErrorScreen
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
 /**
  * Main app composable with navigation
@@ -82,10 +80,20 @@ fun PushPrimeApp() {
         ErrorScreen(message = "Failed to initialize app storage")
         return
     }
+
+    val authViewModel: AuthViewModel = androidx.lifecycle.viewmodel.compose.viewModel(
+        factory = remember(localStore) {
+            AuthViewModelFactory(context.applicationContext, localStore)
+        }
+    )
+
+    val isLoggedIn by authViewModel.isLoggedIn.collectAsState()
+    val isAuthReady by authViewModel.isAuthReady.collectAsState()
+    val onboardingCompleted by localStore.onboardingCompleted.collectAsState()
     
     // Determine if we should show bottom nav (only on main tabs)
     // Use LaunchedEffect to ensure it updates reactively
-    var showBottomNav by remember { mutableStateOf(true) }
+    var showBottomNav by remember { mutableStateOf(false) }
     
     LaunchedEffect(currentRoute) {
         val mainTabs = listOf(
@@ -154,8 +162,49 @@ fun PushPrimeApp() {
     ) { paddingValues ->
         NavHost(
             navController = navController,
-            startDestination = Screen.Home.route
+            startDestination = Screen.Splash.route
         ) {
+            composable(Screen.Splash.route) {
+                SplashScreen()
+                LaunchedEffect(isAuthReady, isLoggedIn, onboardingCompleted) {
+                    if (isAuthReady) {
+                        val target = when {
+                            !onboardingCompleted -> Screen.Onboarding.route
+                            isLoggedIn -> Screen.Home.route
+                            else -> Screen.Auth.route
+                        }
+                        navController.navigate(target) {
+                            popUpTo(Screen.Splash.route) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    }
+                }
+            }
+
+            composable(Screen.Onboarding.route) {
+                OnboardingScreen(
+                    onGetStarted = {
+                        localStore.setOnboardingCompleted(true)
+                        navController.navigate(Screen.Auth.route) {
+                            popUpTo(Screen.Onboarding.route) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    }
+                )
+            }
+
+            composable(Screen.Auth.route) {
+                AuthScreen(
+                    authViewModel = authViewModel,
+                    onLoggedIn = {
+                        navController.navigate(Screen.Home.route) {
+                            popUpTo(Screen.Auth.route) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    }
+                )
+            }
+
             // ========== MAIN BOTTOM NAV SCREENS ==========
             
             composable(Screen.Home.route) {
@@ -237,6 +286,9 @@ fun PushPrimeApp() {
                     onNavigateToNotificationSettings = {
                         navController.navigate(Screen.NotificationSettings.route)
                     },
+                    onNavigateToAccount = {
+                        navController.navigate(Screen.Account.route)
+                    },
                     onNavigateBack = {} // Main tab - no back needed
                 )
             }
@@ -259,6 +311,7 @@ fun PushPrimeApp() {
                     WorkoutPlayerScreen(
                         sessionId = sessionId,
                         localStore = localStore,
+                        currentUserId = authViewModel.currentUser?.uid,
                         spotifyHelper = spotifyHelper,
                         onNavigateBack = {
                             navController.popBackStack()
@@ -437,6 +490,24 @@ fun PushPrimeApp() {
             
             composable(Screen.NotificationSettings.route) {
                 NotificationSettingsScreen(
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    }
+                )
+            }
+
+            composable(Screen.Account.route) {
+                AccountScreen(
+                    user = authViewModel.currentUser,
+                    onLogout = {
+                        authViewModel.logout()
+                        navController.navigate(Screen.Auth.route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                inclusive = true
+                            }
+                            launchSingleTop = true
+                        }
+                    },
                     onNavigateBack = {
                         navController.popBackStack()
                     }

@@ -3,6 +3,7 @@ package com.pushprime.ui.theme
 import android.app.Activity
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
@@ -43,19 +44,47 @@ private val PushPrimeLightColorScheme = lightColorScheme(
     outlineVariant = PushPrimeColors.OutlineVariant
 )
 
+private val PushPrimeDarkColorScheme = darkColorScheme(
+    primary = PushPrimeColors.DarkPrimary,
+    onPrimary = PushPrimeColors.DarkBackground,
+    primaryContainer = PushPrimeColors.PrimaryVariant,
+    onPrimaryContainer = PushPrimeColors.DarkOnBackground,
+
+    secondary = PushPrimeColors.DarkSecondary,
+    onSecondary = PushPrimeColors.DarkBackground,
+    secondaryContainer = PushPrimeColors.DarkSurfaceVariant,
+    onSecondaryContainer = PushPrimeColors.DarkOnSurface,
+
+    background = PushPrimeColors.DarkBackground,
+    onBackground = PushPrimeColors.DarkOnBackground,
+
+    surface = PushPrimeColors.DarkSurface,
+    onSurface = PushPrimeColors.DarkOnSurface,
+    surfaceVariant = PushPrimeColors.DarkSurfaceVariant,
+    onSurfaceVariant = PushPrimeColors.DarkOnSurfaceVariant,
+
+    error = PushPrimeColors.Error,
+    onError = Color(0xFFFFFFFF),
+    errorContainer = PushPrimeColors.Error.copy(alpha = 0.2f),
+    onErrorContainer = PushPrimeColors.DarkOnSurface,
+
+    outline = PushPrimeColors.OutlineVariant,
+    outlineVariant = PushPrimeColors.OutlineVariant
+)
+
 @Composable
 fun PushPrimeTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit
 ) {
-    val colorScheme = PushPrimeLightColorScheme
+    val colorScheme = if (darkTheme) PushPrimeDarkColorScheme else PushPrimeLightColorScheme
     
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
             window.statusBarColor = colorScheme.surface.toArgb()
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = true
+            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
         }
     }
 

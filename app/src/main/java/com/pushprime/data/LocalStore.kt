@@ -25,10 +25,14 @@ class LocalStore(private val context: Context) {
     
     private val _user = MutableStateFlow<User?>(null)
     val user: StateFlow<User?> = _user.asStateFlow()
+
+    private val _onboardingCompleted = MutableStateFlow(false)
+    val onboardingCompleted: StateFlow<Boolean> = _onboardingCompleted.asStateFlow()
     
     init {
         loadSessions()
         loadUser()
+        loadOnboardingState()
     }
     
     // User data
@@ -61,6 +65,67 @@ class LocalStore(private val context: Context) {
                 country = prefs.getString("country", "US") ?: "US"
             )
         }
+    }
+
+    // Onboarding
+    private fun loadOnboardingState() {
+        _onboardingCompleted.value = prefs.getBoolean("onboarding_completed", false)
+    }
+
+    fun setOnboardingCompleted(completed: Boolean) {
+        _onboardingCompleted.value = completed
+        prefs.edit().putBoolean("onboarding_completed", completed).apply()
+    }
+
+    // Auth session tracking
+    fun saveLoginSessionInfo(
+        userId: String,
+        loginTimestamp: Long,
+        deviceModel: String,
+        appVersion: String,
+        sessionId: String
+    ) {
+        prefs.edit().apply {
+            putString("last_login_user_id", userId)
+            putLong("last_login_timestamp", loginTimestamp)
+            putString("last_login_device_model", deviceModel)
+            putString("last_login_app_version", appVersion)
+            putString("current_session_id", sessionId)
+            putString("current_session_user_id", userId)
+            apply()
+        }
+    }
+
+    fun getCurrentSessionId(): String? = prefs.getString("current_session_id", null)
+
+    fun getCurrentSessionUserId(): String? = prefs.getString("current_session_user_id", null)
+
+    fun clearCurrentSession() {
+        prefs.edit().apply {
+            remove("current_session_id")
+            remove("current_session_user_id")
+            apply()
+        }
+    }
+
+    fun clearAuthSensitiveData() {
+        prefs.edit().apply {
+            remove("username")
+            remove("age")
+            remove("gender")
+            remove("fitnessLevel")
+            remove("predictedMaxPushups")
+            remove("dailyGoal")
+            remove("country")
+            remove("last_login_user_id")
+            remove("last_login_timestamp")
+            remove("last_login_device_model")
+            remove("last_login_app_version")
+            remove("current_session_id")
+            remove("current_session_user_id")
+            apply()
+        }
+        _user.value = null
     }
     
     // Sessions
