@@ -1,7 +1,7 @@
 # Build APK for Chrome OS Deployment
 # This script builds the app APK that can be installed on Chromebooks
 
-Write-Host "PushPrime Health App - Chrome OS Build Script" -ForegroundColor Cyan
+Write-Host "RAMBOOST Health App - Chrome OS Build Script" -ForegroundColor Cyan
 Write-Host "=============================================" -ForegroundColor Cyan
 Write-Host ""
 

@@ -1,4 +1,4 @@
-# PushPrime Health App - Documentation
+# RAMBOOST Health App - Documentation
 
 ## Quick Start
 - **Build APK**: Use Android Studio's Build > Build Bundle(s) / APK(s) > Build APK(s)

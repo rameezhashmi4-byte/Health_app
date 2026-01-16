@@ -1,4 +1,4 @@
-# PushPrime App
+# RAMBOOST App
 
 A modern Android fitness app built with Kotlin and Jetpack Compose. Track push-ups, get AI-powered coaching predictions, compete on leaderboards, join group workouts, and stay motivated with daily quotes and health news.
 
@@ -37,7 +37,7 @@ app/src/main/java/com/pushprime/
 │   │   ├── settings/     # NotificationSettingsScreen
 │   │   └── common/       # ErrorScreen
 │   ├── components/       # PushUpCounter, ProgressRing, LeaderboardCard, QuoteCard
-│   └── theme/           # PushPrime theme, colors, typography
+│   └── theme/           # RAMBOOST theme, colors, typography
 ├── data/                # LocalStore, FirebaseHelper
 ├── model/               # User, Session, LeaderboardEntry
 ├── network/             # NewsService, QuoteService, VoipService
@@ -65,8 +65,8 @@ app/src/main/java/com/pushprime/
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/YOUR_USERNAME/PushPrimeApp.git
-   cd PushPrimeApp
+   git clone https://github.com/YOUR_USERNAME/RAMBOOST.git
+   cd RAMBOOST
    ```
 
 2. **Set up Firebase**

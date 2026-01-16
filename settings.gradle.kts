@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "PushPrimeApp"
+rootProject.name = "RAMBOOST"
 include(":app")
