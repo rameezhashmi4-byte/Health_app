@@ -1,78 +1,108 @@
 package com.pushprime.ui.screens
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.pushprime.ui.components.FeedCard
-import com.pushprime.ui.components.StoryType
-import com.pushprime.ui.components.StoriesRow
 import com.pushprime.data.LocalStore
+import com.pushprime.data.SessionDao
+import com.pushprime.data.SpotifyHelper
+import com.pushprime.data.calculateStreak
+import com.pushprime.data.latestSession
+import com.pushprime.data.todaySessionDate
+import com.pushprime.data.totalRepsForDate
+import com.pushprime.model.SessionEntity
+import com.pushprime.ui.components.MiniMusicBar
+import com.pushprime.ui.components.ProgressRing
 import com.pushprime.ui.theme.PushPrimeColors
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
 
 /**
- * Home Screen (Feed)
- * Instagram-like feed with stories row and cards
+ * Today Screen
+ * Lean daily summary with core actions
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     localStore: LocalStore,
+    sessionDao: SessionDao?,
+    spotifyHelper: SpotifyHelper?,
     onNavigateToWorkout: () -> Unit,
     onNavigateToProgress: () -> Unit,
-    onNavigateToCompete: () -> Unit,
-    onNavigateToProfile: () -> Unit,
-    onNavigateToPhotoVault: () -> Unit,
-    onNavigateToSports: () -> Unit,
-    onNavigateToTodayPlan: () -> Unit,
+    onNavigateToNutrition: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // Optimize state collection - use initial value to prevent null issues
+    if (sessionDao == null) {
+        ErrorScreen(message = "Database not available")
+        return
+    }
+
     val user by localStore.user.collectAsState(initial = null)
-    val sessions by localStore.sessions.collectAsState(initial = emptyList())
-    
-    // Cache expensive calculations
-    var todayTotal by remember { mutableStateOf(0) }
-    var streak by remember { mutableStateOf(0) }
-    var dailyGoal by remember { mutableStateOf(100) }
-    var recentSession by remember { mutableStateOf<com.pushprime.model.Session?>(null) }
-    
-    // Calculate values in LaunchedEffect to avoid blocking UI
-    LaunchedEffect(sessions, user) {
-        try {
-            todayTotal = localStore.getTodayTotalPushups()
-            streak = localStore.getStreak()
-            dailyGoal = user?.dailyGoal ?: 100
-            recentSession = sessions.firstOrNull()
-        } catch (e: Exception) {
-            // Silently handle errors to prevent crashes
+    val sessions by sessionDao.getAllSessions().collectAsState(initial = emptyList())
+
+    val dailyGoal = user?.dailyGoal ?: 100
+    val todayTotal = totalRepsForDate(sessions, todaySessionDate())
+    val streak = calculateStreak(sessions)
+    val lastSession = latestSession(sessions)
+
+    val recommendation = remember(todayTotal, dailyGoal, streak) {
+        when {
+            todayTotal == 0 -> Recommendation(
+                title = "Starter Set",
+                subtitle = "5 min • 3 rounds of 10 reps"
+            )
+            todayTotal < dailyGoal / 2 -> Recommendation(
+                title = "Momentum Builder",
+                subtitle = "8 min • Add 20 reps"
+            )
+            streak >= 3 -> Recommendation(
+                title = "Streak Strength",
+                subtitle = "10 min • Push pace +5 reps"
+            )
+            else -> Recommendation(
+                title = "Finish Strong",
+                subtitle = "6 min • Close the gap"
+            )
         }
     }
-    
-    // Cache date formatting
-    val today = remember {
-        SimpleDateFormat("EEEE, MMM dd", Locale.getDefault()).format(Date())
-    }
-    
-    val dateFormatter = remember {
-        SimpleDateFormat("MMM dd, hh:mm a", Locale.getDefault())
-    }
-    
+
+    val isSpotifyConnected = spotifyHelper?.isConnected?.collectAsState(initial = false)?.value ?: false
+    val currentTrack = spotifyHelper?.currentTrack?.collectAsState(initial = null)?.value
+    val isPlaying = spotifyHelper?.isPlaying?.collectAsState(initial = false)?.value ?: false
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
                     Text(
-                        text = "PushPrime",
+                        text = "Today",
                         fontWeight = FontWeight.Bold
                     )
                 },
@@ -87,168 +117,210 @@ fun HomeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues),
-            contentPadding = PaddingValues(vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Stories Row
             item {
-                StoriesRow(
-                    onStoryClick = { storyType ->
-                        when (storyType) {
-                            StoryType.QUICK_START -> onNavigateToWorkout()
-                            StoryType.TODAY_PLAN -> onNavigateToTodayPlan()
-                            StoryType.SPORTS -> onNavigateToSports()
-                            StoryType.PROGRESS -> onNavigateToProgress()
-                            StoryType.BEFORE_AFTER -> onNavigateToPhotoVault()
-                        }
-                    }
-                )
-            }
-            
-            // Today's Goal Card
-            item {
-                FeedCard(
-                    title = "Today's Goal",
-                    subtitle = today,
-                    icon = Icons.Default.TrackChanges,
-                    onClick = onNavigateToProgress
+                Card(
+                    onClick = onNavigateToProgress,
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = PushPrimeColors.Surface)
                 ) {
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Progress",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = "$todayTotal of $dailyGoal reps",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = PushPrimeColors.OnSurfaceVariant
+                            )
+                        }
+                        ProgressRing(
+                            current = todayTotal,
+                            goal = dailyGoal
+                        )
+                    }
+                }
+            }
+
+            item {
+                Card(
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = PushPrimeColors.Surface)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column {
                             Text(
-                                text = "$todayTotal / $dailyGoal",
-                                style = MaterialTheme.typography.headlineMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = PushPrimeColors.Primary
+                                text = "Streak",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = "push-ups today",
+                                text = "$streak days",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = PushPrimeColors.OnSurfaceVariant
                             )
                         }
-                        CircularProgressIndicator(
-                            progress = (todayTotal.toFloat() / dailyGoal).coerceIn(0f, 1f),
-                            modifier = Modifier.size(48.dp),
-                            color = PushPrimeColors.Primary
+                        Text(
+                            text = "🔥",
+                            style = MaterialTheme.typography.headlineSmall
                         )
                     }
                 }
             }
-            
-            // Streak Card
+
             item {
-                FeedCard(
-                    title = "🔥 Streak",
-                    subtitle = "Keep it going!",
-                    emoji = "🔥",
-                    onClick = onNavigateToProgress
+                Card(
+                    onClick = onNavigateToWorkout,
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = PushPrimeColors.Surface)
                 ) {
-                    Text(
-                        text = "$streak days",
-                        style = MaterialTheme.typography.headlineLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = PushPrimeColors.Warning
-                    )
-                }
-            }
-            
-            // Suggested Workout Card
-            item {
-                FeedCard(
-                    title = "Suggested Workout",
-                    subtitle = "Leg Day + Football conditioning (20 min)",
-                    icon = Icons.Default.FitnessCenter,
-                    onClick = onNavigateToWorkout
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        WorkoutTag("Legs")
-                        WorkoutTag("Cardio")
-                        WorkoutTag("20 min")
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "Recommended workout",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Text(
+                                    text = "${recommendation.title} • ${recommendation.subtitle}",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = PushPrimeColors.OnSurfaceVariant
+                                )
+                            }
+                            Button(onClick = onNavigateToWorkout) {
+                                androidx.compose.material3.Icon(
+                                    imageVector = Icons.Default.PlayArrow,
+                                    contentDescription = "Start"
+                                )
+                            }
+                        }
                     }
                 }
             }
-            
-            // Recent Session Card
+
             item {
-                val currentSession = recentSession
-                FeedCard(
-                    title = "Recent Session",
-                    subtitle = remember(currentSession) {
-                        currentSession?.let {
-                            try {
-                                dateFormatter.format(Date(it.timestamp))
-                            } catch (e: Exception) {
-                                "Recent session"
-                            }
-                        } ?: "No sessions yet"
-                    },
-                    icon = Icons.Default.History,
-                    onClick = onNavigateToProgress
+                Card(
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = PushPrimeColors.Surface)
                 ) {
-                    currentSession?.let { session ->
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(
-                                text = "${session.pushups} push-ups",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            Text(
-                                text = formatTime(session.workoutTime),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = PushPrimeColors.OnSurfaceVariant
-                            )
-                        }
-                    } ?: run {
+                    Column(modifier = Modifier.padding(16.dp)) {
                         Text(
-                            text = "Start your first workout!",
+                            text = "Last session",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = formatLastSession(lastSession),
                             style = MaterialTheme.typography.bodyMedium,
                             color = PushPrimeColors.OnSurfaceVariant
                         )
                     }
                 }
             }
-            
-            // Music Status Card (if Spotify connected)
+
             item {
-                FeedCard(
-                    title = "Music",
-                    subtitle = "Not connected",
-                    icon = Icons.Default.MusicNote,
-                    onClick = onNavigateToProfile
+                Card(
+                    onClick = onNavigateToNutrition,
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = PushPrimeColors.Surface)
                 ) {
-                    Text(
-                        text = "Connect Spotify to play music during workouts",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = PushPrimeColors.OnSurfaceVariant
-                    )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = "Nutrition",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "Daily targets & meal plans",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = PushPrimeColors.OnSurfaceVariant
+                            )
+                        }
+                        Text(
+                            text = "🥗",
+                            style = MaterialTheme.typography.headlineSmall
+                        )
+                    }
                 }
+            }
+
+            item {
+                MiniMusicBar(
+                    isConnected = isSpotifyConnected,
+                    trackName = currentTrack?.name,
+                    artistName = currentTrack?.artist?.name,
+                    isPlaying = isPlaying,
+                    onConnect = { spotifyHelper?.connect() },
+                    onPlayPause = {
+                        if (isPlaying) spotifyHelper?.pause() else spotifyHelper?.resume()
+                    },
+                    onNext = { spotifyHelper?.skipNext() },
+                    onPrevious = { spotifyHelper?.skipPrevious() }
+                )
             }
         }
     }
 }
 
-@Composable
-fun WorkoutTag(text: String) {
-    Surface(
-        shape = MaterialTheme.shapes.small,
-        color = PushPrimeColors.Primary.copy(alpha = 0.1f)
-    ) {
-        Text(
-            text = text,
-            style = MaterialTheme.typography.labelSmall,
-            color = PushPrimeColors.Primary,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-        )
+private data class Recommendation(
+    val title: String,
+    val subtitle: String
+)
+
+private fun formatLastSession(session: SessionEntity?): String {
+    if (session == null) return "No sessions yet"
+    val formatter = SimpleDateFormat("MMM dd, h:mm a", Locale.getDefault())
+    val startTime = formatter.format(Date(session.startTime))
+    val durationSeconds = session.totalSeconds ?: session.getDurationSeconds()
+    val detailParts = mutableListOf<String>()
+    if ((session.totalReps ?: 0) > 0) {
+        detailParts.add("${session.totalReps} reps")
+    }
+    if (durationSeconds > 0) {
+        detailParts.add(formatDuration(durationSeconds))
+    }
+    val details = if (detailParts.isEmpty()) "Logged activity" else detailParts.joinToString(" • ")
+    return "$startTime • $details"
+}
+
+private fun formatDuration(seconds: Int): String {
+    val hours = seconds / 3600
+    val minutes = (seconds % 3600) / 60
+    return if (hours > 0) {
+        String.format("%dh %dm", hours, minutes)
+    } else {
+        String.format("%dm", minutes)
     }
 }

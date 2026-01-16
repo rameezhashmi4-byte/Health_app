@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Launcher icon background color (mint green) -->
-    <color name="ic_launcher_background">#00D4AA</color>
+    <!-- Launcher icon background color -->
+    <color name="ic_launcher_background">#000000</color>
 </resources>

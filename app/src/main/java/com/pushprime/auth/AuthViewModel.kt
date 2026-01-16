@@ -19,10 +19,15 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.util.UUID
 
-class AuthViewModel(
-    private val appContext: Context,
+import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
+import javax.inject.Inject
+
+@HiltViewModel
+class AuthViewModel @Inject constructor(
+    @ApplicationContext private val appContext: Context,
     private val localStore: LocalStore,
-    private val authRepository: AuthRepository = AuthRepository()
+    private val authRepository: AuthRepository
 ) : ViewModel() {
     private val firestore: FirebaseFirestore? = try {
         FirebaseFirestore.getInstance()
@@ -272,18 +277,5 @@ class AuthViewModel(
         } catch (_: PackageManager.NameNotFoundException) {
             "unknown"
         }
-    }
-}
-
-class AuthViewModelFactory(
-    private val appContext: Context,
-    private val localStore: LocalStore
-) : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(AuthViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return AuthViewModel(appContext, localStore) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }

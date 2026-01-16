@@ -9,19 +9,15 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import org.json.JSONArray
 import org.json.JSONObject
-import java.text.SimpleDateFormat
-import java.util.*
 
 /**
  * Local data storage
- * Uses SharedPreferences for simple data and JSON for leaderboard
+ * Uses SharedPreferences for settings and lightweight metadata.
+ * Workout sessions are stored in Room.
  */
 class LocalStore(private val context: Context) {
     private val prefs: SharedPreferences = 
         context.getSharedPreferences("PushPrimePrefs", Context.MODE_PRIVATE)
-    
-    private val _sessions = MutableStateFlow<List<Session>>(emptyList())
-    val sessions: StateFlow<List<Session>> = _sessions.asStateFlow()
     
     private val _user = MutableStateFlow<User?>(null)
     val user: StateFlow<User?> = _user.asStateFlow()
@@ -33,7 +29,6 @@ class LocalStore(private val context: Context) {
     val lastKnownLoggedIn: StateFlow<Boolean> = _lastKnownLoggedIn.asStateFlow()
     
     init {
-        loadSessions()
         loadUser()
         loadOnboardingState()
         loadLastKnownLoggedIn()
@@ -88,95 +83,6 @@ class LocalStore(private val context: Context) {
     fun setLastKnownLoggedIn(isLoggedIn: Boolean) {
         _lastKnownLoggedIn.value = isLoggedIn
         prefs.edit().putBoolean("last_known_logged_in", isLoggedIn).apply()
-    }
-    
-    // Sessions
-    fun saveSession(session: Session) {
-        val currentSessions = _sessions.value.toMutableList()
-        currentSessions.add(0, session)
-        _sessions.value = currentSessions
-        saveSessionsToPrefs()
-    }
-    
-    fun getTodaySessions(): List<Session> {
-        val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
-        return _sessions.value.filter { it.date == today }
-    }
-    
-    fun getTodayTotalPushups(): Int {
-        return getTodaySessions().sumOf { it.pushups }
-    }
-    
-    fun getTodayTotalTime(): Int {
-        return getTodaySessions().sumOf { it.workoutTime }
-    }
-    
-    fun getStreak(): Int {
-        val sessions = _sessions.value.sortedByDescending { it.timestamp }
-        if (sessions.isEmpty()) return 0
-        
-        var streak = 0
-        val calendar = Calendar.getInstance()
-        var currentDate = calendar.time
-        
-        for (session in sessions) {
-            val sessionDate = Date(session.timestamp)
-            val daysDiff = ((currentDate.time - sessionDate.time) / (1000 * 60 * 60 * 24)).toInt()
-            
-            if (daysDiff == streak) {
-                streak++
-                calendar.add(Calendar.DAY_OF_YEAR, -1)
-                currentDate = calendar.time
-            } else if (daysDiff > streak) {
-                break
-            }
-        }
-        
-        return streak
-    }
-    
-    private fun loadSessions() {
-        val sessionsJson = prefs.getString("sessions", "[]") ?: "[]"
-        try {
-            val jsonArray = JSONArray(sessionsJson)
-            val sessions = mutableListOf<Session>()
-            for (i in 0 until jsonArray.length()) {
-                val obj = jsonArray.getJSONObject(i)
-                sessions.add(
-                    Session(
-                        id = obj.getString("id"),
-                        username = obj.getString("username"),
-                        userId = obj.optString("userId", ""),
-                        pushups = obj.getInt("pushups"),
-                        workoutTime = obj.getInt("workoutTime"),
-                        timestamp = obj.getLong("timestamp"),
-                        country = obj.getString("country"),
-                        date = obj.getString("date")
-                    )
-                )
-            }
-            _sessions.value = sessions
-        } catch (e: Exception) {
-            _sessions.value = emptyList()
-        }
-    }
-    
-    private fun saveSessionsToPrefs() {
-        val jsonArray = JSONArray()
-        _sessions.value.forEach { session ->
-            val obj = JSONObject().apply {
-                put("id", session.id)
-                put("username", session.username)
-                put("userId", session.userId)
-                put("pushups", session.pushups)
-                put("workoutTime", session.workoutTime)
-                put("timestamp", session.timestamp)
-                put("country", session.country)
-                put("date", session.date)
-            }
-            jsonArray.put(obj)
-        }
-        prefs.edit().putString("sessions", jsonArray.toString()).apply()
     }
     
     // Leaderboard (local JSON)
@@ -350,6 +256,44 @@ class LocalStore(private val context: Context) {
             apply()
         }
         _user.value = null
+    }
+
+    // Achievements
+    fun saveUnlockedAchievement(achievementId: String) {
+        val unlocked = getUnlockedAchievements().toMutableSet()
+        unlocked.add(achievementId)
+        prefs.edit().putStringSet("unlocked_achievements", unlocked).apply()
+    }
+
+    fun getUnlockedAchievements(): Set<String> {
+        return prefs.getStringSet("unlocked_achievements", emptySet()) ?: emptySet()
+    }
+
+    // Nutrition settings
+    fun saveNutritionSettings(settings: com.pushprime.model.NutritionSettings) {
+        prefs.edit().apply {
+            putString("nutrition_goal", settings.goal.name)
+            putString("nutrition_region", settings.region)
+            putBoolean("nutrition_is_halal", settings.isHalal)
+            putBoolean("nutrition_is_veggie", settings.isVeggie)
+            putBoolean("nutrition_is_budget", settings.isBudget)
+            putBoolean("nutrition_restaurant_mode", settings.restaurantMode)
+            apply()
+        }
+    }
+
+    fun loadNutritionSettings(): com.pushprime.model.NutritionSettings {
+        return com.pushprime.model.NutritionSettings(
+            goal = com.pushprime.model.NutritionGoal.valueOf(
+                prefs.getString("nutrition_goal", com.pushprime.model.NutritionGoal.MAINTAIN.name) 
+                    ?: com.pushprime.model.NutritionGoal.MAINTAIN.name
+            ),
+            region = prefs.getString("nutrition_region", "Global") ?: "Global",
+            isHalal = prefs.getBoolean("nutrition_is_halal", false),
+            isVeggie = prefs.getBoolean("nutrition_is_veggie", false),
+            isBudget = prefs.getBoolean("nutrition_is_budget", false),
+            restaurantMode = prefs.getBoolean("nutrition_restaurant_mode", false)
+        )
     }
 }
 

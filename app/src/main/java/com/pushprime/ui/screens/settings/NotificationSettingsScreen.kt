@@ -1,7 +1,10 @@
 package com.pushprime.ui.screens
 
 import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -16,10 +19,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.core.app.ActivityCompat
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.isGranted
-import com.google.accompanist.permissions.rememberPermissionState
+import androidx.core.content.ContextCompat
 import com.pushprime.data.NotificationHelper
 import com.pushprime.ui.theme.PushPrimeColors
 import java.text.SimpleDateFormat
@@ -29,7 +29,7 @@ import java.util.*
  * Notification Settings Screen
  * Configure smart daily exercise reminders
  */
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationSettingsScreen(
     onNavigateBack: () -> Unit,
@@ -42,25 +42,27 @@ fun NotificationSettingsScreen(
     var selectedHour by remember { mutableStateOf(7) }
     var selectedMinute by remember { mutableStateOf(0) }
     
-    // Request notification permission
-    val notificationPermissionState = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        rememberPermissionState(Manifest.permission.POST_NOTIFICATIONS)
-    } else {
-        null
+    val needsNotificationPermission = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+    val isNotificationPermissionGranted = remember {
+        mutableStateOf(
+            !needsNotificationPermission || ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+        )
+    }
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        isNotificationPermissionGranted.value = granted
     }
     
     LaunchedEffect(notificationsEnabled) {
         if (notificationsEnabled) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                notificationPermissionState?.let { permissionState ->
-                    if (!permissionState.status.isGranted) {
-                        permissionState.launchPermissionRequest()
-                    }
-                }
+            if (needsNotificationPermission && !isNotificationPermissionGranted.value) {
+                permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
             }
-            // Schedule only if permission granted (or Android < 13)
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU || 
-                notificationPermissionState?.status?.isGranted == true) {
+            if (!needsNotificationPermission || isNotificationPermissionGranted.value) {
                 notificationHelper.scheduleDailyReminders()
             }
         } else {

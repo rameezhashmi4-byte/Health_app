@@ -1,105 +1,48 @@
 package com.pushprime
 
-import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
-import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.*
 import androidx.navigation.navArgument
-import com.google.accompanist.navigation.animation.AnimatedNavHost
-import com.google.accompanist.navigation.animation.composable
-import com.google.accompanist.navigation.animation.rememberAnimatedNavController
-import kotlinx.coroutines.launch
 import com.pushprime.auth.AuthViewModel
-import com.pushprime.auth.AuthViewModelFactory
-import com.pushprime.data.AppDatabase
-import com.pushprime.data.FirebaseHelper
-import com.pushprime.data.LocalStore
 import com.pushprime.navigation.Screen
-import com.pushprime.network.VoipService
 import com.pushprime.ui.components.BottomNavigationBar
 import com.pushprime.ui.screens.*
-import com.pushprime.ui.screens.ErrorScreen
+import com.pushprime.ui.screens.nutrition.NutritionScreen
+import com.pushprime.ui.screens.nutrition.NutritionViewModel
 
 /**
  * Main app composable with navigation
- * Modernized with bottom navigation and new screens
+ * Modernized with Hilt and standard Compose Navigation
  */
-@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun PushPrimeApp() {
-    val navController = rememberAnimatedNavController()
+    val navController = rememberNavController()
     val context = LocalContext.current
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
     
-    // Initialize data stores - safe initialization for MVP
-    val localStore = remember { 
-        try {
-            LocalStore(context)
-        } catch (e: Exception) {
-            null
-        }
-    }
+    val authViewModel: AuthViewModel = hiltViewModel()
     
-    // Firebase and Voip are optional - app works without them
-    val firebaseHelper = remember { 
-        try {
-            FirebaseHelper()
-        } catch (e: Exception) {
-            null
-        }
-    }
-    val voipService = remember { 
-        try {
-            VoipService(context)
-        } catch (e: Exception) {
-            null
-        }
-    }
+    // Use Hilt-provided singleton if possible, but keep fallback for safety
+    val localStore = remember { try { com.pushprime.di.DataModule.provideLocalStore(context) } catch (e: Exception) { null } }
+    val firebaseHelper = remember { try { com.pushprime.data.FirebaseHelper() } catch (e: Exception) { null } }
+    val database = remember { try { com.pushprime.data.AppDatabase.getDatabase(context) } catch (e: Exception) { null } }
+    val spotifyHelper = remember { try { com.pushprime.data.SpotifyHelper(context) } catch (e: Exception) { null } }
     
-    // Initialize database lazily (only when needed)
-    val database = remember { 
-        try {
-            AppDatabase.getDatabase(context)
-        } catch (e: Exception) {
-            null
-        }
-    }
-    
-    // Initialize Spotify Helper
-    val spotifyHelper = remember {
-        try {
-            com.pushprime.data.SpotifyHelper(context)
-        } catch (e: Exception) {
-            null
-        }
-    }
-    
-    // Show error if LocalStore failed (critical component)
     if (localStore == null) {
         ErrorScreen(message = "Failed to initialize app storage")
         return
     }
 
-    val authViewModel: AuthViewModel = viewModel(
-        factory = remember(localStore) {
-            AuthViewModelFactory(context.applicationContext, localStore)
-        }
-    )
-
     val isLoggedIn by authViewModel.isLoggedIn.collectAsState()
     val onboardingCompleted by localStore.onboardingCompleted.collectAsState()
     
-    // Determine if we should show bottom nav (only on main tabs)
-    // Use LaunchedEffect to ensure it updates reactively
     var showBottomNav by remember { mutableStateOf(false) }
     
     LaunchedEffect(currentRoute) {
@@ -107,7 +50,6 @@ fun PushPrimeApp() {
             Screen.Home.route,
             Screen.Workout.route,
             Screen.Progress.route,
-            Screen.Compete.route,
             Screen.Profile.route
         )
         showBottomNav = currentRoute in mainTabs && !currentRoute.orEmpty().contains("/")
@@ -119,47 +61,13 @@ fun PushPrimeApp() {
                 BottomNavigationBar(
                     currentRoute = currentRoute,
                     onNavigate = { route ->
-                        // Ensure navigation is always fluid - never block
-                        // Use LaunchedEffect to prevent blocking the UI thread
-                        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main).launch {
-                            try {
-                                // Always allow navigation between main tabs
-                                val mainTabs = listOf(
-                                    Screen.Home.route,
-                                    Screen.Workout.route,
-                                    Screen.Progress.route,
-                                    Screen.Compete.route,
-                                    Screen.Profile.route
-                                )
-                                
-                                // If navigating to a main tab, clear back stack to that tab
-                                if (route in mainTabs && currentRoute != route) {
-                                    navController.navigate(route) {
-                                        // Pop up to the start destination
-                                        popUpTo(navController.graph.findStartDestination().id) {
-                                            saveState = true
-                                            inclusive = false
-                                        }
-                                        launchSingleTop = true
-                                        restoreState = true
-                                    }
-                                } else if (route !in mainTabs) {
-                                    // For nested routes, just navigate normally
-                                    navController.navigate(route) {
-                                        launchSingleTop = true
-                                    }
+                        if (currentRoute != route) {
+                            navController.navigate(route) {
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    saveState = true
                                 }
-                            } catch (e: Exception) {
-                                // If navigation fails, try simple navigation
-                                try {
-                                    if (currentRoute != route) {
-                                        navController.navigate(route) {
-                                            launchSingleTop = true
-                                        }
-                                    }
-                                } catch (e2: Exception) {
-                                    // Silently handle navigation errors - don't crash
-                                }
+                                launchSingleTop = true
+                                restoreState = true
                             }
                         }
                     }
@@ -167,34 +75,12 @@ fun PushPrimeApp() {
             }
         }
     ) { paddingValues ->
-        AnimatedNavHost(
+        NavHost(
             navController = navController,
             startDestination = Screen.Splash.route,
-            enterTransition = {
-                fadeIn(animationSpec = tween(300)) + slideInHorizontally(
-                    animationSpec = tween(300),
-                    initialOffsetX = { it / 6 }
-                )
-            },
-            exitTransition = {
-                fadeOut(animationSpec = tween(300)) + slideOutHorizontally(
-                    animationSpec = tween(300),
-                    targetOffsetX = { -it / 6 }
-                )
-            },
-            popEnterTransition = {
-                fadeIn(animationSpec = tween(300)) + slideInHorizontally(
-                    animationSpec = tween(300),
-                    initialOffsetX = { -it / 6 }
-                )
-            },
-            popExitTransition = {
-                fadeOut(animationSpec = tween(300)) + slideOutHorizontally(
-                    animationSpec = tween(300),
-                    targetOffsetX = { it / 6 }
-                )
-            }
+            modifier = Modifier.padding(paddingValues)
         ) {
+            // ... rest of the file ...
             composable(Screen.Splash.route) {
                 var hasRouted by remember { mutableStateOf(false) }
                 SplashScreen()
@@ -208,7 +94,6 @@ fun PushPrimeApp() {
                     hasRouted = true
                     navController.navigate(target) {
                         popUpTo(Screen.Splash.route) { inclusive = true }
-                        launchSingleTop = true
                     }
                 }
             }
@@ -242,28 +127,16 @@ fun PushPrimeApp() {
             composable(Screen.Home.route) {
                 HomeScreen(
                     localStore = localStore,
+                    sessionDao = database?.sessionDao(),
+                    spotifyHelper = spotifyHelper,
                     onNavigateToWorkout = {
                         navController.navigate(Screen.Workout.route)
                     },
                     onNavigateToProgress = {
                         navController.navigate(Screen.Progress.route)
                     },
-                    onNavigateToCompete = {
-                        navController.navigate(Screen.Compete.route)
-                    },
-                    onNavigateToProfile = {
-                        navController.navigate(Screen.Profile.route)
-                    },
-                    onNavigateToPhotoVault = {
-                        navController.navigate(Screen.PhotoVault.route)
-                    },
-                    onNavigateToSports = {
-                        navController.navigate(Screen.SportsSelection.route)
-                    },
-                    onNavigateToTodayPlan = {
-                        navController.navigate(Screen.TodayPlan.route) {
-                            launchSingleTop = true
-                        }
+                    onNavigateToNutrition = {
+                        navController.navigate(Screen.Nutrition.route)
                     }
                 )
             }
@@ -306,14 +179,9 @@ fun PushPrimeApp() {
             composable(Screen.Profile.route) {
                 ProfileScreen(
                     localStore = localStore,
-                    onNavigateToCoaching = {
-                        navController.navigate(Screen.Coaching.route)
-                    },
+                    sessionDao = database?.sessionDao(),
                     onNavigateToPhotoVault = {
                         navController.navigate(Screen.PhotoVault.route)
-                    },
-                    onNavigateToSpotify = {
-                        navController.navigate(Screen.SpotifyLogin.route)
                     },
                     onNavigateToNotificationSettings = {
                         navController.navigate(Screen.NotificationSettings.route)
@@ -342,7 +210,6 @@ fun PushPrimeApp() {
                 if (localStore != null) {
                     WorkoutPlayerScreen(
                         sessionId = sessionId,
-                        localStore = localStore,
                         currentUserId = authViewModel.currentUser?.uid,
                         spotifyHelper = spotifyHelper,
                         onNavigateBack = {
@@ -442,36 +309,6 @@ fun PushPrimeApp() {
                 }
             }
             
-            composable(Screen.Coaching.route) {
-                CoachingScreen(
-                    localStore = localStore,
-                    onNavigateBack = {
-                        navController.popBackStack()
-                    }
-                )
-            }
-            
-            composable(Screen.GroupSession.route) {
-                if (voipService != null) {
-                    GroupSessionScreen(
-                        voipService = voipService,
-                        onNavigateBack = {
-                            navController.popBackStack()
-                        }
-                    )
-                } else {
-                    ErrorScreen(message = "Group sessions require Twilio configuration")
-                }
-            }
-            
-            composable(Screen.Motivation.route) {
-                MotivationScreen(
-                    onNavigateBack = {
-                        navController.popBackStack()
-                    }
-                )
-            }
-            
             composable(Screen.Metrics.route) {
                 MetricsScreen(
                     localStore = localStore,
@@ -493,29 +330,11 @@ fun PushPrimeApp() {
                     }
                 )
             }
-            
-            composable(Screen.SpotifyLogin.route) {
-                SpotifyLoginScreen(
+
+            composable(Screen.Nutrition.route) {
+                NutritionScreen(
                     onNavigateBack = {
                         navController.popBackStack()
-                    },
-                    onConnectClick = {
-                        spotifyHelper?.connect()
-                        navController.navigate(Screen.SpotifyBrowser.route) {
-                            popUpTo(Screen.SpotifyLogin.route) { inclusive = true }
-                        }
-                    }
-                )
-            }
-            
-            composable(Screen.SpotifyBrowser.route) {
-                SpotifyBrowserScreen(
-                    spotifyHelper = spotifyHelper,
-                    onNavigateBack = {
-                        navController.popBackStack()
-                    },
-                    onPlaylistSelected = { uri ->
-                        // Playlist selected - can navigate back or stay
                     }
                 )
             }

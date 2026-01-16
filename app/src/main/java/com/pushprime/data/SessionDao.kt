@@ -40,6 +40,21 @@ interface SessionDao {
     
     @Query("SELECT * FROM sessions WHERE endTime IS NULL LIMIT 1")
     suspend fun getActiveSession(): SessionEntity?
+
+    @Query("SELECT * FROM sessions WHERE isSynced = 0 ORDER BY startTime ASC LIMIT :limit")
+    suspend fun getUnsyncedSessions(limit: Int = 50): List<SessionEntity>
+
+    @Query("""
+        UPDATE sessions 
+        SET isSynced = :isSynced, lastSyncedAt = :lastSyncedAt, syncAttempts = :syncAttempts
+        WHERE id = :id
+    """)
+    suspend fun updateSyncState(
+        id: Long,
+        isSynced: Boolean,
+        lastSyncedAt: Long?,
+        syncAttempts: Int
+    )
     
     @Query("SELECT COUNT(*) FROM sessions WHERE date = :date")
     suspend fun getSessionCountForDate(date: String): Int

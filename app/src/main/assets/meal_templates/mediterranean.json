@@ -1,0 +1,75 @@
+{
+  "region": "Mediterranean",
+  "proteinOptions": [
+    "Chicken",
+    "Fish",
+    "Lentils",
+    "Chickpeas",
+    "Eggs",
+    "Feta"
+  ],
+  "carbOptions": [
+    "Whole grain pasta",
+    "Farro",
+    "Brown rice",
+    "Quinoa",
+    "Sourdough"
+  ],
+  "fatOptions": [
+    "Olive oil",
+    "Olives",
+    "Almonds",
+    "Pine nuts",
+    "Avocado"
+  ],
+  "commonMeals": [
+    {
+      "name": "Greek yogurt with honey and nuts",
+      "mealType": "BREAKFAST",
+      "portionGuidance": "3/4 cup yogurt + 1 tsp honey + 1 tbsp nuts"
+    },
+    {
+      "name": "Egg and spinach frittata",
+      "mealType": "BREAKFAST",
+      "portionGuidance": "2 eggs + 1 cup spinach + 1 tsp olive oil"
+    },
+    {
+      "name": "Mediterranean salad with chickpeas",
+      "mealType": "LUNCH",
+      "portionGuidance": "2 cups salad + 3/4 cup chickpeas + 1 tbsp olive oil"
+    },
+    {
+      "name": "Grilled fish with lemon and veg",
+      "mealType": "DINNER",
+      "portionGuidance": "1 palm fish + 2 cups veg + 1 tsp olive oil"
+    },
+    {
+      "name": "Hummus with carrots",
+      "mealType": "SNACK",
+      "portionGuidance": "1/3 cup hummus + sliced carrots"
+    }
+  ],
+  "restaurantMode": [
+    "Choose grilled fish or chicken with a vegetable side.",
+    "Ask for olive oil and lemon dressing on the side.",
+    "Swap fries for roasted veg or a side salad.",
+    "Pick tomato-based pasta instead of creamy sauces."
+  ],
+  "swapRules": [
+    {
+      "dish": "Fried calamari",
+      "swapWith": "Grilled fish with lemon",
+      "reason": "Lower fried fat while keeping seafood."
+    },
+    {
+      "dish": "Creamy alfredo pasta",
+      "swapWith": "Olive oil garlic pasta with veg",
+      "reason": "Lighter sauce and more vegetables."
+    },
+    {
+      "dish": "Large pita sandwich",
+      "swapWith": "Open-faced pita with extra salad",
+      "reason": "Smaller carb portion with more volume."
+    }
+  ]
+}

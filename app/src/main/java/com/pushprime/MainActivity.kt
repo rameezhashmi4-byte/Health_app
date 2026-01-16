@@ -12,9 +12,17 @@ import com.google.firebase.FirebaseApp
 import com.pushprime.data.NotificationHelper
 import com.pushprime.ui.theme.PushPrimeTheme
 
+import androidx.core.view.WindowCompat
+import dagger.hilt.android.AndroidEntryPoint
+
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // Make the app "slick" by enabling edge-to-edge
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        
         try {
             FirebaseApp.initializeApp(this)
         } catch (_: Exception) {

@@ -14,10 +14,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.pushprime.data.LocalStore
+import com.pushprime.data.SessionDao
+import com.pushprime.data.calculateStreak
+import com.pushprime.data.todaySessionDate
+import com.pushprime.data.totalDurationSeconds
+import com.pushprime.data.totalRepsForDate
 import com.pushprime.ui.components.FeedCard
 import com.pushprime.ui.theme.PushPrimeColors
-import java.text.SimpleDateFormat
-import java.util.*
 
 /**
  * Profile Screen
@@ -27,25 +30,31 @@ import java.util.*
 @Composable
 fun ProfileScreen(
     localStore: LocalStore,
-    onNavigateToCoaching: () -> Unit,
+    sessionDao: SessionDao?,
     onNavigateToPhotoVault: () -> Unit,
-    onNavigateToSpotify: () -> Unit,
     onNavigateToNotificationSettings: () -> Unit,
     onNavigateToAccount: () -> Unit,
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    if (sessionDao == null) {
+        ErrorScreen(message = "Database not available")
+        return
+    }
+
     val user by localStore.user.collectAsState(initial = null)
-    val sessions by localStore.sessions.collectAsState(initial = emptyList())
+    val sessions by sessionDao.getAllSessions().collectAsState(initial = emptyList())
     
     var streak by remember { mutableStateOf(0) }
     var totalSessions by remember { mutableStateOf(0) }
     var totalMinutes by remember { mutableStateOf(0) }
+    var todayTotal by remember { mutableStateOf(0) }
     
     LaunchedEffect(sessions) {
-        streak = localStore.getStreak()
+        streak = calculateStreak(sessions)
         totalSessions = sessions.size
-        totalMinutes = sessions.sumOf { it.workoutTime } / 60
+        totalMinutes = totalDurationSeconds(sessions) / 60
+        todayTotal = totalRepsForDate(sessions, todaySessionDate())
     }
     
     Scaffold(
@@ -123,13 +132,12 @@ fun ProfileScreen(
                 }
             }
             
-            // Quick Actions
+            // Insight
             item {
                 FeedCard(
-                    title = "Smart Coaching",
-                    subtitle = "Get personalized predictions",
-                    icon = Icons.Default.Psychology,
-                    onClick = onNavigateToCoaching
+                    title = "Insight",
+                    subtitle = buildInsight(streak, todayTotal, user?.dailyGoal ?: 100),
+                    icon = Icons.Default.TrendingUp
                 )
             }
             
@@ -149,15 +157,6 @@ fun ProfileScreen(
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(vertical = 8.dp)
-                )
-            }
-            
-            item {
-                PreferenceItem(
-                    title = "Music",
-                    subtitle = "Spotify integration",
-                    icon = Icons.Default.MusicNote,
-                    onClick = onNavigateToSpotify
                 )
             }
             
@@ -267,5 +266,14 @@ fun PreferenceItem(
                 modifier = Modifier.size(20.dp)
             )
         }
+    }
+}
+
+private fun buildInsight(streak: Int, todayTotal: Int, dailyGoal: Int): String {
+    return when {
+        streak >= 7 -> "Seven-day streak. Keep the rhythm strong."
+        todayTotal >= dailyGoal -> "Goal achieved today. Consider a light recovery set."
+        todayTotal > 0 -> "You're ${dailyGoal - todayTotal} reps from today's goal."
+        else -> "Start a quick session to build consistency."
     }
 }

@@ -24,7 +24,7 @@ import com.pushprime.model.SetEntity
         PhotoEntryEntity::class,
         CollageEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -45,10 +45,19 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "pushprime_database"
                 )
-                    .fallbackToDestructiveMigration() // For MVP - allows schema changes
+                    .addMigrations(MIGRATION_3_4)
+                    .fallbackToDestructiveMigration() // Keep safety net
                     .build()
                 INSTANCE = instance
                 instance
+            }
+        }
+
+        private val MIGRATION_3_4 = object : androidx.room.migration.Migration(3, 4) {
+            override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE sessions ADD COLUMN isSynced INTEGER NOT NULL DEFAULT 0")
+                database.execSQL("ALTER TABLE sessions ADD COLUMN lastSyncedAt INTEGER")
+                database.execSQL("ALTER TABLE sessions ADD COLUMN syncAttempts INTEGER NOT NULL DEFAULT 0")
             }
         }
     }

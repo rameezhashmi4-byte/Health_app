@@ -1,0 +1,85 @@
+{
+  "region": "UK",
+  "proteinOptions": [
+    "Chicken breast",
+    "Eggs",
+    "Salmon",
+    "Lean beef",
+    "Turkey",
+    "Cod",
+    "Tofu",
+    "Greek yogurt"
+  ],
+  "carbOptions": [
+    "Oats",
+    "Wholegrain bread",
+    "Potatoes",
+    "Brown rice",
+    "Barley",
+    "Wholewheat pasta"
+  ],
+  "fatOptions": [
+    "Olive oil",
+    "Rapeseed oil",
+    "Avocado",
+    "Walnuts",
+    "Cheddar (small)",
+    "Peanut butter"
+  ],
+  "commonMeals": [
+    {
+      "name": "Porridge with berries",
+      "mealType": "BREAKFAST",
+      "portionGuidance": "1/2 cup dry oats + 1 cup milk + 1/2 cup berries",
+      "description": "Add cinnamon or a small drizzle of honey."
+    },
+    {
+      "name": "Eggs on toast with tomatoes",
+      "mealType": "BREAKFAST",
+      "portionGuidance": "2 eggs + 1 slice wholegrain toast + 1/2 cup tomatoes"
+    },
+    {
+      "name": "Tuna jacket potato",
+      "mealType": "LUNCH",
+      "portionGuidance": "1 medium baked potato + 1 tin tuna + 1 tbsp yogurt"
+    },
+    {
+      "name": "Chicken and veg traybake",
+      "mealType": "DINNER",
+      "portionGuidance": "1 palm chicken + 2 cups mixed veg + 1 tsp olive oil"
+    },
+    {
+      "name": "Beef and barley stew",
+      "mealType": "DINNER",
+      "portionGuidance": "1 bowl stew + side greens"
+    },
+    {
+      "name": "Apple with peanut butter",
+      "mealType": "SNACK",
+      "portionGuidance": "1 apple + 1 tbsp peanut butter"
+    }
+  ],
+  "restaurantMode": [
+    "Choose grilled fish or chicken with seasonal veg.",
+    "Swap chips for a side salad or extra veg.",
+    "Ask for sauces on the side and add just a small amount.",
+    "Pick jacket potatoes over fried sides."
+  ],
+  "swapRules": [
+    {
+      "dish": "Fish and chips",
+      "swapWith": "Grilled fish + roasted potatoes",
+      "reason": "Cuts excess oil while keeping a classic pairing."
+    },
+    {
+      "dish": "Full English breakfast",
+      "swapWith": "Grilled eggs, beans, mushrooms, and tomato",
+      "reason": "Keeps protein and fiber with less saturated fat."
+    },
+    {
+      "dish": "Creamy pasta",
+      "swapWith": "Tomato-based wholewheat pasta",
+      "reason": "Lower fat and higher fiber."
+    }
+  ]
+}

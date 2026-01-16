@@ -1,173 +1,329 @@
 package com.pushprime.ui.screens
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.FastForward
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.SkipNext
+import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Divider
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.pushprime.data.AnalyticsHelper
 import com.pushprime.data.AppDatabase
-import com.pushprime.data.LocalStore
-import com.pushprime.data.SessionDao
 import com.pushprime.model.ActivityType
 import com.pushprime.model.Intensity
 import com.pushprime.model.SessionEntity
+import com.pushprime.ui.components.WorkoutMusicBar
 import com.pushprime.ui.theme.PushPrimeColors
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Locale
 
 /**
  * Workout Player Screen
- * REPS mode: Big counter with increment/undo
- * TIMER mode: Radial timer with pause/resume
- * Includes Spotify music player at bottom
+ * State machine: COUNTDOWN -> ACTIVE -> REST -> COMPLETE
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WorkoutPlayerScreen(
     sessionId: Long?,
-    localStore: LocalStore,
     currentUserId: String?,
     spotifyHelper: com.pushprime.data.SpotifyHelper?,
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val context = androidx.compose.ui.platform.LocalContext.current
-    val database = remember { 
+    val context = LocalContext.current
+    val database = remember {
         try {
             AppDatabase.getDatabase(context)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             null
         }
     }
     val sessionDao = remember(database) { database?.sessionDao() }
     val coroutineScope = rememberCoroutineScope()
-    
-    // Workout mode: REPS or TIMER
-    var workoutMode by remember { mutableStateOf<WorkoutMode>(WorkoutMode.REPS) }
-    
-    // REPS mode state
-    var repCount by remember { mutableStateOf(0) }
-    var repHistory by remember { mutableStateOf<List<Int>>(emptyList()) }
-    
-    // TIMER mode state
-    var timerSeconds by remember { mutableStateOf(0) }
-    var isTimerRunning by remember { mutableStateOf(false) }
-    var timerJob by remember { mutableStateOf<Job?>(null) }
-    
-    // Session state
+    val haptics = LocalHapticFeedback.current
+    val analyticsHelper = remember { AnalyticsHelper(context) }
+
+    val sessions by (sessionDao?.getAllSessions() ?: flowOf(emptyList()))
+        .collectAsState(initial = emptyList())
+
+    val workoutPlan = remember {
+        listOf(
+            WorkoutExercise(
+                name = "Push-ups",
+                targetReps = 18,
+                targetSeconds = 40,
+                restSeconds = 20,
+                cue = "Keep core tight"
+            ),
+            WorkoutExercise(
+                name = "Squats",
+                targetReps = 20,
+                targetSeconds = 45,
+                restSeconds = 20,
+                cue = "Drive through heels"
+            ),
+            WorkoutExercise(
+                name = "Plank",
+                targetReps = null,
+                targetSeconds = 35,
+                restSeconds = 20,
+                cue = "Flat back, steady breath"
+            ),
+            WorkoutExercise(
+                name = "Mountain Climbers",
+                targetReps = 24,
+                targetSeconds = 35,
+                restSeconds = 0,
+                cue = "Light on your feet"
+            )
+        )
+    }
+
+    var phase by remember { mutableStateOf(WorkoutPhase.COUNTDOWN) }
+    var exerciseIndex by remember { mutableStateOf(0) }
+    var countdownSeconds by remember { mutableStateOf(3) }
+    var activeSecondsRemaining by remember { mutableStateOf(workoutPlan.first().targetSeconds) }
+    var activeSecondsElapsed by remember { mutableStateOf(0) }
+    var restSecondsRemaining by remember { mutableStateOf(workoutPlan.first().restSeconds) }
+    var activeReps by remember { mutableStateOf(0) }
+    var totalReps by remember { mutableStateOf(0) }
+    var workoutElapsedSeconds by remember { mutableStateOf(0) }
+    var completedExercises by remember { mutableStateOf<List<CompletedExercise>>(emptyList()) }
+    var isPaused by remember { mutableStateOf(false) }
     var sessionStartTime by remember { mutableStateOf<Long?>(null) }
-    var isSessionActive by remember { mutableStateOf(false) }
-    
-    // Spotify state - use actual SpotifyHelper if available
-    val isSpotifyConnected = if (spotifyHelper != null) {
-        spotifyHelper.isConnected.collectAsState(initial = false).value
-    } else {
-        remember { mutableStateOf(false) }.value
+
+    val personalBest = remember(sessions) {
+        sessions.maxOfOrNull { it.totalReps ?: 0 } ?: 0
     }
-    
-    val spotifyCurrentTrack = if (spotifyHelper != null) {
-        spotifyHelper.currentTrack.collectAsState(initial = null).value
-    } else {
-        remember { mutableStateOf<com.pushprime.data.Track?>(null) }.value
+    val isPersonalBest = totalReps > 0 && totalReps > personalBest
+
+    val currentExercise = workoutPlan.getOrNull(exerciseIndex)
+    val nextExercise = workoutPlan.getOrNull(exerciseIndex + 1)
+
+    fun resetForExercise(index: Int) {
+        val exercise = workoutPlan.getOrNull(index) ?: return
+        activeSecondsRemaining = exercise.targetSeconds
+        activeSecondsElapsed = 0
+        activeReps = 0
+        isPaused = false
     }
-    
-    val isMusicPlaying = if (spotifyHelper != null) {
-        spotifyHelper.isPlaying.collectAsState(initial = false).value
-    } else {
-        remember { mutableStateOf(false) }.value
+
+    fun moveToNextExercise() {
+        if (exerciseIndex >= workoutPlan.lastIndex) {
+            phase = WorkoutPhase.COMPLETE
+            return
+        }
+        exerciseIndex += 1
+        resetForExercise(exerciseIndex)
+        phase = WorkoutPhase.ACTIVE
     }
-    
-    val currentTrack = remember(spotifyCurrentTrack) {
-        spotifyCurrentTrack?.name ?: "No track"
-    }
-    
-    // Start session when screen loads
-    LaunchedEffect(Unit) {
-        sessionStartTime = System.currentTimeMillis()
-        isSessionActive = true
-    }
-    
-    // Timer logic
-    LaunchedEffect(isTimerRunning) {
-        if (isTimerRunning) {
-            timerJob = coroutineScope.launch {
-                while (isTimerRunning) {
-                    delay(1000)
-                    timerSeconds++
-                }
-            }
+
+    fun completeExercise(skipped: Boolean) {
+        val exercise = currentExercise ?: return
+        val elapsedSeconds = activeSecondsElapsed.coerceAtMost(exercise.targetSeconds)
+        val repsLogged = if (skipped) 0 else activeReps
+
+        completedExercises = completedExercises + CompletedExercise(
+            name = exercise.name,
+            reps = repsLogged,
+            seconds = elapsedSeconds
+        )
+        totalReps += repsLogged
+
+        if (exerciseIndex >= workoutPlan.lastIndex) {
+            phase = WorkoutPhase.COMPLETE
+            return
+        }
+
+        restSecondsRemaining = exercise.restSeconds
+        phase = if (restSecondsRemaining > 0) {
+            WorkoutPhase.REST
         } else {
-            timerJob?.cancel()
+            moveToNextExercise()
+            WorkoutPhase.ACTIVE
         }
     }
-    
-    // Save session when stopping
+
     fun stopSession() {
-        isSessionActive = false
-        timerJob?.cancel()
-        isTimerRunning = false
-        
-        if (sessionDao != null && (repCount > 0 || timerSeconds > 0)) {
+        val endTime = System.currentTimeMillis()
+        val startTime = sessionStartTime ?: endTime
+        val duration = workoutElapsedSeconds.takeIf { it > 0 } ?: ((endTime - startTime) / 1000).toInt()
+
+        analyticsHelper.trackEvent(
+            AnalyticsHelper.Events.WORKOUT_COMPLETED,
+            mapOf(
+                AnalyticsHelper.Params.PUSHUPS_COUNT to totalReps,
+                AnalyticsHelper.Params.DURATION to duration
+            )
+        )
+
+        if (sessionDao != null && (totalReps > 0 || workoutElapsedSeconds > 0)) {
             coroutineScope.launch {
-                val endTime = System.currentTimeMillis()
-                val startTime = sessionStartTime ?: endTime
-                val duration = ((endTime - startTime) / 1000).toInt()
-                
                 val session = SessionEntity(
                     userId = currentUserId ?: "anonymous",
                     startTime = startTime,
                     endTime = endTime,
                     activityType = ActivityType.GYM.name,
-                    mode = workoutMode.name,
-                    totalReps = if (workoutMode == WorkoutMode.REPS) repCount else null,
-                    totalSeconds = if (workoutMode == WorkoutMode.TIMER) timerSeconds else duration,
+                    mode = "GUIDED",
+                    totalReps = totalReps.takeIf { it > 0 },
+                    totalSeconds = duration,
                     intensity = Intensity.MEDIUM.name
                 )
                 sessionDao.insert(session)
             }
         }
-        
-        // Also save to LocalStore for backward compatibility
-        if (repCount > 0) {
-            val session = com.pushprime.model.Session(
-                id = System.currentTimeMillis().toString(),
-                username = "User",
-                userId = currentUserId ?: "anonymous",
-                pushups = repCount,
-                workoutTime = timerSeconds,
-                timestamp = System.currentTimeMillis(),
-                country = "US",
-                date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
-            )
-            localStore.saveSession(session)
-        }
-        
+
         onNavigateBack()
     }
-    
+
+    LaunchedEffect(Unit) {
+        sessionStartTime = System.currentTimeMillis()
+        analyticsHelper.trackEvent(
+            AnalyticsHelper.Events.WORKOUT_STARTED,
+            mapOf(AnalyticsHelper.Params.WORKOUT_TYPE to "GUIDED")
+        )
+    }
+
+    LaunchedEffect(phase) {
+        when (phase) {
+            WorkoutPhase.COUNTDOWN -> {
+                countdownSeconds = 3
+                while (countdownSeconds > 0 && phase == WorkoutPhase.COUNTDOWN) {
+                    haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    delay(1000)
+                    countdownSeconds -= 1
+                }
+                if (phase == WorkoutPhase.COUNTDOWN) {
+                    resetForExercise(exerciseIndex)
+                    phase = WorkoutPhase.ACTIVE
+                }
+            }
+            WorkoutPhase.ACTIVE -> haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+            WorkoutPhase.REST -> haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+            WorkoutPhase.COMPLETE -> haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+        }
+    }
+
+    LaunchedEffect(phase, isPaused, activeSecondsRemaining, exerciseIndex) {
+        if (phase == WorkoutPhase.ACTIVE && !isPaused) {
+            while (activeSecondsRemaining > 0 && phase == WorkoutPhase.ACTIVE && !isPaused) {
+                delay(1000)
+                activeSecondsRemaining -= 1
+                activeSecondsElapsed += 1
+                workoutElapsedSeconds += 1
+            }
+            if (phase == WorkoutPhase.ACTIVE && activeSecondsRemaining <= 0) {
+                completeExercise(skipped = false)
+            }
+        }
+    }
+
+    LaunchedEffect(phase, restSecondsRemaining) {
+        if (phase == WorkoutPhase.REST) {
+            while (restSecondsRemaining > 0 && phase == WorkoutPhase.REST) {
+                delay(1000)
+                restSecondsRemaining -= 1
+                workoutElapsedSeconds += 1
+            }
+            if (phase == WorkoutPhase.REST) {
+                moveToNextExercise()
+            }
+        }
+    }
+
+    // Spotify state
+    val isSpotifyConnected = if (spotifyHelper != null) {
+        spotifyHelper.isConnected.collectAsState(initial = false).value
+    } else {
+        remember { mutableStateOf(false) }.value
+    }
+
+    val spotifyCurrentTrack = if (spotifyHelper != null) {
+        spotifyHelper.currentTrack.collectAsState(initial = null).value
+    } else {
+        remember { mutableStateOf<com.pushprime.data.Track?>(null) }.value
+    }
+
+    val isMusicPlaying = if (spotifyHelper != null) {
+        spotifyHelper.isPlaying.collectAsState(initial = false).value
+    } else {
+        remember { mutableStateOf(false) }.value
+    }
+
+    val currentTrack = remember(spotifyCurrentTrack) {
+        spotifyCurrentTrack?.name ?: "No track"
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        text = "Workout",
-                        fontWeight = FontWeight.Bold
-                    )
+                    Column {
+                        Text(
+                            text = "Workout",
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "${exerciseIndex + 1} of ${workoutPlan.size}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = PushPrimeColors.OnSurfaceVariant
+                        )
+                    }
                 },
                 navigationIcon = {
                     IconButton(onClick = { stopSession() }) {
@@ -180,22 +336,46 @@ fun WorkoutPlayerScreen(
             )
         },
         bottomBar = {
-            // Spotify Music Player
-            SpotifyPlayerBar(
-                isConnected = isSpotifyConnected,
-                isPlaying = isMusicPlaying,
-                currentTrack = currentTrack,
-                onConnectClick = {
-                    // Navigate to Spotify login - handled by parent
-                },
-                onPlayPauseClick = {
-                    if (isMusicPlaying) {
-                        spotifyHelper?.pause()
-                    } else {
-                        spotifyHelper?.resume()
+            if (isSpotifyConnected) {
+                WorkoutMusicBar(
+                    isPlaying = isMusicPlaying,
+                    currentTrack = currentTrack,
+                    onPlayPause = {
+                        if (isMusicPlaying) spotifyHelper?.pause() else spotifyHelper?.resume()
+                    },
+                    onNext = { spotifyHelper?.skipNext() },
+                    onPrevious = { spotifyHelper?.skipPrevious() },
+                    onPresetSelected = { preset ->
+                        analyticsHelper.trackEvent(
+                            AnalyticsHelper.Events.ENERGY_PRESET_CHANGED,
+                            mapOf(AnalyticsHelper.Params.PRESET_NAME to preset)
+                        )
+                    }
+                )
+            } else {
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    color = Color.Black,
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Connect Spotify for better beats", color = Color.White)
+                        TextButton(onClick = { /* Spotify login */ }) {
+                            Text(
+                                "CONNECT",
+                                color = PushPrimeColors.GTAYellow,
+                                fontWeight = FontWeight.Black
+                            )
+                        }
                     }
                 }
-            )
+            }
         }
     ) { paddingValues ->
         Column(
@@ -203,212 +383,453 @@ fun WorkoutPlayerScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .background(PushPrimeColors.Background),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Mode selector
-            Row(
+            AnimatedContent(
+                targetState = phase,
+                transitionSpec = {
+                    fadeIn(tween(200)) togetherWith fadeOut(tween(150))
+                },
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                FilterChip(
-                    selected = workoutMode == WorkoutMode.REPS,
-                    onClick = { workoutMode = WorkoutMode.REPS },
-                    label = { Text("REPS") },
-                    modifier = Modifier.weight(1f)
-                )
-                FilterChip(
-                    selected = workoutMode == WorkoutMode.TIMER,
-                    onClick = { workoutMode = WorkoutMode.TIMER },
-                    label = { Text("TIMER") },
-                    modifier = Modifier.weight(1f)
-                )
-            }
-            
-            Spacer(modifier = Modifier.weight(1f))
-            
-            // Main workout display
-            when (workoutMode) {
-                WorkoutMode.REPS -> {
-                    RepsCounter(
-                        count = repCount,
-                        onIncrement = { 
-                            repCount++
-                            repHistory = repHistory + repCount
-                        },
-                        onUndo = {
-                            if (repHistory.isNotEmpty()) {
-                                repHistory = repHistory.dropLast(1)
-                                repCount = repHistory.lastOrNull() ?: 0
-                            } else {
-                                repCount = 0
+                    .fillMaxSize()
+                    .padding(horizontal = 20.dp, vertical = 16.dp),
+                label = "workout_phase"
+            ) { currentPhase ->
+                when (currentPhase) {
+                    WorkoutPhase.COUNTDOWN -> {
+                        CountdownContent(
+                            secondsRemaining = countdownSeconds,
+                            exercise = currentExercise
+                        )
+                    }
+                    WorkoutPhase.ACTIVE -> {
+                        ActiveWorkoutContent(
+                            exercise = currentExercise,
+                            nextExercise = nextExercise,
+                            isPaused = isPaused,
+                            secondsRemaining = activeSecondsRemaining,
+                            repsCompleted = activeReps,
+                            onAddRep = {
+                                activeReps += 1
+                                haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            },
+                            onPauseToggle = {
+                                isPaused = !isPaused
+                                haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            },
+                            onFinishSet = { completeExercise(skipped = false) },
+                            onSkip = { completeExercise(skipped = true) }
+                        )
+                    }
+                    WorkoutPhase.REST -> {
+                        RestContent(
+                            restSeconds = restSecondsRemaining,
+                            nextExercise = nextExercise,
+                            onSkipRest = {
+                                haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                moveToNextExercise()
                             }
-                        }
-                    )
+                        )
+                    }
+                    WorkoutPhase.COMPLETE -> {
+                        CompletionContent(
+                            completedExercises = completedExercises,
+                            totalReps = totalReps,
+                            totalTimeSeconds = workoutElapsedSeconds,
+                            isPersonalBest = isPersonalBest,
+                            onFinish = { stopSession() }
+                        )
+                    }
                 }
-                WorkoutMode.TIMER -> {
-                    TimerDisplay(
-                        seconds = timerSeconds,
-                        isRunning = isTimerRunning,
-                        onPlayPause = {
-                            isTimerRunning = !isTimerRunning
-                        },
-                        onReset = {
-                            timerSeconds = 0
-                            isTimerRunning = false
-                        }
-                    )
-                }
-            }
-            
-            Spacer(modifier = Modifier.weight(1f))
-            
-            // Session info
-            if (sessionStartTime != null) {
-                val elapsed = ((System.currentTimeMillis() - sessionStartTime!!) / 1000).toInt()
-                Text(
-                    text = "Session: ${formatWorkoutTime(elapsed)}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = PushPrimeColors.OnSurfaceVariant,
-                    modifier = Modifier.padding(bottom = 80.dp) // Space for music player
-                )
             }
         }
     }
 }
 
 @Composable
-fun RepsCounter(
-    count: Int,
-    onIncrement: () -> Unit,
-    onUndo: () -> Unit
+private fun CountdownContent(
+    secondsRemaining: Int,
+    exercise: WorkoutExercise?
 ) {
     Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(24.dp)
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Big number display
         Text(
-            text = count.toString(),
+            text = "Starting in",
+            style = MaterialTheme.typography.titleMedium,
+            color = PushPrimeColors.OnSurfaceVariant
+        )
+        Text(
+            text = secondsRemaining.toString(),
             style = MaterialTheme.typography.displayLarge,
-            fontSize = 120.sp,
             fontWeight = FontWeight.Bold,
+            fontSize = 88.sp,
             color = PushPrimeColors.Primary
         )
-        
-        // Buttons
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        Spacer(modifier = Modifier.height(16.dp))
+        if (exercise != null) {
+            Text(
+                text = exercise.name,
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = exercise.targetLabel(),
+                style = MaterialTheme.typography.bodyMedium,
+                color = PushPrimeColors.OnSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
+private fun ActiveWorkoutContent(
+    exercise: WorkoutExercise?,
+    nextExercise: WorkoutExercise?,
+    isPaused: Boolean,
+    secondsRemaining: Int,
+    repsCompleted: Int,
+    onAddRep: () -> Unit,
+    onPauseToggle: () -> Unit,
+    onFinishSet: () -> Unit,
+    onSkip: () -> Unit
+) {
+    if (exercise == null) return
+    val progress = if (exercise.targetSeconds > 0) {
+        1f - (secondsRemaining.toFloat() / exercise.targetSeconds.toFloat())
+    } else {
+        0f
+    }
+
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.SpaceBetween
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Button(
-                onClick = onIncrement,
-                modifier = Modifier.size(80.dp),
-                shape = CircleShape,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = PushPrimeColors.Primary
-                )
+            Text(
+                text = exercise.name,
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = exercise.cue,
+                style = MaterialTheme.typography.bodyMedium,
+                color = PushPrimeColors.OnSurfaceVariant
+            )
+
+            Box(
+                modifier = Modifier.size(220.dp),
+                contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    Icons.Default.Add,
-                    contentDescription = "Increment",
-                    modifier = Modifier.size(32.dp)
+                CircularProgressIndicator(
+                    progress = progress.coerceIn(0f, 1f),
+                    modifier = Modifier.fillMaxSize(),
+                    strokeWidth = 10.dp,
+                    color = PushPrimeColors.Primary
                 )
-            }
-            
-            if (count > 0) {
-                OutlinedButton(
-                    onClick = onUndo,
-                    modifier = Modifier.size(80.dp),
-                    shape = CircleShape
-                ) {
-                    Icon(
-                        Icons.Default.Undo,
-                        contentDescription = "Undo",
-                        modifier = Modifier.size(32.dp)
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = formatWorkoutTime(secondsRemaining),
+                        style = MaterialTheme.typography.displaySmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = exercise.targetLabel(),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = PushPrimeColors.OnSurfaceVariant
                     )
                 }
+            }
+
+            if (exercise.targetReps != null) {
+                Text(
+                    text = "Reps: $repsCompleted / ${exercise.targetReps}",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                OutlinedButton(
+                    onClick = onAddRep,
+                    shape = CircleShape,
+                    modifier = Modifier.size(64.dp)
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Add rep")
+                }
+            }
+
+            if (isPaused) {
+                Text(
+                    text = "Paused",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = PushPrimeColors.OnSurfaceVariant
+                )
+            }
+        }
+
+        Column(
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            NextExercisePreview(nextExercise = nextExercise)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                OutlinedButton(
+                    onClick = onPauseToggle,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Icon(
+                        imageVector = if (isPaused) Icons.Default.PlayArrow else Icons.Default.Pause,
+                        contentDescription = if (isPaused) "Resume" else "Pause"
+                    )
+                    Spacer(modifier = Modifier.size(6.dp))
+                    Text(if (isPaused) "Resume" else "Pause")
+                }
+                Button(
+                    onClick = onFinishSet,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.CheckCircle,
+                        contentDescription = "Finish set"
+                    )
+                    Spacer(modifier = Modifier.size(6.dp))
+                    Text("Finish")
+                }
+            }
+            TextButton(
+                onClick = onSkip,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(
+                    imageVector = Icons.Default.SkipNext,
+                    contentDescription = "Skip exercise"
+                )
+                Spacer(modifier = Modifier.size(6.dp))
+                Text("Skip exercise")
             }
         }
     }
 }
 
 @Composable
-fun TimerDisplay(
-    seconds: Int,
-    isRunning: Boolean,
-    onPlayPause: () -> Unit,
-    onReset: () -> Unit
+private fun RestContent(
+    restSeconds: Int,
+    nextExercise: WorkoutExercise?,
+    onSkipRest: () -> Unit
 ) {
     Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(24.dp)
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.SpaceBetween
     ) {
-        // Circular progress indicator
-        Box(
-            modifier = Modifier.size(200.dp),
-            contentAlignment = Alignment.Center
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier.fillMaxWidth()
         ) {
-            CircularProgressIndicator(
-                progress = 1f,
-                modifier = Modifier.size(200.dp),
-                strokeWidth = 8.dp,
-                color = PushPrimeColors.Primary.copy(alpha = 0.2f)
+            Text(
+                text = "Rest",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold
             )
             Text(
-                text = formatWorkoutTime(seconds),
+                text = "$restSeconds sec",
                 style = MaterialTheme.typography.displayMedium,
-                fontSize = 48.sp,
                 fontWeight = FontWeight.Bold,
                 color = PushPrimeColors.Primary
             )
+            Text(
+                text = "Breathe and reset",
+                style = MaterialTheme.typography.bodyMedium,
+                color = PushPrimeColors.OnSurfaceVariant
+            )
         }
-        
-        // Control buttons
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+
+        Column(
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier.fillMaxWidth()
         ) {
+            NextExercisePreview(nextExercise = nextExercise)
             Button(
-                onClick = onPlayPause,
-                modifier = Modifier.size(80.dp),
-                shape = CircleShape
+                onClick = onSkipRest,
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Icon(
-                    if (isRunning) Icons.Default.Pause else Icons.Default.PlayArrow,
-                    contentDescription = if (isRunning) "Pause" else "Play",
-                    modifier = Modifier.size(32.dp)
+                    imageVector = Icons.Default.FastForward,
+                    contentDescription = "Skip rest"
                 )
-            }
-            
-            OutlinedButton(
-                onClick = onReset,
-                modifier = Modifier.size(80.dp),
-                shape = CircleShape
-            ) {
-                Icon(
-                    Icons.Default.Refresh,
-                    contentDescription = "Reset",
-                    modifier = Modifier.size(32.dp)
-                )
+                Spacer(modifier = Modifier.size(6.dp))
+                Text("Skip rest")
             }
         }
     }
 }
 
 @Composable
-fun SpotifyPlayerBar(
-    isConnected: Boolean,
-    isPlaying: Boolean,
-    currentTrack: String?,
-    onConnectClick: () -> Unit,
-    onPlayPauseClick: () -> Unit,
+private fun CompletionContent(
+    completedExercises: List<CompletedExercise>,
+    totalReps: Int,
+    totalTimeSeconds: Int,
+    isPersonalBest: Boolean,
+    onFinish: () -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.SpaceBetween
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(
+                imageVector = Icons.Default.CheckCircle,
+                contentDescription = "Workout complete",
+                tint = PushPrimeColors.Success,
+                modifier = Modifier.size(64.dp)
+            )
+            Text(
+                text = "Workout complete",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = "Nice work finishing strong.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = PushPrimeColors.OnSurfaceVariant
+            )
+        }
+
+        Column(
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                StatCard(
+                    label = "Total time",
+                    value = formatWorkoutTime(totalTimeSeconds),
+                    modifier = Modifier.weight(1f)
+                )
+                StatCard(
+                    label = "Total reps",
+                    value = totalReps.toString(),
+                    modifier = Modifier.weight(1f)
+                )
+            }
+            if (isPersonalBest) {
+                Card(
+                    colors = CardDefaults.cardColors(
+                        containerColor = PushPrimeColors.Secondary.copy(alpha = 0.2f)
+                    ),
+                    shape = RoundedCornerShape(20.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Timer,
+                            contentDescription = "Personal best",
+                            tint = PushPrimeColors.Secondary
+                        )
+                        Text(
+                            text = "New personal best!",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
+            }
+
+            if (completedExercises.isNotEmpty()) {
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = PushPrimeColors.Surface),
+                    shape = RoundedCornerShape(20.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            text = "Summary",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        completedExercises.forEachIndexed { index, exercise ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(exercise.name, style = MaterialTheme.typography.bodyMedium)
+                                Text(
+                                    text = if (exercise.reps > 0) "${exercise.reps} reps" else "${exercise.seconds}s",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = PushPrimeColors.OnSurfaceVariant
+                                )
+                            }
+                            if (index != completedExercises.lastIndex) {
+                                Divider(modifier = Modifier.padding(vertical = 6.dp))
+                            }
+                        }
+                    }
+                }
+            }
+
+            Button(
+                onClick = onFinish,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Done")
+            }
+        }
+    }
+}
+
+@Composable
+private fun StatCard(
+    label: String,
+    value: String,
     modifier: Modifier = Modifier
 ) {
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        color = PushPrimeColors.Surface,
-        shadowElevation = 8.dp
+    Card(
+        modifier = modifier,
+        colors = CardDefaults.cardColors(containerColor = PushPrimeColors.Surface),
+        shape = RoundedCornerShape(20.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelLarge,
+                color = PushPrimeColors.OnSurfaceVariant
+            )
+            Text(
+                text = value,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+        }
+    }
+}
+
+@Composable
+private fun NextExercisePreview(nextExercise: WorkoutExercise?) {
+    if (nextExercise == null) return
+    Card(
+        colors = CardDefaults.cardColors(containerColor = PushPrimeColors.Surface),
+        shape = RoundedCornerShape(20.dp)
     ) {
         Row(
             modifier = Modifier
@@ -417,58 +838,28 @@ fun SpotifyPlayerBar(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            if (!isConnected) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Icon(
-                        Icons.Default.MusicNote,
-                        contentDescription = "Spotify",
-                        tint = Color(0xFF1DB954) // Spotify green
-                    )
-                    Text(
-                        text = "Connect Spotify",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-                TextButton(onClick = onConnectClick) {
-                    Text("Connect")
-                }
-            } else {
-                Row(
-                    modifier = Modifier.weight(1f),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Icon(
-                        Icons.Default.MusicNote,
-                        contentDescription = "Now Playing",
-                        tint = Color(0xFF1DB954),
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = currentTrack ?: "No track",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Medium,
-                            maxLines = 1
-                        )
-                        Text(
-                            text = "Spotify",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = PushPrimeColors.OnSurfaceVariant
-                        )
-                    }
-                }
-                IconButton(onClick = onPlayPauseClick) {
-                    Icon(
-                        if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                        contentDescription = if (isPlaying) "Pause" else "Play",
-                        tint = Color(0xFF1DB954)
-                    )
-                }
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    text = "Up next",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = PushPrimeColors.OnSurfaceVariant
+                )
+                Text(
+                    text = nextExercise.name,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Text(
+                    text = nextExercise.targetLabel(),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = PushPrimeColors.OnSurfaceVariant
+                )
             }
+            Icon(
+                imageVector = Icons.Default.SkipNext,
+                contentDescription = "Next exercise",
+                tint = PushPrimeColors.Primary
+            )
         }
     }
 }
@@ -479,6 +870,27 @@ fun formatWorkoutTime(seconds: Int): String {
     return String.format("%02d:%02d", minutes, secs)
 }
 
-enum class WorkoutMode {
-    REPS, TIMER
+private data class WorkoutExercise(
+    val name: String,
+    val targetReps: Int?,
+    val targetSeconds: Int,
+    val restSeconds: Int,
+    val cue: String
+) {
+    fun targetLabel(): String {
+        return targetReps?.let { "Target: $it reps" } ?: "Target: $targetSeconds sec"
+    }
+}
+
+private data class CompletedExercise(
+    val name: String,
+    val reps: Int,
+    val seconds: Int
+)
+
+private enum class WorkoutPhase {
+    COUNTDOWN,
+    ACTIVE,
+    REST,
+    COMPLETE
 }

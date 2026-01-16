@@ -109,8 +109,8 @@ fun MetricsScreen(
             val prevMonthLogs = previousMonthLogs.first()
             previousMonthTotal = prevMonthLogs.sumOf { it.repsOrDuration }
             
-                // Get streak
-                streak = localStore.getStreak()
+                // Get streak from recent exercise logs
+                streak = calculateLogStreak(logs)
                 
                 isLoading = false
             } catch (e: Exception) {
@@ -188,4 +188,22 @@ fun MetricsScreen(
             }
         }
     }
+}
+
+private fun calculateLogStreak(logs: List<ExerciseLog>): Int {
+    if (logs.isEmpty()) return 0
+    val availableDates = logs.map { it.date }.toSet()
+    val dateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+    val calendar = Calendar.getInstance()
+    var streak = 0
+    while (true) {
+        val dateKey = dateFormatter.format(calendar.time)
+        if (availableDates.contains(dateKey)) {
+            streak++
+            calendar.add(Calendar.DAY_OF_YEAR, -1)
+        } else {
+            break
+        }
+    }
+    return streak
 }

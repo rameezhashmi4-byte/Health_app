@@ -11,7 +11,6 @@ sealed class Screen(val route: String) {
     object Home : Screen("home")
     object Workout : Screen("workout")
     object Progress : Screen("progress")
-    object Compete : Screen("compete")
     object Profile : Screen("profile")
     
     // Nested Routes
@@ -37,17 +36,14 @@ sealed class Screen(val route: String) {
     // Today Plan
     object TodayPlan : Screen("today_plan")
     
-    // Spotify
-    object SpotifyLogin : Screen("spotify_login")
-    object SpotifyBrowser : Screen("spotify_browser")
+    // Nutrition
+    object Nutrition : Screen("nutrition")
     
     // Settings
     object NotificationSettings : Screen("notification_settings")
     
-    // Legacy/Other
-    object Coaching : Screen("coaching")
-    object GroupSession : Screen("group_session")
-    object Motivation : Screen("motivation")
+    // Social/Other
+    object Compete : Screen("compete")
     object Metrics : Screen("metrics")
     
     // Dashboard (kept for backward compatibility, redirects to Home)

@@ -25,7 +25,10 @@ data class SessionEntity(
     val intensity: String = "MEDIUM", // "LOW", "MEDIUM", "HIGH"
     val tags: String? = null, // JSON array or comma-separated
     val notes: String? = null,
-    val date: String = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+    val date: String = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date()),
+    val isSynced: Boolean = false,
+    val lastSyncedAt: Long? = null,
+    val syncAttempts: Int = 0
 ) {
     /**
      * Get duration in seconds

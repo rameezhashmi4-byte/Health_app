@@ -1,6 +1,7 @@
 package com.pushprime.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -21,9 +22,14 @@ import com.pushprime.ui.components.PushPrimeSpacing
 import com.pushprime.ui.theme.PushPrimeColors
 import kotlinx.coroutines.launch
 
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.sp
+import com.pushprime.model.WeeklyChallenges
+import com.pushprime.model.ChallengeTargetType
+
 /**
  * Compete Screen
- * Local and global leaderboards with toggle
+ * Weekly Challenges + Global/Local Leaderboards
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -32,11 +38,12 @@ fun CompeteScreen(
     firebaseHelper: FirebaseHelper?,
     onNavigateBack: () -> Unit
 ) {
-    var showLocal by remember { mutableStateOf(true) }
+    var showLocal by remember { mutableStateOf(false) }
     var localLeaderboard by remember { mutableStateOf<List<LeaderboardEntry>>(emptyList()) }
     var globalLeaderboard by remember { mutableStateOf<List<LeaderboardEntry>>(emptyList()) }
     var isLoading by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
+    val weeklyChallenge = remember { WeeklyChallenges.getCurrentChallenge() }
     
     LaunchedEffect(showLocal) {
         if (showLocal) {
@@ -48,134 +55,157 @@ fun CompeteScreen(
                     globalLeaderboard = firebaseHelper.getGlobalLeaderboard(limit = 100)
                     isLoading = false
                 }
-            } else {
-                // Firebase not available - show message
-                globalLeaderboard = emptyList()
             }
         }
     }
     
     Scaffold(
         topBar = {
-            TopAppBar(
+            CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text = "Compete",
-                        fontWeight = FontWeight.Bold
+                        text = "COMPETE",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = 4.sp
                     )
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = PushPrimeColors.Surface
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = Color.White
                 )
             )
-        }
+        },
+        containerColor = Color.White
     ) { paddingValues ->
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
-                .background(PushPrimeColors.Background)
+                .padding(paddingValues),
+            contentPadding = PaddingValues(bottom = 24.dp)
         ) {
-                // Toggle Buttons
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            FilterChip(
-                selected = showLocal,
-                onClick = { showLocal = true },
-                label = { Text("Friends") },
-                modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(20.dp)
-            )
-            FilterChip(
-                selected = !showLocal,
-                onClick = { 
-                    if (firebaseHelper?.isAvailable == true) {
-                        showLocal = false
-                    }
-                },
-                label = { Text("Global") },
-                modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(20.dp),
-                enabled = firebaseHelper?.isAvailable == true
-            )
-        }
-        
-            // Leaderboard List
-            if (isLoading) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(color = PushPrimeColors.Primary)
-            }
-        } else {
-            val leaderboard = if (showLocal) localLeaderboard else globalLeaderboard
-            
-            // Show message if Firebase not available and trying to view global
-            if (!showLocal && firebaseHelper?.isAvailable != true) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
+            // Weekly Challenge Section
+            item {
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(24.dp),
+                    color = Color.Black,
+                    shape = RoundedCornerShape(0.dp)
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.padding(20.dp)
+                    Column(modifier = Modifier.padding(24.dp)) {
+                        Text(
+                            text = "WEEKLY CHALLENGE",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = PushPrimeColors.GTAYellow,
+                            fontWeight = FontWeight.Black
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = weeklyChallenge.title,
+                            style = MaterialTheme.typography.headlineLarge,
+                            color = Color.White,
+                            fontWeight = FontWeight.Black
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = weeklyChallenge.description,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.Gray
+                        )
+                        Spacer(modifier = Modifier.height(24.dp))
+                        
+                        // Progress Bar for Challenge
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.Bottom
+                        ) {
+                            Text(
+                                text = "120 / ${weeklyChallenge.targetValue}",
+                                style = MaterialTheme.typography.titleLarge,
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "24% COMPLETE",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = PushPrimeColors.GTAGreen,
+                                fontWeight = FontWeight.Black
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(12.dp))
+                        LinearProgressIndicator(
+                            progress = 0.24f,
+                            modifier = Modifier.fillMaxWidth().height(4.dp),
+                            color = PushPrimeColors.GTAGreen,
+                            trackColor = Color.DarkGray
+                        )
+                    }
+                }
+            }
+
+            // Leaderboard Toggle
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(48.dp)
+                            .background(if (!showLocal) Color.Black else Color.LightGray)
+                            .clickable { showLocal = false },
+                        contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "Global Leaderboard",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = PushPrimeColors.OnSurface
+                            "GLOBAL",
+                            fontWeight = FontWeight.Black,
+                            color = if (!showLocal) Color.White else Color.Black
                         )
-                        Spacer(modifier = Modifier.height(16.dp))
+                    }
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(48.dp)
+                            .background(if (showLocal) Color.Black else Color.LightGray)
+                            .clickable { showLocal = true },
+                        contentAlignment = Alignment.Center
+                    ) {
                         Text(
-                            text = "Firebase not configured",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = PushPrimeColors.OnSurfaceVariant
+                            "FRIENDS",
+                            fontWeight = FontWeight.Black,
+                            color = if (showLocal) Color.White else Color.Black
                         )
-                        Text(
-                            text = "Global leaderboard requires Firebase setup",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = PushPrimeColors.OnSurfaceVariant
-                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(24.dp))
+            }
+
+            // Leaderboard Items
+            val leaderboard = if (showLocal) localLeaderboard else globalLeaderboard
+            if (isLoading) {
+                item {
+                    Box(Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(color = Color.Black)
                     }
                 }
             } else if (leaderboard.isEmpty()) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = "No entries yet",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = PushPrimeColors.OnSurfaceVariant
-                        )
-                        Text(
-                            text = "Complete a workout to appear on the leaderboard!",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = PushPrimeColors.OnSurfaceVariant
-                        )
-                    }
+                item {
+                    Text(
+                        "No rankings yet. Start a session!",
+                        modifier = Modifier.padding(24.dp),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.Gray
+                    )
                 }
             } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(leaderboard) { entry ->
-                        LeaderboardCard(entry = entry)
-                    }
+                items(leaderboard) { entry ->
+                    LeaderboardCard(entry = entry)
                 }
             }
-        }
         }
     }
 }

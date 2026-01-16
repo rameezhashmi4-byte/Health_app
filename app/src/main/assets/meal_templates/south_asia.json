@@ -1,0 +1,83 @@
+{
+  "region": "South Asia",
+  "proteinOptions": [
+    "Chicken",
+    "Eggs",
+    "Fish",
+    "Lentils (dal)",
+    "Chickpeas",
+    "Paneer",
+    "Tofu"
+  ],
+  "carbOptions": [
+    "Basmati rice",
+    "Whole wheat roti",
+    "Millet",
+    "Quinoa",
+    "Poha",
+    "Idli"
+  ],
+  "fatOptions": [
+    "Ghee (small)",
+    "Mustard oil",
+    "Coconut",
+    "Peanuts",
+    "Sesame seeds",
+    "Olive oil"
+  ],
+  "commonMeals": [
+    {
+      "name": "Vegetable upma",
+      "mealType": "BREAKFAST",
+      "portionGuidance": "1 bowl upma + extra mixed veg"
+    },
+    {
+      "name": "Poha with peanuts",
+      "mealType": "BREAKFAST",
+      "portionGuidance": "1 bowl poha + 1 tbsp peanuts"
+    },
+    {
+      "name": "Dal and rice",
+      "mealType": "LUNCH",
+      "portionGuidance": "1 cup dal + 3/4 cup cooked rice + salad"
+    },
+    {
+      "name": "Chana masala with roti",
+      "mealType": "LUNCH",
+      "portionGuidance": "1 cup chana + 1-2 whole wheat roti"
+    },
+    {
+      "name": "Tandoori chicken with salad",
+      "mealType": "DINNER",
+      "portionGuidance": "1 palm chicken + 2 cups salad + 1 tsp oil"
+    },
+    {
+      "name": "Raita with cucumber",
+      "mealType": "SNACK",
+      "portionGuidance": "3/4 cup yogurt + cucumber + spices"
+    }
+  ],
+  "restaurantMode": [
+    "Choose tandoori or grilled items instead of creamy curries.",
+    "Ask for less oil and extra vegetables in curries.",
+    "Swap naan for roti or a smaller rice portion.",
+    "Pick dal, chana, or mixed veg as a main."
+  ],
+  "swapRules": [
+    {
+      "dish": "Butter chicken",
+      "swapWith": "Tandoori chicken with tomato-based curry",
+      "reason": "Lower cream while keeping flavor."
+    },
+    {
+      "dish": "Fried samosa",
+      "swapWith": "Baked samosa or chaat with extra veg",
+      "reason": "Cuts frying oil and adds fiber."
+    },
+    {
+      "dish": "Large biryani portion",
+      "swapWith": "Half biryani + side salad",
+      "reason": "Balances carbs with more volume from veg."
+    }
+  ]
+}
