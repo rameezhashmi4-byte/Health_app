@@ -73,6 +73,9 @@ class AuthViewModel(
                 } else {
                     authRepository.signInWithEmail(email, password)
                 }
+                authRepository.currentUser?.let { user ->
+                    handleUserSignedIn(user)
+                }
                 onResult(Result.success(Unit))
             } catch (e: Exception) {
                 onResult(Result.failure(e))
@@ -84,6 +87,9 @@ class AuthViewModel(
         viewModelScope.launch {
             try {
                 authRepository.signInWithGoogle(idToken)
+                authRepository.currentUser?.let { user ->
+                    handleUserSignedIn(user)
+                }
                 onResult(Result.success(Unit))
             } catch (e: Exception) {
                 onResult(Result.failure(e))

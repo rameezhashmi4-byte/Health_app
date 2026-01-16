@@ -6,40 +6,44 @@ import com.google.firebase.auth.GoogleAuthProvider
 import kotlinx.coroutines.tasks.await
 
 class AuthRepository {
-    private val auth: FirebaseAuth? = try {
-        FirebaseAuth.getInstance()
-    } catch (_: Exception) {
-        null
+    private fun firebaseAuthOrNull(): FirebaseAuth? {
+        return try {
+            FirebaseAuth.getInstance()
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    private fun firebaseAuth(): FirebaseAuth {
+        return firebaseAuthOrNull()
+            ?: throw IllegalStateException("Firebase is not initialized. Check google-services.json.")
     }
 
     val currentUser: FirebaseUser?
-        get() = auth?.currentUser
+        get() = firebaseAuthOrNull()?.currentUser
 
     fun addAuthStateListener(listener: FirebaseAuth.AuthStateListener) {
-        auth?.addAuthStateListener(listener)
+        firebaseAuthOrNull()?.addAuthStateListener(listener)
     }
 
     fun removeAuthStateListener(listener: FirebaseAuth.AuthStateListener) {
-        auth?.removeAuthStateListener(listener)
+        firebaseAuthOrNull()?.removeAuthStateListener(listener)
     }
 
     suspend fun signInWithEmail(email: String, password: String) {
-        val firebaseAuth = auth ?: throw IllegalStateException("Firebase unavailable")
-        firebaseAuth.signInWithEmailAndPassword(email, password).await()
+        firebaseAuth().signInWithEmailAndPassword(email, password).await()
     }
 
     suspend fun createAccount(email: String, password: String) {
-        val firebaseAuth = auth ?: throw IllegalStateException("Firebase unavailable")
-        firebaseAuth.createUserWithEmailAndPassword(email, password).await()
+        firebaseAuth().createUserWithEmailAndPassword(email, password).await()
     }
 
     suspend fun signInWithGoogle(idToken: String) {
-        val firebaseAuth = auth ?: throw IllegalStateException("Firebase unavailable")
         val credential = GoogleAuthProvider.getCredential(idToken, null)
-        firebaseAuth.signInWithCredential(credential).await()
+        firebaseAuth().signInWithCredential(credential).await()
     }
 
     fun signOut() {
-        auth?.signOut()
+        firebaseAuthOrNull()?.signOut()
     }
 }

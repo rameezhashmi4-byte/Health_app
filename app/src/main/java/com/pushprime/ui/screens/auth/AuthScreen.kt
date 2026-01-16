@@ -47,6 +47,7 @@ import androidx.compose.ui.unit.dp
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
+import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.FirebaseAuthWeakPasswordException
@@ -106,6 +107,14 @@ fun AuthScreen(
             is FirebaseAuthInvalidCredentialsException -> "Invalid email or password."
             is FirebaseAuthWeakPasswordException -> "Password is too weak (min 6 characters)."
             is FirebaseAuthUserCollisionException -> "Account already exists. Try signing in."
+            is FirebaseAuthException -> {
+                when (error.errorCode) {
+                    "ERROR_OPERATION_NOT_ALLOWED" -> "Email/password sign-in is disabled in Firebase."
+                    "ERROR_USER_DISABLED" -> "This account has been disabled."
+                    "ERROR_USER_NOT_FOUND" -> "No account found for this email."
+                    else -> error.message ?: "Sign-in failed."
+                }
+            }
             else -> error.message ?: "Sign-in failed."
         }
     }
@@ -221,7 +230,7 @@ fun AuthScreen(
                         }
                     } else {
                         Text(
-                            text = "Google sign-in available after Firebase setup.",
+                            text = "Google sign-in not configured. Re-download google-services.json after enabling Google provider.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
