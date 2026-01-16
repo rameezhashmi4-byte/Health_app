@@ -71,6 +71,8 @@ fun AuthScreen(
     var authError by remember { mutableStateOf<String?>(null) }
     var isLoading by remember { mutableStateOf(false) }
     var isCreateAccount by remember { mutableStateOf(false) }
+    var attemptedEmailSubmit by remember { mutableStateOf(false) }
+    var attemptedPasswordSubmit by remember { mutableStateOf(false) }
 
     val onLoggedInState = rememberUpdatedState(onLoggedIn)
 
@@ -81,6 +83,17 @@ fun AuthScreen(
             onLoggedInState.value()
         }
     }
+
+    val googleClientId = remember {
+        try {
+            context.getString(
+                context.resources.getIdentifier("default_web_client_id", "string", context.packageName)
+            )
+        } catch (_: Exception) {
+            ""
+        }
+    }
+    val isGoogleConfigured = googleClientId.isNotBlank()
 
     val googleLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
@@ -112,20 +125,13 @@ fun AuthScreen(
             isLoading = false
             return
         }
-        val clientId = try {
-            context.getString(
-                context.resources.getIdentifier("default_web_client_id", "string", context.packageName)
-            )
-        } catch (_: Exception) {
-            ""
-        }
-        if (clientId.isBlank()) {
+        if (!isGoogleConfigured) {
             authError = "Google sign-in is not configured."
             isLoading = false
             return
         }
         val signInOptions = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken(clientId)
+            .requestIdToken(googleClientId)
             .requestEmail()
             .build()
         val googleClient = GoogleSignIn.getClient(activity, signInOptions)
@@ -172,37 +178,40 @@ fun AuthScreen(
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                     modifier = Modifier.padding(vertical = 24.dp)
                 ) {
-                    OutlinedButton(
-                        onClick = {
-                            authError = null
-                            isLoading = true
-                            startGoogleSignIn()
-                        },
-                        enabled = !isLoading,
-                        modifier = Modifier
-                            .height(56.dp)
-                            .fillMaxWidth()
-                    ) {
-                        if (isLoading) {
-                            CircularProgressIndicator(
-                                strokeWidth = 2.dp,
-                                modifier = Modifier.width(20.dp)
-                            )
-                        } else {
-                            Text(
-                                "Continue with Google",
-                                style = MaterialTheme.typography.bodyLarge
-                            )
+                    if (isGoogleConfigured) {
+                        OutlinedButton(
+                            onClick = {
+                                authError = null
+                                isLoading = true
+                                startGoogleSignIn()
+                            },
+                            enabled = !isLoading,
+                            modifier = Modifier
+                                .height(56.dp)
+                                .fillMaxWidth()
+                        ) {
+                            if (isLoading) {
+                                CircularProgressIndicator(
+                                    strokeWidth = 2.dp,
+                                    modifier = Modifier.width(20.dp)
+                                )
+                            } else {
+                                Text(
+                                    "Continue with Google",
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                            }
                         }
                     }
 
                     Button(
                         onClick = {
                             authError = null
-                            emailError = null
+                            attemptedEmailSubmit = true
                             if (email.isBlank() || !email.contains("@")) {
                                 emailError = "Enter a valid email."
                             } else {
+                                emailError = null
                                 step = EmailAuthStep.Password
                             }
                         },
@@ -248,7 +257,9 @@ fun AuthScreen(
                                 value = email,
                                 onValueChange = {
                                     email = it
-                                    emailError = null
+                                    if (attemptedEmailSubmit) {
+                                        emailError = null
+                                    }
                                 },
                                 label = { Text("Email") },
                                 isError = emailError != null,
@@ -258,7 +269,7 @@ fun AuthScreen(
                                     focusedBorderColor = PushPrimeColors.Primary
                                 )
                             )
-                            if (emailError != null) {
+                            if (attemptedEmailSubmit && emailError != null) {
                                 Text(
                                     text = emailError.orEmpty(),
                                     color = PushPrimeColors.Error,
@@ -277,7 +288,9 @@ fun AuthScreen(
                                 value = password,
                                 onValueChange = {
                                     password = it
-                                    passwordError = null
+                                    if (attemptedPasswordSubmit) {
+                                        passwordError = null
+                                    }
                                 },
                                 label = { Text("Password") },
                                 singleLine = true,
@@ -288,7 +301,7 @@ fun AuthScreen(
                                     focusedBorderColor = PushPrimeColors.Primary
                                 )
                             )
-                            if (passwordError != null) {
+                            if (attemptedPasswordSubmit && passwordError != null) {
                                 Text(
                                     text = passwordError.orEmpty(),
                                     color = PushPrimeColors.Error,
@@ -299,6 +312,7 @@ fun AuthScreen(
                             Button(
                                 onClick = {
                                     authError = null
+                                    attemptedPasswordSubmit = true
                                     if (password.length < 6) {
                                         passwordError = "Password must be at least 6 characters."
                                         return@Button

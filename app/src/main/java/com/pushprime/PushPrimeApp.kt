@@ -533,7 +533,7 @@ fun PushPrimeApp() {
                     user = authViewModel.currentUser,
                     onLogout = {
                         authViewModel.logout()
-                        navController.navigate(Screen.Auth.route) {
+                        navController.navigate(Screen.Onboarding.route) {
                             popUpTo(Screen.Splash.route) { inclusive = true }
                             launchSingleTop = true
                         }
