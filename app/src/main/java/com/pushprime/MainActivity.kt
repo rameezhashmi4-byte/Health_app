@@ -8,12 +8,18 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import com.google.firebase.FirebaseApp
 import com.pushprime.data.NotificationHelper
 import com.pushprime.ui.theme.PushPrimeTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        try {
+            FirebaseApp.initializeApp(this)
+        } catch (_: Exception) {
+            // Firebase is optional; app should still run without it
+        }
         setContent {
             PushPrimeTheme {
                 Surface(

@@ -47,6 +47,9 @@ import androidx.compose.ui.unit.dp
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
+import com.google.firebase.auth.FirebaseAuthUserCollisionException
+import com.google.firebase.auth.FirebaseAuthWeakPasswordException
 import com.pushprime.auth.AuthViewModel
 import com.pushprime.ui.theme.PushPrimeColors
 
@@ -85,15 +88,27 @@ fun AuthScreen(
     }
 
     val googleClientId = remember {
-        try {
-            context.getString(
-                context.resources.getIdentifier("default_web_client_id", "string", context.packageName)
-            )
-        } catch (_: Exception) {
+        val resId = context.resources.getIdentifier(
+            "default_web_client_id",
+            "string",
+            context.packageName
+        )
+        if (resId != 0) {
+            context.getString(resId)
+        } else {
             ""
         }
     }
     val isGoogleConfigured = googleClientId.isNotBlank()
+
+    fun mapAuthError(error: Throwable): String {
+        return when (error) {
+            is FirebaseAuthInvalidCredentialsException -> "Invalid email or password."
+            is FirebaseAuthWeakPasswordException -> "Password is too weak (min 6 characters)."
+            is FirebaseAuthUserCollisionException -> "Account already exists. Try signing in."
+            else -> error.message ?: "Sign-in failed."
+        }
+    }
 
     val googleLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
@@ -111,12 +126,12 @@ fun AuthScreen(
                     signInResult.onSuccess {
                         onLoggedInState.value()
                     }.onFailure { error ->
-                        authError = error.message ?: "Sign-in failed."
+                        authError = mapAuthError(error)
                     }
                 }
             }
         } catch (e: Exception) {
-            authError = e.message ?: "Google sign-in failed."
+            authError = mapAuthError(e)
             isLoading = false
         }
     }
@@ -345,7 +360,7 @@ fun AuthScreen(
                                         result.onSuccess {
                                             onLoggedInState.value()
                                         }.onFailure { error ->
-                                            authError = error.message ?: "Sign-in failed."
+                                            authError = mapAuthError(error)
                                         }
                                     }
                                 },
