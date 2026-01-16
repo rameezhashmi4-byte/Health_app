@@ -88,6 +88,7 @@ fun DashboardScreen(
             val session = Session(
                 id = System.currentTimeMillis().toString(),
                 username = user?.username ?: "User",
+                userId = "anonymous",
                 pushups = pushupCount,
                 workoutTime = elapsedTime.toInt(),
                 timestamp = System.currentTimeMillis(),

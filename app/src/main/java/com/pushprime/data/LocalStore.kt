@@ -25,10 +25,18 @@ class LocalStore(private val context: Context) {
     
     private val _user = MutableStateFlow<User?>(null)
     val user: StateFlow<User?> = _user.asStateFlow()
+
+    private val _onboardingCompleted = MutableStateFlow(false)
+    val onboardingCompleted: StateFlow<Boolean> = _onboardingCompleted.asStateFlow()
+
+    private val _lastKnownLoggedIn = MutableStateFlow(false)
+    val lastKnownLoggedIn: StateFlow<Boolean> = _lastKnownLoggedIn.asStateFlow()
     
     init {
         loadSessions()
         loadUser()
+        loadOnboardingState()
+        loadLastKnownLoggedIn()
     }
     
     // User data
@@ -61,6 +69,25 @@ class LocalStore(private val context: Context) {
                 country = prefs.getString("country", "US") ?: "US"
             )
         }
+    }
+
+    // Onboarding
+    private fun loadOnboardingState() {
+        _onboardingCompleted.value = prefs.getBoolean("onboarding_completed", false)
+    }
+
+    fun setOnboardingCompleted(completed: Boolean) {
+        _onboardingCompleted.value = completed
+        prefs.edit().putBoolean("onboarding_completed", completed).apply()
+    }
+
+    private fun loadLastKnownLoggedIn() {
+        _lastKnownLoggedIn.value = prefs.getBoolean("last_known_logged_in", false)
+    }
+
+    fun setLastKnownLoggedIn(isLoggedIn: Boolean) {
+        _lastKnownLoggedIn.value = isLoggedIn
+        prefs.edit().putBoolean("last_known_logged_in", isLoggedIn).apply()
     }
     
     // Sessions
@@ -119,6 +146,7 @@ class LocalStore(private val context: Context) {
                     Session(
                         id = obj.getString("id"),
                         username = obj.getString("username"),
+                        userId = obj.optString("userId", ""),
                         pushups = obj.getInt("pushups"),
                         workoutTime = obj.getInt("workoutTime"),
                         timestamp = obj.getLong("timestamp"),
@@ -139,6 +167,7 @@ class LocalStore(private val context: Context) {
             val obj = JSONObject().apply {
                 put("id", session.id)
                 put("username", session.username)
+                put("userId", session.userId)
                 put("pushups", session.pushups)
                 put("workoutTime", session.workoutTime)
                 put("timestamp", session.timestamp)
@@ -211,4 +240,125 @@ class LocalStore(private val context: Context) {
         }
         prefs.edit().putString("leaderboard", jsonArray.toString()).apply()
     }
+
+    // Auth session tracking
+    fun saveLoginSessionInfo(
+        userId: String,
+        loginTimestamp: Long,
+        deviceModel: String,
+        appVersion: String,
+        sessionId: String
+    ) {
+        prefs.edit().apply {
+            putString("last_login_user_id", userId)
+            putLong("last_login_timestamp", loginTimestamp)
+            putString("last_login_device_model", deviceModel)
+            putString("last_login_app_version", appVersion)
+            putString("current_session_id", sessionId)
+            putString("current_session_user_id", userId)
+            putLong("current_session_started_at", loginTimestamp)
+            apply()
+        }
+    }
+
+    fun getCurrentSessionId(): String? = prefs.getString("current_session_id", null)
+
+    fun getCurrentSessionUserId(): String? = prefs.getString("current_session_user_id", null)
+
+    fun getCurrentSessionStartedAt(): Long = prefs.getLong("current_session_started_at", 0L)
+
+    fun clearCurrentSession() {
+        prefs.edit().apply {
+            remove("current_session_id")
+            remove("current_session_user_id")
+            remove("current_session_started_at")
+            apply()
+        }
+    }
+
+    fun addPendingSessionWrite(write: PendingSessionWrite) {
+        val pending = getPendingSessionWrites().toMutableList()
+        pending.add(write)
+        savePendingSessionWrites(pending)
+    }
+
+    fun removePendingSessionWrite(sessionId: String, action: String) {
+        val pending = getPendingSessionWrites().filterNot {
+            it.sessionId == sessionId && it.action == action
+        }
+        savePendingSessionWrites(pending)
+    }
+
+    fun getPendingSessionWrites(): List<PendingSessionWrite> {
+        val raw = prefs.getString("pending_session_writes", "[]") ?: "[]"
+        return try {
+            val jsonArray = JSONArray(raw)
+            val list = mutableListOf<PendingSessionWrite>()
+            for (i in 0 until jsonArray.length()) {
+                val obj = jsonArray.getJSONObject(i)
+                list.add(
+                    PendingSessionWrite(
+                        userId = obj.getString("userId"),
+                        sessionId = obj.getString("sessionId"),
+                        action = obj.getString("action"),
+                        loginTimestamp = obj.optLong("loginTimestamp", 0L),
+                        deviceModel = obj.optString("deviceModel", ""),
+                        appVersion = obj.optString("appVersion", ""),
+                        endedAt = obj.optLong("endedAt", 0L)
+                    )
+                )
+            }
+            list
+        } catch (_: Exception) {
+            emptyList()
+        }
+    }
+
+    private fun savePendingSessionWrites(pending: List<PendingSessionWrite>) {
+        val jsonArray = JSONArray()
+        pending.forEach { write ->
+            val obj = JSONObject().apply {
+                put("userId", write.userId)
+                put("sessionId", write.sessionId)
+                put("action", write.action)
+                put("loginTimestamp", write.loginTimestamp)
+                put("deviceModel", write.deviceModel)
+                put("appVersion", write.appVersion)
+                put("endedAt", write.endedAt)
+            }
+            jsonArray.put(obj)
+        }
+        prefs.edit().putString("pending_session_writes", jsonArray.toString()).apply()
+    }
+
+    fun clearAuthSensitiveData() {
+        prefs.edit().apply {
+            remove("username")
+            remove("age")
+            remove("gender")
+            remove("fitnessLevel")
+            remove("predictedMaxPushups")
+            remove("dailyGoal")
+            remove("country")
+            remove("last_login_user_id")
+            remove("last_login_timestamp")
+            remove("last_login_device_model")
+            remove("last_login_app_version")
+            remove("current_session_id")
+            remove("current_session_user_id")
+            remove("current_session_started_at")
+            apply()
+        }
+        _user.value = null
+    }
 }
+
+data class PendingSessionWrite(
+    val userId: String,
+    val sessionId: String,
+    val action: String,
+    val loginTimestamp: Long,
+    val deviceModel: String,
+    val appVersion: String,
+    val endedAt: Long
+)

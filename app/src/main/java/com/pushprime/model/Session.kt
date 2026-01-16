@@ -7,6 +7,7 @@ package com.pushprime.model
 data class Session(
     val id: String = "",
     val username: String = "",
+    val userId: String = "",
     val pushups: Int = 0,
     val workoutTime: Int = 0, // in seconds
     val timestamp: Long = System.currentTimeMillis(),

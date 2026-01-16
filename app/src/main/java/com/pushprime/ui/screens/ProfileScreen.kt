@@ -31,6 +31,7 @@ fun ProfileScreen(
     onNavigateToPhotoVault: () -> Unit,
     onNavigateToSpotify: () -> Unit,
     onNavigateToNotificationSettings: () -> Unit,
+    onNavigateToAccount: () -> Unit,
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -166,6 +167,15 @@ fun ProfileScreen(
                     subtitle = "Workout reminders",
                     icon = Icons.Default.Notifications,
                     onClick = onNavigateToNotificationSettings
+                )
+            }
+
+            item {
+                PreferenceItem(
+                    title = "Account",
+                    subtitle = "Email and security",
+                    icon = Icons.Default.Person,
+                    onClick = onNavigateToAccount
                 )
             }
             

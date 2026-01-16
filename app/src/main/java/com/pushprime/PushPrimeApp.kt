@@ -1,35 +1,41 @@
 package com.pushprime
 
-import android.content.Context
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.core.tween
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
-import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.google.accompanist.navigation.animation.AnimatedNavHost
+import com.google.accompanist.navigation.animation.composable
+import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import kotlinx.coroutines.launch
+import com.pushprime.auth.AuthViewModel
+import com.pushprime.auth.AuthViewModelFactory
 import com.pushprime.data.AppDatabase
 import com.pushprime.data.FirebaseHelper
 import com.pushprime.data.LocalStore
-import com.pushprime.network.VoipService
 import com.pushprime.navigation.Screen
+import com.pushprime.network.VoipService
 import com.pushprime.ui.components.BottomNavigationBar
 import com.pushprime.ui.screens.*
 import com.pushprime.ui.screens.ErrorScreen
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
 /**
  * Main app composable with navigation
  * Modernized with bottom navigation and new screens
  */
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun PushPrimeApp() {
-    val navController = rememberNavController()
+    val navController = rememberAnimatedNavController()
     val context = LocalContext.current
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -82,10 +88,19 @@ fun PushPrimeApp() {
         ErrorScreen(message = "Failed to initialize app storage")
         return
     }
+
+    val authViewModel: AuthViewModel = viewModel(
+        factory = remember(localStore) {
+            AuthViewModelFactory(context.applicationContext, localStore)
+        }
+    )
+
+    val isLoggedIn by authViewModel.isLoggedIn.collectAsState()
+    val onboardingCompleted by localStore.onboardingCompleted.collectAsState()
     
     // Determine if we should show bottom nav (only on main tabs)
     // Use LaunchedEffect to ensure it updates reactively
-    var showBottomNav by remember { mutableStateOf(true) }
+    var showBottomNav by remember { mutableStateOf(false) }
     
     LaunchedEffect(currentRoute) {
         val mainTabs = listOf(
@@ -152,10 +167,76 @@ fun PushPrimeApp() {
             }
         }
     ) { paddingValues ->
-        NavHost(
+        AnimatedNavHost(
             navController = navController,
-            startDestination = Screen.Home.route
+            startDestination = Screen.Splash.route,
+            enterTransition = {
+                fadeIn(animationSpec = tween(300)) + slideInHorizontally(
+                    animationSpec = tween(300),
+                    initialOffsetX = { it / 6 }
+                )
+            },
+            exitTransition = {
+                fadeOut(animationSpec = tween(300)) + slideOutHorizontally(
+                    animationSpec = tween(300),
+                    targetOffsetX = { -it / 6 }
+                )
+            },
+            popEnterTransition = {
+                fadeIn(animationSpec = tween(300)) + slideInHorizontally(
+                    animationSpec = tween(300),
+                    initialOffsetX = { -it / 6 }
+                )
+            },
+            popExitTransition = {
+                fadeOut(animationSpec = tween(300)) + slideOutHorizontally(
+                    animationSpec = tween(300),
+                    targetOffsetX = { it / 6 }
+                )
+            }
         ) {
+            composable(Screen.Splash.route) {
+                var hasRouted by remember { mutableStateOf(false) }
+                SplashScreen()
+                LaunchedEffect(isLoggedIn, onboardingCompleted, hasRouted) {
+                    if (hasRouted) return@LaunchedEffect
+                    val target = when {
+                        !onboardingCompleted -> Screen.Onboarding.route
+                        isLoggedIn -> Screen.Home.route
+                        else -> Screen.Auth.route
+                    }
+                    hasRouted = true
+                    navController.navigate(target) {
+                        popUpTo(Screen.Splash.route) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                }
+            }
+
+            composable(Screen.Onboarding.route) {
+                OnboardingScreen(
+                    onGetStarted = {
+                        localStore.setOnboardingCompleted(true)
+                        navController.navigate(Screen.Auth.route) {
+                            popUpTo(Screen.Onboarding.route) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    }
+                )
+            }
+
+            composable(Screen.Auth.route) {
+                AuthScreen(
+                    authViewModel = authViewModel,
+                    onLoggedIn = {
+                        navController.navigate(Screen.Home.route) {
+                            popUpTo(Screen.Auth.route) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    }
+                )
+            }
+
             // ========== MAIN BOTTOM NAV SCREENS ==========
             
             composable(Screen.Home.route) {
@@ -237,6 +318,9 @@ fun PushPrimeApp() {
                     onNavigateToNotificationSettings = {
                         navController.navigate(Screen.NotificationSettings.route)
                     },
+                    onNavigateToAccount = {
+                        navController.navigate(Screen.Account.route)
+                    },
                     onNavigateBack = {} // Main tab - no back needed
                 )
             }
@@ -259,6 +343,7 @@ fun PushPrimeApp() {
                     WorkoutPlayerScreen(
                         sessionId = sessionId,
                         localStore = localStore,
+                        currentUserId = authViewModel.currentUser?.uid,
                         spotifyHelper = spotifyHelper,
                         onNavigateBack = {
                             navController.popBackStack()
@@ -437,6 +522,22 @@ fun PushPrimeApp() {
             
             composable(Screen.NotificationSettings.route) {
                 NotificationSettingsScreen(
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    }
+                )
+            }
+
+            composable(Screen.Account.route) {
+                AccountScreen(
+                    user = authViewModel.currentUser,
+                    onLogout = {
+                        authViewModel.logout()
+                        navController.navigate(Screen.Auth.route) {
+                            popUpTo(Screen.Splash.route) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    },
                     onNavigateBack = {
                         navController.popBackStack()
                     }

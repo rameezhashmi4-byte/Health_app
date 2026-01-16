@@ -18,6 +18,7 @@ import com.pushprime.network.QuoteService
 import com.pushprime.ui.components.QuoteCard
 import com.pushprime.ui.theme.PushPrimeColors
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * Motivation Screen
@@ -30,15 +31,24 @@ fun MotivationScreen(
     var quote by remember { mutableStateOf<QuoteService.Quote?>(null) }
     var newsItems by remember { mutableStateOf<List<NewsService.NewsItem>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
     val coroutineScope = rememberCoroutineScope()
-    
-    LaunchedEffect(Unit) {
-        coroutineScope.launch {
-            isLoading = true
-            quote = QuoteService.getDailyQuote()
-            newsItems = NewsService.getHealthNews(limit = 3)
-            isLoading = false
+
+    suspend fun loadContent() {
+        isLoading = true
+        errorMessage = null
+        val quoteResult = withTimeoutOrNull(3000) { QuoteService.getDailyQuote() }
+        val newsResult = withTimeoutOrNull(3000) { NewsService.getHealthNews(limit = 3) }
+        quote = quoteResult ?: QuoteService.Quote("Stay consistent. Progress follows.", "PushPrime")
+        newsItems = newsResult ?: emptyList()
+        if (newsResult == null) {
+            errorMessage = "Unable to load news right now."
         }
+        isLoading = false
+    }
+
+    LaunchedEffect(Unit) {
+        loadContent()
     }
     
     Column(
@@ -77,6 +87,34 @@ fun MotivationScreen(
                 contentPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
+                if (errorMessage != null) {
+                    item {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = PushPrimeColors.Surface
+                            )
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = errorMessage.orEmpty(),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = PushPrimeColors.OnSurfaceVariant
+                                )
+                                TextButton(onClick = { coroutineScope.launch { loadContent() } }) {
+                                    Text("Retry")
+                                }
+                            }
+                        }
+                    }
+                }
+
                 // Daily Quote
                 item {
                     if (quote != null) {

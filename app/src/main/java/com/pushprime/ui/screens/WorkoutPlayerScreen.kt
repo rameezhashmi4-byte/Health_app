@@ -41,6 +41,7 @@ import java.util.*
 fun WorkoutPlayerScreen(
     sessionId: Long?,
     localStore: LocalStore,
+    currentUserId: String?,
     spotifyHelper: com.pushprime.data.SpotifyHelper?,
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier
@@ -128,6 +129,7 @@ fun WorkoutPlayerScreen(
                 val duration = ((endTime - startTime) / 1000).toInt()
                 
                 val session = SessionEntity(
+                    userId = currentUserId ?: "anonymous",
                     startTime = startTime,
                     endTime = endTime,
                     activityType = ActivityType.GYM.name,
@@ -145,6 +147,7 @@ fun WorkoutPlayerScreen(
             val session = com.pushprime.model.Session(
                 id = System.currentTimeMillis().toString(),
                 username = "User",
+                userId = currentUserId ?: "anonymous",
                 pushups = repCount,
                 workoutTime = timerSeconds,
                 timestamp = System.currentTimeMillis(),

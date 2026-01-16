@@ -1,7 +1,7 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
-    id("com.google.gms.google-services") apply false
+    id("com.google.gms.google-services")
     id("kotlin-kapt")
 }
 
@@ -84,6 +84,7 @@ dependencies {
     
     // Navigation
     implementation("androidx.navigation:navigation-compose:2.7.5")
+    implementation("com.google.accompanist:accompanist-navigation-animation:0.32.0")
     
     // ViewModel
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.2")
@@ -97,6 +98,7 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
     implementation("com.google.firebase:firebase-firestore-ktx")
     implementation("com.google.firebase:firebase-auth-ktx")
+    implementation("com.google.android.gms:play-services-auth:20.7.0")
     
     // DataStore (for SharedPreferences alternative)
     implementation("androidx.datastore:datastore-preferences:1.0.0")

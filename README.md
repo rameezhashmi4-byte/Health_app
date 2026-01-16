@@ -62,10 +62,13 @@ app/src/main/java/com/pushprime/
 
 2. **Set up Firebase**
    - Create a Firebase project at https://console.firebase.google.com
-   - Add Android app to Firebase project
+   - Add Android app to Firebase project (`com.pushprime`)
    - Download `google-services.json`
    - Place it in `app/` directory
+   - Enable Firebase Authentication (Email/Password + Google)
    - Enable Firestore Database
+   - Add SHA-1/SHA-256 fingerprints for Google Sign-In
+     - Android Studio: Gradle → Tasks → android → signingReport
 
 3. **Open in Android Studio**
    - File → Open → Select project directory
