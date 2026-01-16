@@ -1,6 +1,5 @@
 package com.pushprime.ui.components
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
@@ -62,36 +61,27 @@ fun StoryCircle(
         modifier = modifier.clickable(onClick = onClick),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Box(
-            modifier = Modifier
-                .size(64.dp)
-                .clip(CircleShape)
-                .background(
-                    brush = androidx.compose.ui.graphics.Brush.linearGradient(
-                        colors = listOf(
-                            PushPrimeColors.Primary,
-                            PushPrimeColors.Secondary
-                        )
-                    )
-                )
-                .padding(2.dp)
-                .background(
-                    color = PushPrimeColors.Surface,
-                    shape = CircleShape
-                ),
-            contentAlignment = Alignment.Center
+        Surface(
+            modifier = Modifier.size(60.dp),
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.surface,
+            tonalElevation = 1.dp,
+            shadowElevation = 1.dp,
+            border = androidx.compose.foundation.BorderStroke(1.dp, PushPrimeColors.Outline)
         ) {
+            Box(contentAlignment = Alignment.Center) {
             Text(
                 text = story.emoji,
                 style = MaterialTheme.typography.headlineSmall
             )
+            }
         }
         Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = story.label,
             style = MaterialTheme.typography.labelSmall,
             fontWeight = FontWeight.Medium,
-            color = PushPrimeColors.OnSurface
+            color = MaterialTheme.colorScheme.onSurface
         )
     }
 }

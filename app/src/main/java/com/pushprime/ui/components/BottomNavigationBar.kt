@@ -50,8 +50,8 @@ fun BottomNavigationBar(
     
     NavigationBar(
         modifier = modifier,
-        containerColor = PushPrimeColors.Surface,
-        contentColor = PushPrimeColors.OnSurface
+        containerColor = MaterialTheme.colorScheme.surface,
+        tonalElevation = 2.dp
     ) {
         items.forEach { item ->
             NavigationBarItem(
@@ -70,11 +70,11 @@ fun BottomNavigationBar(
                 selected = currentRoute == item.route,
                 onClick = { onNavigate(item.route) },
                 colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = PushPrimeColors.Primary,
-                    selectedTextColor = PushPrimeColors.Primary,
-                    unselectedIconColor = PushPrimeColors.OnSurfaceVariant,
-                    unselectedTextColor = PushPrimeColors.OnSurfaceVariant,
-                    indicatorColor = PushPrimeColors.Primary.copy(alpha = 0.1f)
+                    selectedIconColor = MaterialTheme.colorScheme.primary,
+                    selectedTextColor = MaterialTheme.colorScheme.primary,
+                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
                 )
             )
         }

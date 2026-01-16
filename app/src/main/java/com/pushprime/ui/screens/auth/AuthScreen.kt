@@ -26,10 +26,10 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -108,7 +108,9 @@ fun AuthScreen(
             } else {
                 authViewModel.signInWithGoogle(token) { signInResult ->
                     isLoading = false
-                    signInResult.onFailure { error ->
+                    signInResult.onSuccess {
+                        onLoggedInState.value()
+                    }.onFailure { error ->
                         authError = error.message ?: "Sign-in failed."
                     }
                 }
@@ -140,7 +142,7 @@ fun AuthScreen(
 
     Surface(
         modifier = modifier.fillMaxSize(),
-        color = PushPrimeColors.Background
+        color = MaterialTheme.colorScheme.background
     ) {
         Column(
             modifier = Modifier
@@ -163,13 +165,13 @@ fun AuthScreen(
                     text = "Welcome back",
                     style = MaterialTheme.typography.headlineLarge,
                     fontWeight = FontWeight.Bold,
-                    color = PushPrimeColors.OnBackground
+                    color = MaterialTheme.colorScheme.onBackground
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
                     text = "Log in to keep your streak going.",
                     style = MaterialTheme.typography.bodyLarge,
-                    color = PushPrimeColors.OnSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
@@ -202,6 +204,12 @@ fun AuthScreen(
                                 )
                             }
                         }
+                    } else {
+                        Text(
+                            text = "Google sign-in available after Firebase setup.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
 
                     Button(
@@ -265,8 +273,13 @@ fun AuthScreen(
                                 isError = emailError != null,
                                 singleLine = true,
                                 modifier = Modifier.fillMaxWidth(),
-                                colors = TextFieldDefaults.outlinedTextFieldColors(
-                                    focusedBorderColor = PushPrimeColors.Primary
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                                    unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
+                                    focusedBorderColor = PushPrimeColors.Primary,
+                                    focusedLabelColor = PushPrimeColors.Primary,
+                                    unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    cursorColor = PushPrimeColors.Primary
                                 )
                             )
                             if (attemptedEmailSubmit && emailError != null) {
@@ -297,8 +310,13 @@ fun AuthScreen(
                                 isError = passwordError != null,
                                 modifier = Modifier.fillMaxWidth(),
                                 visualTransformation = PasswordVisualTransformation(),
-                                colors = TextFieldDefaults.outlinedTextFieldColors(
-                                    focusedBorderColor = PushPrimeColors.Primary
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                                    unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
+                                    focusedBorderColor = PushPrimeColors.Primary,
+                                    focusedLabelColor = PushPrimeColors.Primary,
+                                    unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    cursorColor = PushPrimeColors.Primary
                                 )
                             )
                             if (attemptedPasswordSubmit && passwordError != null) {
@@ -324,7 +342,9 @@ fun AuthScreen(
                                         isCreateAccount = isCreateAccount
                                     ) { result ->
                                         isLoading = false
-                                        result.onFailure { error ->
+                                        result.onSuccess {
+                                            onLoggedInState.value()
+                                        }.onFailure { error ->
                                             authError = error.message ?: "Sign-in failed."
                                         }
                                     }

@@ -26,7 +26,16 @@ A modern Android fitness app built with Kotlin and Jetpack Compose. Track push-u
 ```
 app/src/main/java/com/pushprime/
 ├── ui/
-│   ├── screens/          # DashboardScreen, CoachingScreen, CompeteScreen, GroupSessionScreen, MotivationScreen
+│   ├── screens/
+│   │   ├── auth/         # AuthScreen, OnboardingScreen, SplashScreen, AccountScreen
+│   │   ├── home/         # HomeScreen, DashboardScreen, MotivationScreen
+│   │   ├── workout/      # WorkoutScreen, WorkoutPlayerScreen, ExerciseLibraryScreen
+│   │   ├── progress/     # ProgressScreen, CalendarScreen, AnalyticsScreen
+│   │   ├── media/        # PhotoVaultScreen, CollageCreatorScreen
+│   │   ├── social/       # CompeteScreen, GroupSessionScreen, CoachingScreen
+│   │   ├── integrations/ # SpotifyLoginScreen, SpotifyBrowserScreen
+│   │   ├── settings/     # NotificationSettingsScreen
+│   │   └── common/       # ErrorScreen
 │   ├── components/       # PushUpCounter, ProgressRing, LeaderboardCard, QuoteCard
 │   └── theme/           # PushPrime theme, colors, typography
 ├── data/                # LocalStore, FirebaseHelper

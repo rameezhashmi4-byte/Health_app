@@ -7,42 +7,42 @@ import androidx.compose.ui.graphics.Color
  * Hinge-inspired palette adapted for health & exercise
  */
 object PushPrimeColors {
-    // Light theme
-    val Background = Color(0xFFF8F6F3)
+    // Light theme (Slack-inspired)
+    val Background = Color(0xFFF8F8F8)
     val Surface = Color(0xFFFFFFFF)
-    val SurfaceVariant = Color(0xFFF1ECE8)
-    
-    val OnBackground = Color(0xFF1F1B1A)
-    val OnSurface = Color(0xFF1F1B1A)
-    val OnSurfaceVariant = Color(0xFF5A534F)
-    
-    // Primary accent - Warm rose/coral
-    val Primary = Color(0xFFE65A5F)
-    val PrimaryVariant = Color(0xFFD44F54)
-    val PrimaryLight = Color(0xFFFFC2C5)
-    
-    // Secondary - Dark charcoal
-    val Secondary = Color(0xFF1C1B1F)
-    val SecondaryVariant = Color(0xFF2A2625)
-    
+    val SurfaceVariant = Color(0xFFF2F2F2)
+
+    val OnBackground = Color(0xFF1D1C1D)
+    val OnSurface = Color(0xFF1D1C1D)
+    val OnSurfaceVariant = Color(0xFF5E5E5E)
+
+    // Primary accent - Slack aubergine
+    val Primary = Color(0xFF4A154B)
+    val PrimaryVariant = Color(0xFF3E1240)
+    val PrimaryLight = Color(0xFF7E4A88)
+
+    // Secondary - deep charcoal
+    val Secondary = Color(0xFF1D1C1D)
+    val SecondaryVariant = Color(0xFF2A2A2A)
+
     // Status colors
-    val Error = Color(0xFFCC4A4A)
-    val Success = Color(0xFF2E9F6F)
-    val Warning = Color(0xFFD89B3A)
-    
+    val Error = Color(0xFFD93025)
+    val Success = Color(0xFF2EB67D)
+    val Warning = Color(0xFFECB22E)
+
     // Borders
-    val Outline = Color(0xFFE2DAD6)
-    val OutlineVariant = Color(0xFFD4C8C3)
+    val Outline = Color(0xFFE1E1E1)
+    val OutlineVariant = Color(0xFFD5D5D5)
 
     // Dark theme
-    val DarkBackground = Color(0xFF111111)
-    val DarkSurface = Color(0xFF1A1A1A)
-    val DarkSurfaceVariant = Color(0xFF242424)
-    val DarkOnBackground = Color(0xFFF4F2EF)
-    val DarkOnSurface = Color(0xFFF4F2EF)
-    val DarkOnSurfaceVariant = Color(0xFFCFC6C1)
-    val DarkPrimary = Color(0xFFFF6B6F)
-    val DarkSecondary = Color(0xFFEAE0DB)
+    val DarkBackground = Color(0xFF1A1D21)
+    val DarkSurface = Color(0xFF222529)
+    val DarkSurfaceVariant = Color(0xFF2B2F33)
+    val DarkOnBackground = Color(0xFFEDEDED)
+    val DarkOnSurface = Color(0xFFEDEDED)
+    val DarkOnSurfaceVariant = Color(0xFFB3B3B3)
+    val DarkPrimary = Color(0xFFAD7FC1)
+    val DarkSecondary = Color(0xFFD5D5D5)
 }
 
 // Material 3 mapping
