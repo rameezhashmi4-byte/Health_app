@@ -1,43 +1,79 @@
 package com.pushprime.ui.screens.nutrition
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Bolt
+import androidx.compose.material.icons.filled.LocalDining
+import androidx.compose.material.icons.filled.Restaurant
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.pushprime.model.NutritionGoal
-import com.pushprime.ui.theme.PushPrimeColors
+import com.pushprime.model.NutritionEntry
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NutritionScreen(
     viewModel: NutritionViewModel = hiltViewModel(),
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    onNavigateToAddMeal: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    var quickCalories by remember { mutableStateOf<QuickAddState?>(null) }
+    var quickProtein by remember { mutableStateOf<QuickAddState?>(null) }
 
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text = "NUTRITION",
+                        text = "Nutrition",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Black,
-                        letterSpacing = 4.sp
+                        letterSpacing = 1.sp
                     )
                 },
                 navigationIcon = {
@@ -56,223 +92,224 @@ fun NutritionScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues),
-            contentPadding = PaddingValues(24.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
+            contentPadding = PaddingValues(20.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Target Card
             item {
-                Surface(
-                    color = Color.Black,
-                    shape = RoundedCornerShape(0.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(modifier = Modifier.padding(24.dp)) {
-                        Text(
-                            "DAILY TARGET",
-                            style = MaterialTheme.typography.labelLarge,
-                            color = PushPrimeColors.GTAYellow,
-                            fontWeight = FontWeight.Black
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            "${uiState.targetCalories} kcal",
-                            style = MaterialTheme.typography.displayMedium,
-                            color = Color.White,
-                            fontWeight = FontWeight.Black
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            MacroIndicator("P", "${uiState.targetMacros.protein}g", Color(0xFFE65A5F))
-                            MacroIndicator("C", "${uiState.targetMacros.carbs}g", Color(0xFF276EF1))
-                            MacroIndicator("F", "${uiState.targetMacros.fats}g", Color(0xFFFFD100))
-                        }
-                    }
-                }
-            }
-
-            // Goal & Region
-            item {
-                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    Text("OBJECTIVE", fontWeight = FontWeight.Black, style = MaterialTheme.typography.labelLarge)
-                    
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        NutritionGoal.values().forEach { goal ->
-                            GoalChip(
-                                label = goal.name,
-                                isSelected = uiState.settings.goal == goal,
-                                onClick = { viewModel.updateGoal(goal) },
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-                    }
-
-                    RegionSelector(
-                        selectedRegion = uiState.settings.region,
-                        onRegionSelected = { viewModel.updateRegion(it) }
-                    )
-                }
-            }
-
-            // Preferences
-            item {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text("DIETARY PREFERENCES", fontWeight = FontWeight.Black, style = MaterialTheme.typography.labelLarge)
-                    
-                    PreferenceToggle("Halal", uiState.settings.isHalal) { viewModel.toggleHalal(it) }
-                    PreferenceToggle("Vegetarian", uiState.settings.isVeggie) { viewModel.toggleVeggie(it) }
-                    PreferenceToggle("Budget Friendly", uiState.settings.isBudget) { viewModel.toggleBudget(it) }
-                    PreferenceToggle("Restaurant Mode", uiState.settings.restaurantMode) { viewModel.toggleRestaurantMode(it) }
-                }
-            }
-
-            // Meal Suggestions
-            item {
-                Text("MEAL SUGGESTIONS", fontWeight = FontWeight.Black, style = MaterialTheme.typography.labelLarge)
-            }
-
-            items(uiState.mealSuggestions) { meal ->
-                MealCard(meal)
-            }
-        }
-    }
-}
-
-@Composable
-fun MacroIndicator(label: String, value: String, color: Color) {
-    Column {
-        Text(label, style = MaterialTheme.typography.labelSmall, color = color, fontWeight = FontWeight.Black)
-        Text(value, style = MaterialTheme.typography.titleMedium, color = Color.White, fontWeight = FontWeight.Bold)
-    }
-}
-
-@Composable
-fun GoalChip(label: String, isSelected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier
-            .height(48.dp)
-            .background(if (isSelected) Color.Black else Color.LightGray)
-            .clickable { onClick() },
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            label,
-            color = if (isSelected) Color.White else Color.Black,
-            fontWeight = FontWeight.Black,
-            fontSize = 12.sp
-        )
-    }
-}
-
-@Composable
-fun RegionSelector(selectedRegion: String, onRegionSelected: (String) -> Unit) {
-    var expanded by remember { mutableStateOf(false) }
-    val regions = listOf("Global", "USA", "Europe", "Asia", "Middle East")
-
-    Box {
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { expanded = true },
-            color = Color(0xFFF6F6F6),
-            shape = RoundedCornerShape(0.dp)
-        ) {
-            Row(
-                modifier = Modifier.padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text("REGION", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(selectedRegion, fontWeight = FontWeight.Black)
-                    Icon(Icons.Default.ArrowDropDown, contentDescription = null)
-                }
-            }
-        }
-
-        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            regions.forEach { region ->
-                DropdownMenuItem(
-                    text = { Text(region) },
-                    onClick = {
-                        onRegionSelected(region)
-                        expanded = false
-                    }
+                NutritionTotalsCard(
+                    totalCalories = uiState.totalCalories,
+                    calorieGoal = uiState.calorieGoal,
+                    totalProtein = uiState.totalProtein,
+                    proteinGoal = uiState.proteinGoal
                 )
             }
+
+            item {
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
+                    Button(
+                        onClick = onNavigateToAddMeal,
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Black, contentColor = Color.White)
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Add Meal", fontWeight = FontWeight.Bold)
+                    }
+                    OutlinedButton(
+                        onClick = { quickCalories = QuickAddState("Quick Add Calories") },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(Icons.Default.Bolt, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Quick Add Calories")
+                    }
+                }
+            }
+
+            item {
+                OutlinedButton(
+                    onClick = { quickProtein = QuickAddState("Quick Add Protein") },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Default.LocalDining, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Quick Add Protein")
+                }
+            }
+
+            item {
+                Text("7-Day Calories", fontWeight = FontWeight.Black, style = MaterialTheme.typography.labelLarge)
+                NutritionMiniChart(summaries = uiState.last7Days)
+            }
+
+            item {
+                Text("Today Logs", fontWeight = FontWeight.Black, style = MaterialTheme.typography.labelLarge)
+            }
+
+            if (uiState.entries.isEmpty()) {
+                item {
+                    Text("No meals logged yet.", color = Color.Gray)
+                }
+            } else {
+                items(uiState.entries) { entry ->
+                    NutritionEntryCard(entry = entry)
+                }
+            }
         }
     }
-}
 
-@Composable
-fun PreferenceToggle(label: String, isChecked: Boolean, onCheckedChange: (Boolean) -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(56.dp)
-            .background(Color(0xFFF6F6F6))
-            .clickable { onCheckedChange(!isChecked) }
-            .padding(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(label, fontWeight = FontWeight.Bold)
-        Switch(
-            checked = isChecked,
-            onCheckedChange = onCheckedChange,
-            colors = SwitchDefaults.colors(
-                checkedThumbColor = Color.White,
-                checkedTrackColor = Color.Black,
-                uncheckedThumbColor = Color.White,
-                uncheckedTrackColor = Color.LightGray
-            )
+    quickCalories?.let { state ->
+        QuickAddDialog(
+            title = state.title,
+            onDismiss = { quickCalories = null },
+            onSave = { value ->
+                viewModel.quickAddCalories(value)
+                quickCalories = null
+            }
+        )
+    }
+
+    quickProtein?.let { state ->
+        QuickAddDialog(
+            title = state.title,
+            onDismiss = { quickProtein = null },
+            onSave = { value ->
+                viewModel.quickAddProtein(value)
+                quickProtein = null
+            }
         )
     }
 }
 
+data class QuickAddState(val title: String)
+
 @Composable
-fun MealCard(meal: com.pushprime.model.MealSuggestion) {
+fun NutritionTotalsCard(
+    totalCalories: Int,
+    calorieGoal: Int,
+    totalProtein: Int,
+    proteinGoal: Int
+) {
     Surface(
-        modifier = Modifier.fillMaxWidth(),
-        color = Color.White,
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color.LightGray),
-        shape = RoundedCornerShape(0.dp)
+        color = Color.Black,
+        shape = RoundedCornerShape(20.dp),
+        modifier = Modifier.fillMaxWidth()
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(meal.name, fontWeight = FontWeight.Black, style = MaterialTheme.typography.titleMedium)
-                    Text("${meal.calories} kcal", color = Color.Gray, style = MaterialTheme.typography.bodySmall)
-                }
-                Icon(Icons.Default.Restaurant, contentDescription = null, tint = Color.LightGray)
-            }
-            
-            if (meal.swapOptions.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(12.dp))
-                Text("SWAP OPTIONS:", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = Color.Gray)
-                Row(modifier = Modifier.horizontalScroll(androidx.compose.foundation.rememberScrollState())) {
-                    meal.swapOptions.forEach { option ->
-                        Text(
-                            "• $option  ",
-                            style = MaterialTheme.typography.bodySmall,
-                            fontWeight = FontWeight.Medium,
-                            modifier = Modifier.padding(top = 4.dp)
+        Column(modifier = Modifier.padding(20.dp)) {
+            Text(
+                "Today Calories",
+                color = Color(0xFFFFD100),
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                "$totalCalories / $calorieGoal",
+                color = Color.White,
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Black
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(
+                "Today Protein",
+                color = Color(0xFFFFD100),
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                "${totalProtein}g / ${proteinGoal}g",
+                color = Color.White,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Black
+            )
+        }
+    }
+}
+
+@Composable
+fun NutritionMiniChart(summaries: List<NutritionDaySummary>) {
+    val maxValue = summaries.maxOfOrNull { it.calories }.takeIf { it != null && it > 0 } ?: 1
+    Row(
+        modifier = Modifier.fillMaxWidth().height(72.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.Bottom
+    ) {
+        summaries.forEach { day ->
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Box(
+                    modifier = Modifier
+                        .width(20.dp)
+                        .height((56.dp * (day.calories.toFloat() / maxValue)).coerceAtLeast(6.dp))
+                        .background(
+                            if (day.calories > 0) Color.Black else Color.LightGray,
+                            RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
                         )
-                    }
-                }
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(day.date.takeLast(2), style = MaterialTheme.typography.labelSmall, color = Color.Gray)
             }
         }
     }
 }
 
-// Add horizontalScroll for swap options
 @Composable
-fun RowScope.MealTags(tags: List<String>) {
-    // ...
+fun NutritionEntryCard(entry: NutritionEntry) {
+    Surface(
+        color = Color.White,
+        shape = RoundedCornerShape(16.dp),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE6E6E6)),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = entry.name.ifBlank { entry.mealType.lowercase().replaceFirstChar { it.uppercase() } },
+                    fontWeight = FontWeight.Black
+                )
+                Text(
+                    text = "${entry.calories ?: 0} kcal • ${entry.proteinGrams ?: 0}g protein",
+                    color = Color.Gray,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+            Icon(Icons.Default.Restaurant, contentDescription = null, tint = Color.LightGray)
+        }
+    }
+}
+
+@Composable
+fun QuickAddDialog(
+    title: String,
+    onDismiss: () -> Unit,
+    onSave: (Int) -> Unit
+) {
+    var valueText by remember { mutableStateOf("") }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(title, fontWeight = FontWeight.Bold) },
+        text = {
+            TextField(
+                value = valueText,
+                onValueChange = { valueText = it.filter { ch -> ch.isDigit() } },
+                placeholder = { Text("Enter value") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                val value = valueText.toIntOrNull() ?: 0
+                if (value > 0) onSave(value)
+            }) {
+                Text("Save")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
 }

@@ -23,6 +23,11 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 
+enum class AuthMode {
+    SIGN_IN,
+    SIGN_UP
+}
+
 @HiltViewModel
 class AuthViewModel @Inject constructor(
     @ApplicationContext private val appContext: Context,
@@ -35,8 +40,17 @@ class AuthViewModel @Inject constructor(
         null
     }
 
-    private val _isLoggedIn = MutableStateFlow(localStore.lastKnownLoggedIn.value)
+    private val _isLoggedIn = MutableStateFlow(authRepository.currentUser != null)
     val isLoggedIn: StateFlow<Boolean> = _isLoggedIn.asStateFlow()
+
+    private val _isLoading = MutableStateFlow(true)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    private val _authError = MutableStateFlow<String?>(null)
+    val authError: StateFlow<String?> = _authError.asStateFlow()
+
+    private val _authMode = MutableStateFlow(AuthMode.SIGN_IN)
+    val authMode: StateFlow<AuthMode> = _authMode.asStateFlow()
 
     val currentUser: FirebaseUser?
         get() = authRepository.currentUser
@@ -45,6 +59,7 @@ class AuthViewModel @Inject constructor(
         val user = firebaseAuth.currentUser
         _isLoggedIn.value = user != null
         localStore.setLastKnownLoggedIn(user != null)
+        _isLoading.value = false
         if (user != null) {
             viewModelScope.launch { handleUserSignedIn(user) }
         }
@@ -54,6 +69,7 @@ class AuthViewModel @Inject constructor(
         authRepository.addAuthStateListener(authStateListener)
         _isLoggedIn.value = authRepository.currentUser != null
         localStore.setLastKnownLoggedIn(_isLoggedIn.value)
+        _isLoading.value = false
         viewModelScope.launch { flushPendingSessionWrites() }
         authRepository.currentUser?.let { user ->
             viewModelScope.launch { handleUserSignedIn(user) }
@@ -68,21 +84,27 @@ class AuthViewModel @Inject constructor(
     fun signInWithEmail(
         email: String,
         password: String,
-        isCreateAccount: Boolean,
         onResult: (Result<Unit>) -> Unit
     ) {
         viewModelScope.launch {
             try {
-                if (isCreateAccount) {
+                _isLoading.value = true
+                _authError.value = null
+                if (_authMode.value == AuthMode.SIGN_UP) {
                     authRepository.createAccount(email, password)
                 } else {
                     authRepository.signInWithEmail(email, password)
                 }
                 authRepository.currentUser?.let { user ->
+                    _isLoggedIn.value = true
+                    localStore.setLastKnownLoggedIn(true)
                     handleUserSignedIn(user)
                 }
+                _isLoading.value = false
                 onResult(Result.success(Unit))
             } catch (e: Exception) {
+                _isLoading.value = false
+                _authError.value = e.message
                 onResult(Result.failure(e))
             }
         }
@@ -91,12 +113,19 @@ class AuthViewModel @Inject constructor(
     fun signInWithGoogle(idToken: String, onResult: (Result<Unit>) -> Unit) {
         viewModelScope.launch {
             try {
+                _isLoading.value = true
+                _authError.value = null
                 authRepository.signInWithGoogle(idToken)
                 authRepository.currentUser?.let { user ->
+                    _isLoggedIn.value = true
+                    localStore.setLastKnownLoggedIn(true)
                     handleUserSignedIn(user)
                 }
+                _isLoading.value = false
                 onResult(Result.success(Unit))
             } catch (e: Exception) {
+                _isLoading.value = false
+                _authError.value = e.message
                 onResult(Result.failure(e))
             }
         }
@@ -107,6 +136,7 @@ class AuthViewModel @Inject constructor(
         val sessionId = localStore.getCurrentSessionId()
         val endedAt = System.currentTimeMillis()
         viewModelScope.launch {
+            _isLoading.value = true
             if (userId != null && sessionId != null) {
                 endSession(userId, sessionId, endedAt)
             }
@@ -114,7 +144,24 @@ class AuthViewModel @Inject constructor(
             authRepository.signOut()
             localStore.clearCurrentSession()
             localStore.setLastKnownLoggedIn(false)
+            _isLoading.value = false
         }
+    }
+
+    fun setAuthMode(mode: AuthMode) {
+        _authMode.value = mode
+    }
+
+    fun toggleAuthMode() {
+        _authMode.value = if (_authMode.value == AuthMode.SIGN_IN) {
+            AuthMode.SIGN_UP
+        } else {
+            AuthMode.SIGN_IN
+        }
+    }
+
+    fun clearAuthError() {
+        _authError.value = null
     }
 
     private suspend fun handleUserSignedIn(user: FirebaseUser) {

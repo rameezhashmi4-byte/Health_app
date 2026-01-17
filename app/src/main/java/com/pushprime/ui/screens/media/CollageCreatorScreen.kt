@@ -1,4 +1,4 @@
-package com.pushprime.ui.screens
+package com.pushprime.ui.screens.media
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape

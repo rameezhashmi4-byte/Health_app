@@ -16,13 +16,18 @@ data class SessionEntity(
     val userId: String = "anonymous",
     val startTime: Long = System.currentTimeMillis(),
     val endTime: Long? = null,
-    val activityType: String, // "GYM" or "SPORT"
+    val activityType: String, // "GYM", "SPORT", or "QUICK_SESSION"
     val exerciseId: String? = null, // For gym: exercise name or ID
     val sportType: String? = null, // For sport: "Football", "Cricket", etc.
     val mode: String = "REPS", // "REPS", "TIMER", "HYBRID"
     val totalReps: Int? = null,
     val totalSeconds: Int? = null,
     val intensity: String = "MEDIUM", // "LOW", "MEDIUM", "HIGH"
+    val intervalsEnabled: Boolean = false,
+    val warmupEnabled: Boolean = false,
+    val rating: Int? = null, // 1-5 rating
+    val caloriesEstimate: Int? = null,
+    val durationMinutes: Int? = null,
     val tags: String? = null, // JSON array or comma-separated
     val notes: String? = null,
     val date: String = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date()),
@@ -67,13 +72,15 @@ data class SessionEntity(
  */
 enum class ActivityType(val displayName: String) {
     GYM("Gym"),
-    SPORT("Sport")
+    SPORT("Sport"),
+    QUICK_SESSION("Quick Session")
 }
 
 /**
  * Sport Type enum
  */
 enum class SportType(val displayName: String, val icon: String = "⚽") {
+    SQUASH("Squash", "🥎"),
     FOOTBALL("Football", "⚽"),
     CRICKET("Cricket", "🏏"),
     RUGBY("Rugby", "🏉"),

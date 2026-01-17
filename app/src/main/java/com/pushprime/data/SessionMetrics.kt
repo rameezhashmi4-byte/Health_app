@@ -10,6 +10,8 @@ private val sessionDateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefa
 
 fun todaySessionDate(): String = sessionDateFormatter.format(Date())
 
+fun dateFromTimestamp(timestamp: Long): String = sessionDateFormatter.format(Date(timestamp))
+
 fun totalRepsForDate(sessions: List<SessionEntity>, date: String): Int {
     return sessions.filter { it.date == date }.sumOf { it.totalReps ?: 0 }
 }
@@ -27,6 +29,11 @@ fun totalDurationSeconds(sessions: List<SessionEntity>): Int {
 fun calculateStreak(sessions: List<SessionEntity>): Int {
     if (sessions.isEmpty()) return 0
     val availableDates = sessions.map { it.date }.toSet()
+    return calculateStreakFromDates(availableDates)
+}
+
+fun calculateStreakFromDates(availableDates: Set<String>): Int {
+    if (availableDates.isEmpty()) return 0
     val calendar = Calendar.getInstance()
     var streak = 0
     while (true) {

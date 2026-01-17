@@ -39,7 +39,7 @@ fun MotivationScreen(
         errorMessage = null
         val quoteResult = withTimeoutOrNull(3000) { QuoteService.getDailyQuote() }
         val newsResult = withTimeoutOrNull(3000) { NewsService.getHealthNews(limit = 3) }
-        quote = quoteResult ?: QuoteService.Quote("Stay consistent. Progress follows.", "PushPrime")
+        quote = quoteResult ?: QuoteService.Quote("Stay consistent. Progress follows.", "RAMBOOST")
         newsItems = newsResult ?: emptyList()
         if (newsResult == null) {
             errorMessage = "Unable to load news right now."

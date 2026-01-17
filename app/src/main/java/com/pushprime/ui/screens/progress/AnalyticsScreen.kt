@@ -12,10 +12,13 @@ import androidx.compose.ui.unit.dp
 import com.pushprime.data.SessionDao
 import com.pushprime.data.WeeklyAggregationResult
 import com.pushprime.data.MonthlyAggregationResult
+import com.pushprime.model.ActivityType
+import com.pushprime.model.SessionEntity
 import com.pushprime.ui.components.FeedCard
 import com.pushprime.ui.theme.PushPrimeColors
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlinx.coroutines.flow.first
 
 /**
  * Analytics Screen
@@ -34,6 +37,7 @@ fun AnalyticsScreen(
     }
     
     var selectedPeriod by remember { mutableStateOf<AnalyticsPeriod>(AnalyticsPeriod.WEEKLY) }
+    var selectedFilter by remember { mutableStateOf<ActivityFilter>(ActivityFilter.ALL) }
     
     val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
     val calendar = Calendar.getInstance()
@@ -67,9 +71,15 @@ fun AnalyticsScreen(
     var weeklyData by remember { mutableStateOf<List<WeeklyAggregationResult>>(emptyList()) }
     var monthlyData by remember { mutableStateOf<List<MonthlyAggregationResult>>(emptyList()) }
     
-    LaunchedEffect(startDate, endDate) {
-        weeklyData = sessionDao.getWeeklyAggregation(startDate, endDate)
-        monthlyData = sessionDao.getMonthlyAggregationByType(startDate, endDate)
+    LaunchedEffect(startDate, endDate, selectedFilter) {
+        val sessions = sessionDao.getSessionsByDateRange(startDate, endDate).first()
+        val filteredSessions = when (selectedFilter) {
+            ActivityFilter.ALL -> sessions
+            ActivityFilter.GYM -> sessions.filter { it.activityType == ActivityType.GYM.name }
+            ActivityFilter.SPORT -> sessions.filter { it.activityType == ActivityType.SPORT.name }
+        }
+        weeklyData = buildDailyAggregation(startDate, endDate, filteredSessions)
+        monthlyData = buildMonthlyAggregation(filteredSessions)
     }
     
     val totalSessions = remember(weeklyData) {
@@ -118,6 +128,22 @@ fun AnalyticsScreen(
                             selected = selectedPeriod == period,
                             onClick = { selectedPeriod = period },
                             label = { Text(period.displayName) },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+            }
+
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    ActivityFilter.values().forEach { filter ->
+                        FilterChip(
+                            selected = selectedFilter == filter,
+                            onClick = { selectedFilter = filter },
+                            label = { Text(filter.displayName) },
                             modifier = Modifier.weight(1f)
                         )
                     }
@@ -253,4 +279,50 @@ enum class AnalyticsPeriod(val displayName: String) {
     WEEKLY("Weekly"),
     MONTHLY("Monthly"),
     YEARLY("Yearly")
+}
+
+enum class ActivityFilter(val displayName: String) {
+    ALL("All"),
+    GYM("Gym"),
+    SPORT("Sports")
+}
+
+private fun buildDailyAggregation(
+    startDate: String,
+    endDate: String,
+    sessions: List<SessionEntity>
+): List<WeeklyAggregationResult> {
+    val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+    val start = dateFormat.parse(startDate) ?: return emptyList()
+    val end = dateFormat.parse(endDate) ?: return emptyList()
+    val calendar = Calendar.getInstance().apply { time = start }
+    val results = mutableListOf<WeeklyAggregationResult>()
+    while (!calendar.time.after(end)) {
+        val dateKey = dateFormat.format(calendar.time)
+        val daySessions = sessions.filter { it.date == dateKey }
+        val totalSeconds = daySessions.sumOf { it.totalSeconds ?: it.getDurationSeconds() }
+        results.add(
+            WeeklyAggregationResult(
+                date = dateKey,
+                count = daySessions.size,
+                totalSeconds = totalSeconds
+            )
+        )
+        calendar.add(Calendar.DAY_OF_YEAR, 1)
+    }
+    return results
+}
+
+private fun buildMonthlyAggregation(
+    sessions: List<SessionEntity>
+): List<MonthlyAggregationResult> {
+    return sessions.groupBy { it.activityType }
+        .map { (activityType, group) ->
+            val totalSeconds = group.sumOf { it.totalSeconds ?: it.getDurationSeconds() }
+            MonthlyAggregationResult(
+                activityType = activityType,
+                count = group.size,
+                totalSeconds = totalSeconds
+            )
+        }
 }

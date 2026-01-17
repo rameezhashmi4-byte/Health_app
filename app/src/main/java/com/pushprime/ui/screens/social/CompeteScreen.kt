@@ -1,4 +1,4 @@
-package com.pushprime.ui.screens
+package com.pushprime.ui.screens.social
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable

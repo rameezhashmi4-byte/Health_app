@@ -1,4 +1,4 @@
-package com.pushprime.ui.screens
+package com.pushprime.ui.screens.workout
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -24,6 +24,7 @@ fun WorkoutScreen(
     onNavigateToWorkoutPlayer: (Long?) -> Unit,
     onNavigateToSports: () -> Unit,
     onNavigateToExerciseLibrary: () -> Unit,
+    onNavigateToWorkoutGenerator: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     var selectedActivityType by remember { mutableStateOf<ActivityType>(ActivityType.GYM) }
@@ -93,6 +94,21 @@ fun WorkoutScreen(
                 ) {
                     Text(
                         text = "Begin your workout now",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = PushPrimeColors.OnSurfaceVariant
+                    )
+                }
+            }
+
+            item {
+                FeedCard(
+                    title = "Workout Generator",
+                    subtitle = "Auto-build a session in seconds",
+                    icon = Icons.Default.AutoAwesome,
+                    onClick = onNavigateToWorkoutGenerator
+                ) {
+                    Text(
+                        text = "Tell RAMBOOST your time and gear",
                         style = MaterialTheme.typography.bodyMedium,
                         color = PushPrimeColors.OnSurfaceVariant
                     )

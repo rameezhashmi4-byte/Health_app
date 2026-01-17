@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.PushPrimeApp" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.RAMBOOSTApp" parent="android:Theme.Material.Light.NoActionBar" />
 </resources>

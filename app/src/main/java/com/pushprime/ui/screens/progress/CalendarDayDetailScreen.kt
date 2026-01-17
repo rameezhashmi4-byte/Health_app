@@ -1,4 +1,4 @@
-package com.pushprime.ui.screens
+package com.pushprime.ui.screens.progress
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -135,7 +135,7 @@ fun SessionCard(session: SessionEntity) {
             ) {
                 Column {
                     Text(
-                        text = session.activityType,
+                        text = formatActivityType(session),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -163,6 +163,14 @@ fun SessionCard(session: SessionEntity) {
                 SessionTag(session.intensity)
             }
         }
+    }
+}
+
+private fun formatActivityType(session: SessionEntity): String {
+    return when {
+        session.activityType.equals("SPORT", ignoreCase = true) -> "Sport"
+        session.activityType.equals("QUICK_SESSION", ignoreCase = true) -> "Quick Session"
+        else -> "Workout"
     }
 }
 

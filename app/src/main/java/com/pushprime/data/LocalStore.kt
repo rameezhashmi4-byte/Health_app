@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import com.pushprime.model.Session
 import com.pushprime.model.User
+import com.pushprime.model.UserProfile
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,7 +18,7 @@ import org.json.JSONObject
  */
 class LocalStore(private val context: Context) {
     private val prefs: SharedPreferences = 
-        context.getSharedPreferences("PushPrimePrefs", Context.MODE_PRIVATE)
+        context.getSharedPreferences("RAMBOOSTPrefs", Context.MODE_PRIVATE)
     
     private val _user = MutableStateFlow<User?>(null)
     val user: StateFlow<User?> = _user.asStateFlow()
@@ -27,11 +28,23 @@ class LocalStore(private val context: Context) {
 
     private val _lastKnownLoggedIn = MutableStateFlow(false)
     val lastKnownLoggedIn: StateFlow<Boolean> = _lastKnownLoggedIn.asStateFlow()
+
+    private val _profileSetupCompleted = MutableStateFlow(false)
+    val profileSetupCompleted: StateFlow<Boolean> = _profileSetupCompleted.asStateFlow()
+
+    private val _profile = MutableStateFlow<UserProfile?>(null)
+    val profile: StateFlow<UserProfile?> = _profile.asStateFlow()
+
+    private val _stepTrackingEnabled = MutableStateFlow(false)
+    val stepTrackingEnabled: StateFlow<Boolean> = _stepTrackingEnabled.asStateFlow()
     
     init {
         loadUser()
         loadOnboardingState()
         loadLastKnownLoggedIn()
+        loadProfileSetupState()
+        loadUserProfileState()
+        loadStepTrackingEnabled()
     }
     
     // User data
@@ -83,6 +96,84 @@ class LocalStore(private val context: Context) {
     fun setLastKnownLoggedIn(isLoggedIn: Boolean) {
         _lastKnownLoggedIn.value = isLoggedIn
         prefs.edit().putBoolean("last_known_logged_in", isLoggedIn).apply()
+    }
+
+    private fun loadProfileSetupState() {
+        _profileSetupCompleted.value = prefs.getBoolean("profile_setup_completed", false)
+    }
+
+    fun setProfileSetupCompleted(completed: Boolean) {
+        _profileSetupCompleted.value = completed
+        prefs.edit().putBoolean("profile_setup_completed", completed).apply()
+    }
+
+    fun saveUserProfile(profile: com.pushprime.model.UserProfile) {
+        prefs.edit().apply {
+            putString("profile_uid", profile.uid)
+            putString("profile_full_name", profile.fullName)
+            putString("profile_goal", profile.goal.name)
+            putString("profile_experience", profile.experience.name)
+            putFloat("profile_weight_kg", profile.weightKg.toFloat())
+            putFloat("profile_height_cm", profile.heightCm.toFloat())
+            putInt("profile_age", profile.age ?: -1)
+            putString("profile_sex", profile.sex?.name ?: "")
+            putBoolean("profile_steps_enabled", profile.stepTrackingEnabled)
+            putLong("profile_created_at", profile.createdAt)
+            putLong("profile_updated_at", profile.updatedAt)
+            putBoolean("profile_setup_completed", true)
+            apply()
+        }
+        _profileSetupCompleted.value = true
+        _profile.value = profile
+        _stepTrackingEnabled.value = profile.stepTrackingEnabled
+    }
+
+    fun getUserProfile(): com.pushprime.model.UserProfile? {
+        val name = prefs.getString("profile_full_name", "") ?: ""
+        if (name.isBlank()) return null
+        return com.pushprime.model.UserProfile(
+            uid = prefs.getString("profile_uid", "") ?: "",
+            fullName = name,
+            goal = com.pushprime.model.FitnessGoal.valueOf(
+                prefs.getString("profile_goal", com.pushprime.model.FitnessGoal.GET_STRONGER.name)
+                    ?: com.pushprime.model.FitnessGoal.GET_STRONGER.name
+            ),
+            experience = com.pushprime.model.ExperienceLevel.valueOf(
+                prefs.getString("profile_experience", com.pushprime.model.ExperienceLevel.BEGINNER.name)
+                    ?: com.pushprime.model.ExperienceLevel.BEGINNER.name
+            ),
+            weightKg = prefs.getFloat("profile_weight_kg", 0f).toDouble(),
+            heightCm = prefs.getFloat("profile_height_cm", 0f).toDouble(),
+            age = prefs.getInt("profile_age", -1).takeIf { it > 0 },
+            sex = prefs.getString("profile_sex", "")?.takeIf { it.isNotBlank() }?.let {
+                com.pushprime.model.SexOption.valueOf(it)
+            },
+            stepTrackingEnabled = prefs.getBoolean("profile_steps_enabled", false),
+            createdAt = prefs.getLong("profile_created_at", System.currentTimeMillis()),
+            updatedAt = prefs.getLong("profile_updated_at", System.currentTimeMillis())
+        )
+    }
+
+    private fun loadUserProfileState() {
+        _profile.value = getUserProfile()
+    }
+
+    private fun loadStepTrackingEnabled() {
+        _stepTrackingEnabled.value = prefs.getBoolean("profile_steps_enabled", false)
+    }
+
+    fun setStepTrackingEnabled(enabled: Boolean) {
+        _stepTrackingEnabled.value = enabled
+        prefs.edit().putBoolean("profile_steps_enabled", enabled).apply()
+        _profile.value = _profile.value?.copy(stepTrackingEnabled = enabled)
+    }
+
+    fun recordSessionDate(date: String) {
+        prefs.edit().putString("last_session_date", date).apply()
+    }
+
+    fun getLastSessionDate(): String? {
+        return prefs.getString("last_session_date", null)
     }
     
     // Leaderboard (local JSON)
@@ -253,9 +344,22 @@ class LocalStore(private val context: Context) {
             remove("current_session_id")
             remove("current_session_user_id")
             remove("current_session_started_at")
+            remove("profile_uid")
+            remove("profile_full_name")
+            remove("profile_goal")
+            remove("profile_experience")
+            remove("profile_weight_kg")
+            remove("profile_height_cm")
+            remove("profile_age")
+            remove("profile_sex")
+            remove("profile_steps_enabled")
+            remove("profile_created_at")
+            remove("profile_updated_at")
+            remove("profile_setup_completed")
             apply()
         }
         _user.value = null
+        _profile.value = null
     }
 
     // Achievements

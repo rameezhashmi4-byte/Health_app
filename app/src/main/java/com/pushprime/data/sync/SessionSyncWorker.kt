@@ -62,6 +62,7 @@ class SessionSyncWorker(
                 "totalReps" to session.totalReps,
                 "totalSeconds" to session.totalSeconds,
                 "intensity" to session.intensity,
+                "rating" to session.rating,
                 "tags" to session.tags,
                 "notes" to session.notes,
                 "date" to session.date

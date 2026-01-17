@@ -1,4 +1,4 @@
-package com.pushprime.ui.screens
+package com.pushprime.ui.screens.progress
 
 import android.content.Context
 import androidx.compose.foundation.background

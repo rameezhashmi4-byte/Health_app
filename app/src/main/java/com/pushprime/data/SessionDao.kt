@@ -22,6 +22,9 @@ interface SessionDao {
     
     @Query("SELECT * FROM sessions ORDER BY startTime DESC")
     fun getAllSessions(): Flow<List<SessionEntity>>
+
+    @Query("SELECT * FROM sessions ORDER BY startTime DESC")
+    suspend fun getAllSessionsOnce(): List<SessionEntity>
     
     @Query("SELECT * FROM sessions WHERE id = :id")
     suspend fun getSessionById(id: Long): SessionEntity?
@@ -31,6 +34,9 @@ interface SessionDao {
     
     @Query("SELECT * FROM sessions WHERE date BETWEEN :startDate AND :endDate ORDER BY startTime DESC")
     fun getSessionsByDateRange(startDate: String, endDate: String): Flow<List<SessionEntity>>
+
+    @Query("SELECT * FROM sessions WHERE date BETWEEN :startDate AND :endDate ORDER BY startTime DESC")
+    suspend fun getSessionsByDateRangeOnce(startDate: String, endDate: String): List<SessionEntity>
     
     @Query("SELECT * FROM sessions WHERE activityType = :activityType ORDER BY startTime DESC")
     fun getSessionsByActivityType(activityType: String): Flow<List<SessionEntity>>
@@ -61,6 +67,12 @@ interface SessionDao {
     
     @Query("SELECT COUNT(*) FROM sessions WHERE date BETWEEN :startDate AND :endDate")
     suspend fun getSessionCountForRange(startDate: String, endDate: String): Int
+
+    @Query("SELECT MAX(startTime) FROM sessions")
+    suspend fun getLastSessionStartTime(): Long?
+
+    @Query("SELECT * FROM sessions ORDER BY startTime DESC LIMIT :limit")
+    suspend fun getRecentSessions(limit: Int): List<SessionEntity>
     
     @Query("SELECT SUM(totalSeconds) FROM sessions WHERE date BETWEEN :startDate AND :endDate AND totalSeconds IS NOT NULL")
     suspend fun getTotalMinutesForRange(startDate: String, endDate: String): Int?

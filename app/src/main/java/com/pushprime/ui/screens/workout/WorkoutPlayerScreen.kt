@@ -1,5 +1,6 @@
-package com.pushprime.ui.screens
+package com.pushprime.ui.screens.workout
 
+import android.widget.Toast
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -44,6 +45,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -60,13 +62,39 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.pushprime.coach.BasicCoachProvider
+import com.pushprime.coach.CoachOrchestrator
+import com.pushprime.coach.CoachSettings
+import com.pushprime.coach.OpenAiCoachProvider
+import com.pushprime.coach.SessionPhase
+import com.pushprime.coach.SessionState
+import com.pushprime.coach.SessionType
+import com.pushprime.coach.UserContext
+import com.pushprime.coach.VoiceProviderAdapter
+import com.pushprime.coach.VoiceProviderType
 import com.pushprime.data.AnalyticsHelper
 import com.pushprime.data.AppDatabase
+import com.pushprime.data.CoachSettingsRepository
+import com.pushprime.data.LocalStore
+import com.pushprime.data.MusicSettingsRepository
+import com.pushprime.data.OpenAiKeyStore
 import com.pushprime.model.ActivityType
 import com.pushprime.model.Intensity
 import com.pushprime.model.SessionEntity
+import com.pushprime.music.EnergyLevel
+import com.pushprime.music.MusicPhase
+import com.pushprime.music.MusicProviderManager
+import com.pushprime.music.MusicSource
+import com.pushprime.ui.components.CoachControlBar
 import com.pushprime.ui.components.WorkoutMusicBar
+import com.pushprime.ui.components.MusicModeOverlay
 import com.pushprime.ui.theme.PushPrimeColors
+import com.pushprime.voice.VoiceCoachSettings
+import com.pushprime.voice.VoiceProviderFactory
+import com.pushprime.voice.VoiceProviderLifecycle
+import com.pushprime.voice.VoiceProviderType as LegacyVoiceProviderType
+import com.pushprime.voice.VoiceType
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -80,6 +108,7 @@ import java.util.Locale
 @Composable
 fun WorkoutPlayerScreen(
     sessionId: Long?,
+    localStore: LocalStore,
     currentUserId: String?,
     spotifyHelper: com.pushprime.data.SpotifyHelper?,
     onNavigateBack: () -> Unit,
@@ -97,6 +126,44 @@ fun WorkoutPlayerScreen(
     val coroutineScope = rememberCoroutineScope()
     val haptics = LocalHapticFeedback.current
     val analyticsHelper = remember { AnalyticsHelper(context) }
+    val musicSettingsRepository = remember { MusicSettingsRepository(context) }
+    val achievementsViewModel: WorkoutAchievementsViewModel = hiltViewModel()
+    val coachSettingsRepository = remember { CoachSettingsRepository(context) }
+    val coachSettings by coachSettingsRepository.settings.collectAsState(initial = CoachSettings())
+    val openAiKeyStore = remember { OpenAiKeyStore(context) }
+    val voiceProviderFactory = remember { VoiceProviderFactory(context, openAiKeyStore) }
+    val voiceProvider = remember(coachSettings.voiceProvider) {
+        val providerType = when (coachSettings.voiceProvider) {
+            VoiceProviderType.OPENAI -> LegacyVoiceProviderType.AI_OPENAI
+            VoiceProviderType.SYSTEM -> LegacyVoiceProviderType.SYSTEM
+        }
+        val baseSettings = VoiceCoachSettings(
+            enabled = coachSettings.hybridEnabled,
+            provider = providerType,
+            voiceType = VoiceType.SYSTEM_DEFAULT
+        )
+        val created = voiceProviderFactory.create(baseSettings) { message ->
+            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+        }
+        if (!created.isAvailable) {
+            voiceProviderFactory.create(
+                baseSettings.copy(provider = LegacyVoiceProviderType.SYSTEM)
+            ) { message ->
+                Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+            }
+        } else {
+            created
+        }
+    }
+    val voiceAdapter = remember { VoiceProviderAdapter(voiceProvider) }
+    val basicCoachProvider = remember { BasicCoachProvider() }
+    val aiCoachProvider = remember { OpenAiCoachProvider(openAiKeyStore.getApiKey(), basicCoachProvider) }
+    val coachOrchestrator = remember { CoachOrchestrator(aiCoachProvider, basicCoachProvider, voiceAdapter) }
+    var coachMuted by remember { mutableStateOf(false) }
+    val profile by localStore.profile.collectAsState(initial = null)
+    val userContext = remember(profile) {
+        UserContext(goal = profile?.goal?.name?.replace("_", " "))
+    }
 
     val sessions by (sessionDao?.getAllSessions() ?: flowOf(emptyList()))
         .collectAsState(initial = emptyList())
@@ -134,6 +201,10 @@ fun WorkoutPlayerScreen(
         )
     }
 
+    val expectedDurationSeconds = remember(workoutPlan) {
+        workoutPlan.sumOf { it.targetSeconds + it.restSeconds }.coerceAtLeast(1)
+    }
+
     var phase by remember { mutableStateOf(WorkoutPhase.COUNTDOWN) }
     var exerciseIndex by remember { mutableStateOf(0) }
     var countdownSeconds by remember { mutableStateOf(3) }
@@ -147,6 +218,57 @@ fun WorkoutPlayerScreen(
     var isPaused by remember { mutableStateOf(false) }
     var sessionStartTime by remember { mutableStateOf<Long?>(null) }
 
+    LaunchedEffect(Unit) {
+        coachOrchestrator.resetSession()
+    }
+
+    LaunchedEffect(coachSettings) {
+        coachOrchestrator.updateSettings(coachSettings)
+        if (!coachSettings.hybridEnabled) {
+            coachOrchestrator.stop()
+        }
+    }
+
+    LaunchedEffect(coachMuted) {
+        voiceAdapter.setMuted(coachMuted)
+    }
+
+    LaunchedEffect(voiceProvider) {
+        voiceAdapter.updateProvider(voiceProvider)
+    }
+
+    DisposableEffect(voiceProvider) {
+        onDispose {
+            if (voiceProvider is VoiceProviderLifecycle) {
+                voiceProvider.shutdown()
+            }
+        }
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            coachOrchestrator.stop()
+        }
+    }
+
+    val musicSource by musicSettingsRepository.musicSource.collectAsState(initial = MusicSource.BASIC)
+    val energyLevel by musicSettingsRepository.energyLevel.collectAsState(initial = EnergyLevel.FOCUS)
+    val baseBpm by musicSettingsRepository.baseBpm.collectAsState(initial = 130)
+    val autopilotDefault by musicSettingsRepository.autopilotEnabled.collectAsState(initial = true)
+    var autopilotEnabled by remember { mutableStateOf(autopilotDefault) }
+
+    val musicProvider by MusicProviderManager.currentProvider.collectAsState(
+        initial = MusicProviderManager.currentProvider.value
+    )
+
+    LaunchedEffect(autopilotDefault) {
+        autopilotEnabled = autopilotDefault
+    }
+
+    LaunchedEffect(musicSource) {
+        MusicProviderManager.setSource(musicSource)
+    }
+
     val personalBest = remember(sessions) {
         sessions.maxOfOrNull { it.totalReps ?: 0 } ?: 0
     }
@@ -154,6 +276,9 @@ fun WorkoutPlayerScreen(
 
     val currentExercise = workoutPlan.getOrNull(exerciseIndex)
     val nextExercise = workoutPlan.getOrNull(exerciseIndex + 1)
+    val totalPlannedSeconds = remember(workoutPlan) {
+        workoutPlan.sumOf { it.targetSeconds + it.restSeconds }
+    }
 
     fun resetForExercise(index: Int) {
         val exercise = workoutPlan.getOrNull(index) ?: return
@@ -225,6 +350,8 @@ fun WorkoutPlayerScreen(
                     intensity = Intensity.MEDIUM.name
                 )
                 sessionDao.insert(session)
+                localStore.recordSessionDate(session.date)
+                achievementsViewModel.onSessionSaved()
             }
         }
 
@@ -257,6 +384,33 @@ fun WorkoutPlayerScreen(
             WorkoutPhase.REST -> haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
             WorkoutPhase.COMPLETE -> haptics.performHapticFeedback(HapticFeedbackType.LongPress)
         }
+    }
+
+    LaunchedEffect(
+        phase,
+        isPaused,
+        exerciseIndex,
+        activeSecondsRemaining,
+        restSecondsRemaining,
+        countdownSeconds,
+        workoutElapsedSeconds
+    ) {
+        if (phase == WorkoutPhase.COUNTDOWN) return@LaunchedEffect
+        val sessionRemaining = (totalPlannedSeconds - workoutElapsedSeconds).coerceAtLeast(0)
+        val sessionState = SessionState(
+            sessionType = SessionType.QUICK,
+            phase = when (phase) {
+                WorkoutPhase.COUNTDOWN -> SessionPhase.WARMUP
+                WorkoutPhase.ACTIVE -> SessionPhase.MAIN
+                WorkoutPhase.REST -> SessionPhase.REST
+                WorkoutPhase.COMPLETE -> SessionPhase.FINISHER
+            },
+            secondsElapsed = workoutElapsedSeconds,
+            secondsRemaining = sessionRemaining,
+            roundNumber = exerciseIndex + 1,
+            isPaused = isPaused
+        )
+        coachOrchestrator.handleSessionState(sessionState, userContext)
     }
 
     LaunchedEffect(phase, isPaused, activeSecondsRemaining, exerciseIndex) {
@@ -378,13 +532,25 @@ fun WorkoutPlayerScreen(
             }
         }
     ) { paddingValues ->
-        Column(
+        Box(
             modifier = modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(PushPrimeColors.Background),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .background(PushPrimeColors.Background)
         ) {
+            CoachControlBar(
+                isCoachEnabled = coachSettings.hybridEnabled,
+                isMuted = coachMuted,
+                onMuteToggle = { coachMuted = !coachMuted },
+                onSaySomething = {
+                    coroutineScope.launch {
+                        coachOrchestrator.requestManualLine(userContext)
+                    }
+                },
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = 8.dp, start = 16.dp, end = 16.dp)
+            )
             AnimatedContent(
                 targetState = phase,
                 transitionSpec = {
@@ -442,6 +608,31 @@ fun WorkoutPlayerScreen(
                     }
                 }
             }
+
+            MusicModeOverlay(
+                elapsedSeconds = workoutElapsedSeconds,
+                expectedDurationSeconds = expectedDurationSeconds,
+                baseBpm = baseBpm,
+                energyLevel = energyLevel,
+                musicSource = musicSource,
+                autopilotEnabled = autopilotEnabled,
+                onAutopilotToggle = { enabled ->
+                    autopilotEnabled = enabled
+                    coroutineScope.launch {
+                        musicSettingsRepository.updateAutopilotEnabled(enabled)
+                    }
+                },
+                musicProvider = musicProvider,
+                phaseHint = when (phase) {
+                    WorkoutPhase.COUNTDOWN -> MusicPhase.WARM_UP
+                    WorkoutPhase.ACTIVE -> MusicPhase.MAIN
+                    WorkoutPhase.REST -> MusicPhase.MAIN
+                    WorkoutPhase.COMPLETE -> MusicPhase.FINISHER
+                },
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(16.dp)
+            )
         }
     }
 }

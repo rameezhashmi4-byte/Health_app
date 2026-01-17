@@ -1,4 +1,4 @@
-package com.pushprime.ui.screens
+package com.pushprime.ui.screens.media
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -31,6 +31,7 @@ import com.pushprime.ui.theme.PushPrimeColors
 fun PhotoVaultScreen(
     onNavigateBack: () -> Unit,
     onNavigateToCollageCreator: () -> Unit,
+    onNavigateToShareProgress: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -64,6 +65,9 @@ fun PhotoVaultScreen(
                     }
                 },
                 actions = {
+                    IconButton(onClick = onNavigateToShareProgress) {
+                        Icon(Icons.Default.Share, contentDescription = "Share Progress")
+                    }
                     IconButton(onClick = onNavigateToCollageCreator) {
                         Icon(Icons.Default.Add, contentDescription = "Create Collage")
                     }

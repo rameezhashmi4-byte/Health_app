@@ -1,0 +1,158 @@
+package com.pushprime.ui.screens.pullup
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.weight
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.Button
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import kotlin.math.roundToInt
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun PullupLogSessionScreen(
+    viewModel: PullupLogSessionViewModel = hiltViewModel(),
+    onNavigateBack: () -> Unit
+) {
+    val repsInputs = remember { mutableStateListOf("8", "6", "5") }
+    var addedWeightText by remember { mutableStateOf("") }
+    var restText by remember { mutableStateOf("") }
+    var notes by remember { mutableStateOf("") }
+    var showValidation by remember { mutableStateOf(false) }
+
+    val repsBySet = repsInputs.map { it.toIntOrNull() ?: 0 }
+    val totalReps = repsBySet.sum()
+    val addedWeightKg = addedWeightText.toDoubleOrNull()
+    val volumeScore = calculateVolumeScore(totalReps, addedWeightKg)
+
+    val hasValidSet = repsBySet.any { it > 0 }
+
+    Scaffold(
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = { Text("Log Pull-Up Session", fontWeight = FontWeight.Black) },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = Color.White
+                )
+            )
+        },
+        containerColor = Color.White
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .padding(paddingValues)
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text("Sets", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            repsInputs.forEachIndexed { index, value ->
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                    TextField(
+                        value = value,
+                        onValueChange = { repsInputs[index] = it.filter { ch -> ch.isDigit() } },
+                        label = { Text("Set ${index + 1}") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.weight(1f)
+                    )
+                    IconButton(onClick = { if (repsInputs.size > 1) repsInputs.removeAt(index) }) {
+                        Icon(Icons.Default.Delete, contentDescription = "Remove set")
+                    }
+                }
+            }
+            OutlinedButton(onClick = { repsInputs.add("") }) {
+                Icon(Icons.Default.Add, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Add Set")
+            }
+
+            TextField(
+                value = addedWeightText,
+                onValueChange = { addedWeightText = it.filter { ch -> ch.isDigit() || ch == '.' } },
+                label = { Text("Added weight (kg)") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            TextField(
+                value = restText,
+                onValueChange = { restText = it.filter { ch -> ch.isDigit() } },
+                label = { Text("Rest time (seconds)") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            TextField(
+                value = notes,
+                onValueChange = { notes = it },
+                label = { Text("Notes (optional)") },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Text("Total reps: $totalReps", fontWeight = FontWeight.Bold)
+            Text("Volume score: $volumeScore", color = Color.Gray)
+
+            if (showValidation && !hasValidSet) {
+                Text("Add at least one set with reps.", color = Color.Red)
+            }
+
+            Button(
+                onClick = {
+                    if (!hasValidSet) {
+                        showValidation = true
+                        return@Button
+                    }
+                    viewModel.saveSession(
+                        repsBySet = repsBySet,
+                        addedWeightKg = addedWeightKg,
+                        restSeconds = restText.toIntOrNull(),
+                        notes = notes
+                    )
+                    onNavigateBack()
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Save Session")
+            }
+        }
+    }
+}
+
+private fun calculateVolumeScore(totalReps: Int, addedWeightKg: Double?): Int {
+    val weightFactor = ((addedWeightKg ?: 0.0) / 20.0).coerceAtLeast(0.0)
+    return (totalReps * (1.0 + weightFactor)).roundToInt()
+}

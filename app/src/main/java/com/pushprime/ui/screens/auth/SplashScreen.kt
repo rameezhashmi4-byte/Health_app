@@ -1,4 +1,4 @@
-package com.pushprime.ui.screens
+package com.pushprime.ui.screens.auth
 
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
@@ -15,8 +15,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import com.pushprime.ui.theme.PushPrimeColors
+import androidx.compose.ui.unit.sp
 
 @Composable
 fun SplashScreen() {
@@ -34,14 +35,15 @@ fun SplashScreen() {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(PushPrimeColors.Primary),
+            .background(Color.White),
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = "PushPrime",
+            text = "✅ RAMBOOST",
             style = MaterialTheme.typography.headlineLarge,
-            fontWeight = FontWeight.Bold,
-            color = PushPrimeColors.Surface.copy(alpha = alpha)
+            fontWeight = FontWeight.Black,
+            letterSpacing = 2.sp,
+            color = Color.Black.copy(alpha = alpha)
         )
     }
 }
