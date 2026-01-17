@@ -17,7 +17,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.pushprime.ui.components.RamboostCard
 import com.pushprime.ui.components.RamboostPrimaryButton
@@ -534,8 +533,7 @@ private fun StreakCard(
                     ) {
                         Text(
                             text = if (isRestDayToday) "Rest Day Marked" else "Mark Rest Day",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 12.sp
+                            style = MaterialTheme.typography.labelLarge
                         )
                     }
                     OutlinedButton(
@@ -545,7 +543,10 @@ private fun StreakCard(
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier.weight(1f).height(44.dp)
                     ) {
-                        Text("Start 10-min Quick Session", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                        Text(
+                            text = "Start 10-min Quick Session",
+                            style = MaterialTheme.typography.labelLarge
+                        )
                     }
                 }
             } else {
@@ -562,7 +563,10 @@ private fun StreakCard(
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.fillMaxWidth().height(44.dp)
                 ) {
-                    Text("Start 10-min Quick Session", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    Text(
+                        text = "Start 10-min Quick Session",
+                        style = MaterialTheme.typography.labelLarge
+                    )
                 }
             }
         }
@@ -587,11 +591,20 @@ fun StatTile(label: String, value: String, icon: ImageVector, enabled: Boolean =
                 tint = if (enabled) Color.Black else Color.Gray
             )
             Spacer(modifier = Modifier.height(12.dp))
-            Text(value, fontWeight = FontWeight.Black, fontSize = 18.sp, color = if (enabled) Color.Black else Color.Gray)
+            Text(
+                text = value,
+                style = MaterialTheme.typography.titleLarge,
+                color = if (enabled) Color.Black else Color.Gray
+            )
             Text(label, style = MaterialTheme.typography.labelSmall, color = Color.Gray)
             if (!enabled) {
                 Spacer(modifier = Modifier.height(4.dp))
-                Text("Enable", color = Color(0xFF276EF1), fontSize = 10.sp, fontWeight = FontWeight.Black, modifier = Modifier.clickable { /* Enable */ })
+                Text(
+                    text = "Enable",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color(0xFF276EF1),
+                    modifier = Modifier.clickable { /* Enable */ }
+                )
             }
         }
     }

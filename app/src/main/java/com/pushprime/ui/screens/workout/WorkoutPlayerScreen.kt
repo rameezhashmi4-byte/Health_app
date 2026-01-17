@@ -61,7 +61,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.pushprime.coach.BasicCoachProvider
 import com.pushprime.coach.CoachOrchestrator
@@ -655,8 +654,6 @@ private fun CountdownContent(
         Text(
             text = secondsRemaining.toString(),
             style = MaterialTheme.typography.displayLarge,
-            fontWeight = FontWeight.Bold,
-            fontSize = 88.sp,
             color = PushPrimeColors.Primary
         )
         Spacer(modifier = Modifier.height(16.dp))

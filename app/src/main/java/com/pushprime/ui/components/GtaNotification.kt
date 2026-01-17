@@ -11,7 +11,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.pushprime.ui.theme.PushPrimeColors
 import kotlinx.coroutines.delay
 
@@ -52,9 +51,7 @@ fun GtaNotification(
                     text = if (isSuccess) "MISSION PASSED" else "WASTED",
                     style = MaterialTheme.typography.displayLarge,
                     color = if (isSuccess) PushPrimeColors.GTAYellow else PushPrimeColors.GTARed,
-                    fontWeight = FontWeight.Black,
-                    fontSize = 64.sp,
-                    letterSpacing = 4.sp
+                    fontWeight = FontWeight.Black
                 )
                 if (subMessage.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(8.dp))

@@ -33,7 +33,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.pushprime.coach.BasicCoachProvider
 import com.pushprime.coach.CoachOrchestrator
 import com.pushprime.coach.CoachSettings
@@ -207,6 +206,7 @@ fun SportsSessionScreen(
                 title = {
                     Text(
                         text = sportType.displayName,
+                        style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
                 },
@@ -219,7 +219,7 @@ fun SportsSessionScreen(
                         modifier = Modifier
                             .padding(horizontal = 16.dp)
                             .clickable { onNavigateBack() },
-                        fontSize = 20.sp,
+                        style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
                 }

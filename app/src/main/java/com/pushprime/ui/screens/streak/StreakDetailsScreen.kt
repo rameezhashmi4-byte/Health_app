@@ -30,7 +30,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.pushprime.model.DailyStatusType
 
@@ -93,13 +92,13 @@ fun StreakDetailsScreen(
                                 ) {
                                     Text(
                                         text = day.date.dayOfMonth.toString(),
-                                        fontSize = 12.sp,
+                                        style = MaterialTheme.typography.labelMedium,
                                         fontWeight = FontWeight.Bold,
                                         color = Color.Black
                                     )
                                     Text(
                                         text = statusIcon(day.status),
-                                        fontSize = 12.sp
+                                        style = MaterialTheme.typography.labelMedium
                                     )
                                 }
                             }

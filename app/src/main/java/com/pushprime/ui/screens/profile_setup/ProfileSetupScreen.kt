@@ -24,6 +24,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -60,15 +61,12 @@ fun ProfileSetupScreen(
         when (step) {
             0 -> WelcomeStep(onContinue = { viewModel.nextStep() })
             1 -> BasicDetailsStep(
-                viewModel = viewModel,
-                showErrors = showErrors,
                 onBack = { viewModel.prevStep() },
-                onContinue = {
-                    showErrors = true
-                    if (viewModel.fullName.isNotBlank()) {
-                        viewModel.nextStep()
-                        showErrors = false
-                    }
+                onContinue = { fullName, goal, experience ->
+                    viewModel.fullName = fullName
+                    viewModel.goal = goal
+                    viewModel.experience = experience
+                    viewModel.nextStep()
                 }
             )
             2 -> BodyStatsStep(
@@ -131,35 +129,52 @@ private fun WelcomeStep(onContinue: () -> Unit) {
 
 @Composable
 private fun BasicDetailsStep(
-    viewModel: ProfileSetupViewModel,
-    showErrors: Boolean,
     onBack: () -> Unit,
-    onContinue: () -> Unit
+    onContinue: (String, FitnessGoal, ExperienceLevel) -> Unit
 ) {
+    var fullName by rememberSaveable { mutableStateOf("") }
+    var selectedGoal by rememberSaveable { mutableStateOf<FitnessGoal?>(null) }
+    var selectedExperience by rememberSaveable { mutableStateOf<ExperienceLevel?>(null) }
+    val isFullNameValid = fullName.trim().isNotEmpty()
+    val shouldShowNameError = fullName.isNotEmpty() && !isFullNameValid
+    val isFormValid = isFullNameValid && selectedGoal != null && selectedExperience != null
+
     Text(
         text = "Basic Details",
         style = MaterialTheme.typography.headlineSmall,
         fontWeight = FontWeight.Bold
     )
     OutlinedTextField(
-        value = viewModel.fullName,
-        onValueChange = { viewModel.fullName = it },
+        value = fullName,
+        onValueChange = { fullName = it },
         label = { Text("Full Name") },
         modifier = Modifier.fillMaxWidth(),
         singleLine = true,
-        isError = showErrors && viewModel.fullName.isBlank()
+        isError = shouldShowNameError
     )
     GoalSelector(
-        selected = viewModel.goal,
-        onSelected = { viewModel.goal = it }
+        selected = selectedGoal,
+        onSelected = { selectedGoal = it }
     )
     ExperienceSelector(
-        selected = viewModel.experience,
-        onSelected = { viewModel.experience = it }
+        selected = selectedExperience,
+        onSelected = { selectedExperience = it }
     )
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         OutlinedButton(onClick = onBack, modifier = Modifier.weight(1f)) { Text("Back") }
-        Button(onClick = onContinue, modifier = Modifier.weight(1f)) { Text("Continue") }
+        Button(
+            onClick = {
+                onContinue(
+                    fullName.trim(),
+                    selectedGoal ?: return@Button,
+                    selectedExperience ?: return@Button
+                )
+            },
+            enabled = isFormValid,
+            modifier = Modifier.weight(1f)
+        ) {
+            Text("Continue")
+        }
     }
 }
 
@@ -257,7 +272,7 @@ private fun PermissionsStep(
 
 @Composable
 private fun GoalSelector(
-    selected: FitnessGoal,
+    selected: FitnessGoal?,
     onSelected: (FitnessGoal) -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -274,7 +289,7 @@ private fun GoalSelector(
 
 @Composable
 private fun ExperienceSelector(
-    selected: ExperienceLevel,
+    selected: ExperienceLevel?,
     onSelected: (ExperienceLevel) -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {

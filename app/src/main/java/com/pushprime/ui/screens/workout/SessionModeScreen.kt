@@ -60,7 +60,6 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.pushprime.coach.BasicCoachProvider
 import com.pushprime.coach.CoachOrchestrator
 import com.pushprime.coach.CoachSettings
@@ -503,8 +502,7 @@ private fun CountdownContent(countdownValue: Int, showGoFlash: Boolean) {
             Text(
                 text = "SESSION STARTS",
                 style = MaterialTheme.typography.labelLarge,
-                color = Color.Gray,
-                letterSpacing = 2.sp
+                color = Color.Gray
             )
             Spacer(modifier = Modifier.height(16.dp))
             AnimatedContent(
@@ -518,8 +516,6 @@ private fun CountdownContent(countdownValue: Int, showGoFlash: Boolean) {
                 Text(
                     text = value,
                     style = MaterialTheme.typography.displayLarge,
-                    fontSize = 120.sp,
-                    fontWeight = FontWeight.Black,
                     color = Color.White
                 )
             }

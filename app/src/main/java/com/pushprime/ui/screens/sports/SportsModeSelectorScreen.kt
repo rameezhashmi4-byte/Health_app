@@ -25,7 +25,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.pushprime.model.SportType
 import com.pushprime.ui.theme.PushPrimeColors
 
@@ -53,7 +52,13 @@ fun SportsModeSelectorScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(text = "Sports Mode", fontWeight = FontWeight.Bold) },
+                title = {
+                    Text(
+                        text = "Sports Mode",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = PushPrimeColors.Surface
                 ),
@@ -63,7 +68,7 @@ fun SportsModeSelectorScreen(
                         modifier = Modifier
                             .padding(horizontal = 16.dp)
                             .clickable { onNavigateBack() },
-                        fontSize = 20.sp,
+                        style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
                 }

@@ -56,7 +56,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.pushprime.model.SessionEntity
 import java.text.SimpleDateFormat
@@ -126,7 +125,11 @@ fun HistoryScreen(
             TopAppBar(
                 title = {
                     Column {
-                        Text("History", fontWeight = FontWeight.Black)
+                        Text(
+                            text = "History",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold
+                        )
                         Text(
                             "Your progress over time.",
                             style = MaterialTheme.typography.bodySmall,
@@ -299,11 +302,19 @@ private fun SessionCard(
                         .background(Color.White, RoundedCornerShape(14.dp)),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(item.icon, fontSize = 20.sp)
+                    Text(
+                        text = item.icon,
+                        style = MaterialTheme.typography.titleLarge
+                    )
                 }
                 Spacer(modifier = Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(item.title, fontWeight = FontWeight.Bold, color = Color.Black)
+                    Text(
+                        text = item.title,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black
+                    )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(item.previewLine, color = Color.Gray, style = MaterialTheme.typography.bodySmall)
                 }
@@ -331,9 +342,17 @@ private fun EmptyHistoryState(onStartSession: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text("No sessions yet", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+        Text(
+            text = "No sessions yet",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold
+        )
         Spacer(modifier = Modifier.height(8.dp))
-        Text("Start your first session", color = Color.Gray)
+        Text(
+            text = "Start your first session",
+            style = MaterialTheme.typography.bodyMedium,
+            color = Color.Gray
+        )
         Spacer(modifier = Modifier.height(16.dp))
         Button(
             onClick = onStartSession,

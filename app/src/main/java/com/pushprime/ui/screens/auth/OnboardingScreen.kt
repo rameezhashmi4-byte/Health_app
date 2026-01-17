@@ -20,7 +20,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 
 @Composable
 fun OnboardingScreen(
@@ -41,8 +40,6 @@ fun OnboardingScreen(
             Text(
                 text = "RAMBOOST",
                 style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Black,
-                letterSpacing = 1.sp,
                 color = Color.Black
             )
 
@@ -58,16 +55,14 @@ fun OnboardingScreen(
                     style = MaterialTheme.typography.headlineLarge,
                     fontWeight = FontWeight.Black,
                     color = Color.Black,
-                    textAlign = TextAlign.Center,
-                    lineHeight = 40.sp
+                    textAlign = TextAlign.Center
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
                     text = "Build momentum with focused workouts, progress tracking, and nutrition guidance.",
                     style = MaterialTheme.typography.bodyLarge,
                     color = Color.Gray,
-                    textAlign = TextAlign.Center,
-                    lineHeight = 24.sp
+                    textAlign = TextAlign.Center
                 )
             }
 
@@ -84,8 +79,7 @@ fun OnboardingScreen(
             ) {
                 Text(
                     text = "Get Started",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
+                    style = MaterialTheme.typography.labelLarge
                 )
             }
         }

@@ -11,7 +11,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.pushprime.ui.theme.PushPrimeColors
 
 @Composable
@@ -32,9 +31,7 @@ fun MissionHUD(
             text = "$${String.format("%,d", points)}",
             style = MaterialTheme.typography.displaySmall,
             color = PushPrimeColors.GTAGreen,
-            fontWeight = FontWeight.Black,
-            fontSize = 32.sp,
-            letterSpacing = 2.sp
+            fontWeight = FontWeight.Black
         )
         
         Spacer(modifier = Modifier.height(8.dp))

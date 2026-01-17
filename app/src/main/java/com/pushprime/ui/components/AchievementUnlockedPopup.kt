@@ -23,7 +23,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.pushprime.model.Achievement
 import com.pushprime.ui.theme.PushPrimeColors
 
@@ -62,7 +61,7 @@ fun AchievementUnlockedPopup(
                     Spacer(modifier = Modifier.size(12.dp))
                     Text(
                         text = achievement?.icon.orEmpty(),
-                        fontSize = 32.sp
+                        style = MaterialTheme.typography.headlineMedium
                     )
                     Spacer(modifier = Modifier.size(8.dp))
                     Text(
