@@ -5,6 +5,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.pushprime.data.AppDatabase
 import com.pushprime.data.LocalStore
+import com.pushprime.data.NutritionRepository
 import com.pushprime.data.StreakRepository
 import com.pushprime.navigation.Screen
 import java.time.LocalDate
@@ -50,7 +51,10 @@ class StreakProtectionWorker(
                 val streakRepository = StreakRepository(
                     context = applicationContext,
                     sessionDao = database.sessionDao(),
-                    dailyStatusDao = database.dailyStatusDao()
+                    dailyStatusDao = database.dailyStatusDao(),
+                    nutritionRepository = NutritionRepository(applicationContext),
+                    pullupSessionDao = database.pullupSessionDao(),
+                    pullupMaxTestDao = database.pullupMaxTestDao()
                 )
                 streakRepository.evaluateStreak(today).currentStreakDays
             }.getOrNull()

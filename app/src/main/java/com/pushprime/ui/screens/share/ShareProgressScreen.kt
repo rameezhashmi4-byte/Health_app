@@ -430,8 +430,16 @@ private fun ShareProgressPreviewCard(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            PreviewPhotoCard(beforePhoto, beforePhoto?.getFormattedDate())
-                            PreviewPhotoCard(afterPhoto, afterPhoto?.getFormattedDate())
+                            PreviewPhotoCard(
+                                photo = beforePhoto,
+                                label = beforePhoto?.getFormattedDate(),
+                                modifier = Modifier.weight(1f)
+                            )
+                            PreviewPhotoCard(
+                                photo = afterPhoto,
+                                label = afterPhoto?.getFormattedDate(),
+                                modifier = Modifier.weight(1f)
+                            )
                         }
                     }
                     ShareTemplate.BADGE_STATS -> {
@@ -525,9 +533,13 @@ private fun StatTile(icon: String, value: String, label: String) {
 }
 
 @Composable
-private fun PreviewPhotoCard(photo: PhotoEntryEntity?, label: String?) {
+private fun PreviewPhotoCard(
+    photo: PhotoEntryEntity?,
+    label: String?,
+    modifier: Modifier = Modifier
+) {
     Card(
-        modifier = Modifier.weight(1f),
+        modifier = modifier,
         shape = RoundedCornerShape(16.dp)
     ) {
         if (photo == null) {

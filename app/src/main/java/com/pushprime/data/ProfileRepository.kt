@@ -23,6 +23,10 @@ class ProfileRepository(
         localStore.saveUserProfile(profile)
     }
 
+    fun saveLocalProfile(profile: UserProfile) {
+        saveLocal(profile)
+    }
+
     suspend fun fetchRemoteProfile(uid: String): UserProfile? {
         val db = firestore ?: return null
         return try {
@@ -93,51 +97,8 @@ class ProfileRepository(
             Result.failure(e)
         }
     }
-}
-package com.pushprime.data
-
-import com.google.firebase.firestore.FirebaseFirestore
-import com.pushprime.model.UserProfile
-import kotlinx.coroutines.tasks.await
-
-class ProfileRepository(
-    private val localStore: LocalStore
-) {
-    private val firestore: FirebaseFirestore? = try {
-        FirebaseFirestore.getInstance()
-    } catch (_: Exception) {
-        null
-    }
-
-    fun saveLocalProfile(profile: UserProfile) {
-        localStore.saveUserProfile(profile)
-    }
 
     suspend fun saveRemoteProfile(uid: String, profile: UserProfile): Result<Unit> {
-        val db = firestore ?: return Result.failure(IllegalStateException("Firestore unavailable"))
-        return try {
-            val data = hashMapOf(
-                "uid" to uid,
-                "fullName" to profile.fullName,
-                "goal" to profile.goal.name,
-                "experience" to profile.experience.name,
-                "weightKg" to profile.weightKg,
-                "heightCm" to profile.heightCm,
-                "age" to profile.age,
-                "sex" to profile.sex?.name,
-                "stepTrackingEnabled" to profile.stepTrackingEnabled,
-                "createdAt" to profile.createdAt,
-                "updatedAt" to profile.updatedAt
-            )
-            db.collection("users")
-                .document(uid)
-                .collection("profile")
-                .document("summary")
-                .set(data)
-                .await()
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+        return updateRemoteProfile(profile.copy(uid = uid))
     }
 }

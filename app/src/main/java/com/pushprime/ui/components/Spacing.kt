@@ -6,7 +6,7 @@ import androidx.compose.ui.unit.dp
  * Consistent spacing scale
  * Smooth transitions and spacing like Nike Training Club
  */
-object PushPrimeSpacing {
+object Spacing {
     val xs = 4.dp
     val sm = 8.dp
     val md = 16.dp

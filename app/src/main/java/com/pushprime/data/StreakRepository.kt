@@ -124,7 +124,7 @@ class StreakRepository(
         }
 
         if (startDate != null && !startDate.isAfter(today)) {
-            var date = startDate
+            var date = startDate!!
             while (!date.isAfter(today)) {
                 val dateStr = date.format(dateFormatter)
                 val activityCount = getActivityCountForDate(date)

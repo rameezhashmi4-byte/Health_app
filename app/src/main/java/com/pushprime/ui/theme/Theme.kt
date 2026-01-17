@@ -94,3 +94,11 @@ fun PushPrimeTheme(
         content = content
     )
 }
+
+@Composable
+fun RamboostTheme(
+    darkTheme: Boolean = isSystemInDarkTheme(),
+    content: @Composable () -> Unit
+) {
+    PushPrimeTheme(darkTheme = darkTheme, content = content)
+}

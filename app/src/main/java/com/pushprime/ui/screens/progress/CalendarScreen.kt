@@ -1,4 +1,4 @@
-package com.pushprime.ui.screens
+package com.pushprime.ui.screens.progress
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -15,6 +15,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.pushprime.data.SessionDao
 import com.pushprime.model.ActivityType
+import com.pushprime.ui.screens.common.ErrorScreen
 import com.pushprime.ui.theme.PushPrimeColors
 import java.text.SimpleDateFormat
 import java.util.*

@@ -659,17 +659,20 @@ private fun LiveSessionContent(
                 TogglePill(
                     label = "🎧 Music",
                     enabled = isMusicEnabled,
-                    onToggle = onToggleMusic
+                    onToggle = onToggleMusic,
+                    modifier = Modifier.weight(1f)
                 )
                 TogglePill(
                     label = "🎙 Coach",
                     enabled = isCoachEnabled,
-                    onToggle = onToggleCoach
+                    onToggle = onToggleCoach,
+                    modifier = Modifier.weight(1f)
                 )
                 TogglePill(
                     label = "⚡ Beast",
                     enabled = isBeastMode,
-                    onToggle = onToggleBeastMode
+                    onToggle = onToggleBeastMode,
+                    modifier = Modifier.weight(1f)
                 )
             }
 
@@ -785,10 +788,11 @@ private fun ConfettiBurst() {
 private fun TogglePill(
     label: String,
     enabled: Boolean,
-    onToggle: () -> Unit
+    onToggle: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Surface(
-        modifier = Modifier.weight(1f),
+        modifier = modifier,
         shape = RoundedCornerShape(20.dp),
         color = if (enabled) PushPrimeColors.Primary else Color(0xFF2A2A2A),
         onClick = onToggle

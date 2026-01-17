@@ -25,6 +25,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -459,6 +460,102 @@ private fun StepsSection(
                     RamboostPrimaryButton(text = "Enable", onClick = onEnableSteps)
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun CoachSettingsSection(
+    settings: CoachSettings,
+    onHybridToggle: (Boolean) -> Unit,
+    onIntelligenceChange: (CoachIntelligence) -> Unit,
+    onVoiceProviderChange: (VoiceProviderType) -> Unit,
+    onStyleChange: (CoachStyle) -> Unit,
+    onFrequencyChange: (CoachFrequency) -> Unit
+) {
+    RamboostCard(containerColor = MaterialTheme.colorScheme.surface) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(Spacing.sm)
+        ) {
+            Text(
+                text = "Coach settings",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(text = "Hybrid coach", style = MaterialTheme.typography.bodyMedium)
+                Switch(
+                    checked = settings.hybridEnabled,
+                    onCheckedChange = onHybridToggle
+                )
+            }
+
+            CoachOptionRow(
+                label = "Intelligence",
+                value = settings.intelligence.name.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() },
+                onNext = {
+                    val values = CoachIntelligence.values()
+                    val next = values[(settings.intelligence.ordinal + 1) % values.size]
+                    onIntelligenceChange(next)
+                }
+            )
+            CoachOptionRow(
+                label = "Voice provider",
+                value = settings.voiceProvider.name.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() },
+                onNext = {
+                    val values = VoiceProviderType.values()
+                    val next = values[(settings.voiceProvider.ordinal + 1) % values.size]
+                    onVoiceProviderChange(next)
+                }
+            )
+            CoachOptionRow(
+                label = "Style",
+                value = settings.style.name.lowercase().replaceFirstChar { it.uppercase() },
+                onNext = {
+                    val values = CoachStyle.values()
+                    val next = values[(settings.style.ordinal + 1) % values.size]
+                    onStyleChange(next)
+                }
+            )
+            CoachOptionRow(
+                label = "Frequency",
+                value = settings.frequency.name.lowercase().replaceFirstChar { it.uppercase() },
+                onNext = {
+                    val values = CoachFrequency.values()
+                    val next = values[(settings.frequency.ordinal + 1) % values.size]
+                    onFrequencyChange(next)
+                }
+            )
+        }
+    }
+}
+
+@Composable
+private fun CoachOptionRow(
+    label: String,
+    value: String,
+    onNext: () -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column {
+            Text(text = label, style = MaterialTheme.typography.bodyMedium)
+            Text(
+                text = value,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        TextButton(onClick = onNext) {
+            Text(text = "Change")
         }
     }
 }

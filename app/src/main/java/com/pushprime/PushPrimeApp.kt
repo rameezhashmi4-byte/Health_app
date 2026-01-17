@@ -17,6 +17,7 @@ import com.pushprime.ui.components.BottomNavigationBar
 import com.pushprime.ui.screens.auth.*
 import com.pushprime.ui.screens.common.ErrorScreen
 import com.pushprime.ui.screens.home.HomeScreen
+import com.pushprime.ui.screens.ProfileScreen
 import com.pushprime.ui.screens.achievements.AchievementsScreen
 import com.pushprime.ui.screens.social.CompeteScreen
 import com.pushprime.ui.screens.progress.MetricsScreen
@@ -35,6 +36,9 @@ import com.pushprime.ui.screens.profile_setup.ProfileSetupScreen
 import com.pushprime.ui.screens.profile_setup.ProfileSetupViewModel
 import com.pushprime.ui.screens.progress.CalendarDayDetailScreen
 import com.pushprime.ui.screens.progress.ProgressScreen
+import com.pushprime.ui.screens.quick_session.QuickSessionCompletionScreen
+import com.pushprime.ui.screens.quick_session.QuickSessionPickerScreen
+import com.pushprime.ui.screens.quick_session.QuickSessionPlayerScreen
 import com.pushprime.ui.screens.share.ShareProgressScreen
 import com.pushprime.ui.screens.settings.NotificationSettingsScreen
 import com.pushprime.ui.screens.settings.MusicSettingsScreen
@@ -52,6 +56,7 @@ import com.pushprime.ui.screens.sports.SportsSessionScreen
 import com.pushprime.ui.screens.sports.SportsSessionSummaryScreen
 import com.pushprime.ui.screens.sports.SportsSessionViewModel
 import com.pushprime.ui.screens.workout.ExerciseLibraryScreen
+import com.pushprime.ui.screens.workout.SportsSelectionScreen
 import com.pushprime.ui.screens.workout.TodayPlanScreen
 import com.pushprime.ui.screens.workout.SessionModeScreen
 import com.pushprime.ui.screens.workout.WorkoutGeneratorPreviewScreen
@@ -474,7 +479,8 @@ fun RamboostApp(
 
             composable(Screen.StreakDetails.route) {
                 StreakDetailsScreen(
-                    onNavigateBack = { navController.popBackStack() }
+                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateToQuickSession = { navController.navigate(Screen.QuickSession.route) }
                 )
             }
             

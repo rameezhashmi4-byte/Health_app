@@ -8,6 +8,7 @@ import com.pushprime.data.ProfileRepository
 import com.pushprime.data.SessionDao
 import com.pushprime.data.StepsDay
 import com.pushprime.data.StepsRepository
+import com.pushprime.data.StreakRepository
 import com.pushprime.data.latestSession
 import com.pushprime.model.ExperienceLevel
 import com.pushprime.model.FitnessGoal

@@ -18,7 +18,6 @@ import com.pushprime.data.FirebaseHelper
 import com.pushprime.data.LocalStore
 import com.pushprime.model.LeaderboardEntry
 import com.pushprime.ui.components.LeaderboardCard
-import com.pushprime.ui.components.PushPrimeSpacing
 import com.pushprime.ui.theme.PushPrimeColors
 import kotlinx.coroutines.launch
 

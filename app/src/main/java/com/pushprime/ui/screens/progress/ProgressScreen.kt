@@ -12,6 +12,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.pushprime.data.AppDatabase
 import com.pushprime.data.SessionDao
+import com.pushprime.ui.screens.common.ErrorScreen
 import com.pushprime.ui.theme.PushPrimeColors
 import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.launch

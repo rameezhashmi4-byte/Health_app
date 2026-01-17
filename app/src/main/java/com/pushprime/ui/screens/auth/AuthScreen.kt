@@ -39,6 +39,7 @@ import com.google.firebase.auth.FirebaseAuthWeakPasswordException
 import com.pushprime.R
 import com.pushprime.auth.AuthMode
 import com.pushprime.auth.AuthViewModel
+import com.pushprime.ui.components.Spacing
 
 private enum class LoadingAction {
     None,
@@ -197,7 +198,7 @@ fun AuthScreen(
                 exit = slideOutVertically() + fadeOut(),
                 modifier = Modifier
                     .align(Alignment.TopCenter)
-                    .padding(top = Spacing.lg, horizontal = Spacing.md)
+                    .padding(horizontal = Spacing.md, vertical = Spacing.lg)
             ) {
                 Surface(
                     color = MaterialTheme.colorScheme.errorContainer,
@@ -273,7 +274,6 @@ fun AuthScreen(
                 Column(
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                ) {
                     OutlinedTextField(
                         value = email,
                         onValueChange = {
@@ -301,10 +301,15 @@ fun AuthScreen(
                         )
                     )
                     if (emailError != null && (emailTouched || submittedOnce)) {
-                        Text(emailError!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(start = 8.dp))
+                        Text(
+                            emailError!!,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(start = 8.dp)
+                        )
+                    }
 
-                    Column {
-                    Column {
+                    Spacer(modifier = Modifier.height(Spacing.md))
                         OutlinedTextField(
                             value = password,
                             onValueChange = {
@@ -340,17 +345,23 @@ fun AuthScreen(
                             )
                         )
                         if (passwordError != null && (passwordTouched || submittedOnce)) {
-                            Text(passwordError!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(start = 8.dp))
-                        
+                            Text(
+                                passwordError!!,
+                                color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier.padding(start = 8.dp)
+                            )
+                        }
+
                         if (authMode == AuthMode.SIGN_IN) {
                             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
                                 TextButton(onClick = { /* Forgot password logic */ }) {
-                                TextButton(onClick = { /* Forgot password logic */ }) {
+                                    Text("Forgot password?")
                                 }
                             }
                         }
-                    }
 
+                    Spacer(modifier = Modifier.height(Spacing.lg))
 
                     Button(
                         onClick = {

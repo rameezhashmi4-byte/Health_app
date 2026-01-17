@@ -1,4 +1,4 @@
-package com.pushprime.ui.screens
+package com.pushprime.ui.screens.progress
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -15,6 +15,7 @@ import com.pushprime.data.MonthlyAggregationResult
 import com.pushprime.model.ActivityType
 import com.pushprime.model.SessionEntity
 import com.pushprime.ui.components.FeedCard
+import com.pushprime.ui.screens.common.ErrorScreen
 import com.pushprime.ui.theme.PushPrimeColors
 import java.text.SimpleDateFormat
 import java.util.*

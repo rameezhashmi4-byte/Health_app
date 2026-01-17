@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.weight
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.EmojiEvents
@@ -92,8 +91,18 @@ fun PullupTrackerScreen(
             }
 
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
-                StatCard(label = "Weekly Total", value = "${uiState.weeklyTotal}", icon = Icons.Default.TrendingUp)
-                StatCard(label = "Last Session", value = uiState.lastSessionDate, icon = Icons.Default.FitnessCenter)
+                StatCard(
+                    label = "Weekly Total",
+                    value = "${uiState.weeklyTotal}",
+                    icon = Icons.Default.TrendingUp,
+                    modifier = Modifier.weight(1f)
+                )
+                StatCard(
+                    label = "Last Session",
+                    value = uiState.lastSessionDate,
+                    icon = Icons.Default.FitnessCenter,
+                    modifier = Modifier.weight(1f)
+                )
             }
 
             Button(onClick = onLogSession, modifier = Modifier.fillMaxWidth()) {
@@ -110,10 +119,15 @@ fun PullupTrackerScreen(
 }
 
 @Composable
-private fun StatCard(label: String, value: String, icon: androidx.compose.ui.graphics.vector.ImageVector) {
+private fun StatCard(
+    label: String,
+    value: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    modifier: Modifier = Modifier
+) {
     Surface(
         color = Color(0xFFF6F6F6),
-        modifier = Modifier.weight(1f)
+        modifier = modifier
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Icon(icon, contentDescription = null, tint = Color.Black)

@@ -161,7 +161,7 @@ class AchievementsRepository @Inject constructor(
     }
 
     companion object {
-        val definitions = listOf(
+        private val definitions = listOf(
             AchievementDefinition(
                 id = "streak_3",
                 title = "3-Day Streak",

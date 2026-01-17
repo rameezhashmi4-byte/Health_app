@@ -47,7 +47,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.pushprime.data.OpenAiKeyStore
 import com.pushprime.data.VoiceCoachSettingsRepository
-import com.pushprime.ui.screens.settings.InfoCard
+import com.pushprime.ui.components.InfoCard
 import com.pushprime.ui.theme.PushPrimeColors
 import com.pushprime.voice.CoachFrequency
 import com.pushprime.voice.CoachPersonality

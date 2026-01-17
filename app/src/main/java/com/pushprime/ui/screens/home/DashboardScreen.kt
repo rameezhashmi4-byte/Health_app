@@ -2,6 +2,7 @@ package com.pushprime.ui.screens
 
 import androidx.compose.runtime.Composable
 import com.pushprime.data.LocalStore
+import com.pushprime.ui.screens.common.ErrorScreen
 
 /**
  * Dashboard Screen (Deprecated)
