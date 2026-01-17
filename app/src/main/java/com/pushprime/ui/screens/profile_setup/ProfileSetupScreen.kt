@@ -180,6 +180,16 @@ private fun BodyStatsStep(
     onBack: () -> Unit,
     onContinue: () -> Unit
 ) {
+    var weightInput by rememberSaveable(viewModel.weightKg) {
+        mutableStateOf(viewModel.weightKg?.toString().orEmpty())
+    }
+    var heightInput by rememberSaveable(viewModel.heightCm) {
+        mutableStateOf(viewModel.heightCm?.toString().orEmpty())
+    }
+    var ageInput by rememberSaveable(viewModel.age) {
+        mutableStateOf(viewModel.age?.toString().orEmpty())
+    }
+
     val isWeightValid = (viewModel.weightKg ?: 0.0) > 0
     val isHeightValid = (viewModel.heightCm ?: 0.0) > 0
     val weightError = if (!isWeightValid) "Enter a valid weight" else null
@@ -192,8 +202,11 @@ private fun BodyStatsStep(
         fontWeight = FontWeight.Bold
     )
     RamboostTextField(
-        value = viewModel.weightKg?.toString().orEmpty(),
-        onValueChange = { viewModel.weightKg = it.toDoubleOrNull() },
+        value = weightInput,
+        onValueChange = {
+            weightInput = it
+            viewModel.weightKg = it.toDoubleOrNull()
+        },
         label = "Weight (kg)",
         modifier = Modifier.fillMaxWidth(),
         required = true,
@@ -202,8 +215,11 @@ private fun BodyStatsStep(
         singleLine = true
     )
     RamboostTextField(
-        value = viewModel.heightCm?.toString().orEmpty(),
-        onValueChange = { viewModel.heightCm = it.toDoubleOrNull() },
+        value = heightInput,
+        onValueChange = {
+            heightInput = it
+            viewModel.heightCm = it.toDoubleOrNull()
+        },
         label = "Height (cm)",
         modifier = Modifier.fillMaxWidth(),
         required = true,
@@ -212,8 +228,11 @@ private fun BodyStatsStep(
         singleLine = true
     )
     RamboostTextField(
-        value = viewModel.age?.toString().orEmpty(),
-        onValueChange = { viewModel.age = it.toIntOrNull() },
+        value = ageInput,
+        onValueChange = {
+            ageInput = it
+            viewModel.age = it.toIntOrNull()
+        },
         label = "Age (optional)",
         modifier = Modifier.fillMaxWidth(),
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
