@@ -8,7 +8,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.pushprime.ui.theme.PushPrimeColors
 
@@ -28,7 +27,7 @@ fun CollageCreatorScreen(
                 title = {
                     Text(
                         text = "Create Collage",
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.headlineMedium
                     )
                 },
                 navigationIcon = {
@@ -62,8 +61,7 @@ fun CollageCreatorScreen(
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
                     text = "Collage Creator",
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold
+                    style = MaterialTheme.typography.headlineMedium
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
@@ -79,7 +77,10 @@ fun CollageCreatorScreen(
                 ) {
                     Icon(Icons.Default.PhotoLibrary, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Select Photos")
+                    Text(
+                        text = "Select Photos",
+                        style = MaterialTheme.typography.labelLarge
+                    )
                 }
             }
         }

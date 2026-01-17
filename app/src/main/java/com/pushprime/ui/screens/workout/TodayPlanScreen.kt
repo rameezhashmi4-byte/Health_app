@@ -9,7 +9,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.pushprime.ui.components.FeedCard
 import com.pushprime.ui.theme.PushPrimeColors
@@ -54,7 +53,7 @@ fun TodayPlanScreen(
                 title = {
                     Text(
                         text = "Today's Plan",
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.headlineMedium
                     )
                 },
                 navigationIcon = {
@@ -79,8 +78,7 @@ fun TodayPlanScreen(
             item {
                 Text(
                     text = "Suggested Workouts",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
+                    style = MaterialTheme.typography.titleLarge
                 )
             }
             
@@ -125,8 +123,7 @@ fun WorkoutPlanCard(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = plan.title,
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.titleLarge
                     )
                     Text(
                         text = plan.duration,
@@ -154,8 +151,7 @@ fun WorkoutPlanCard(
             
             Text(
                 text = "Exercises:",
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.SemiBold
+                style = MaterialTheme.typography.titleLarge
             )
             Spacer(modifier = Modifier.height(8.dp))
             plan.exercises.forEach { exercise ->
@@ -186,7 +182,10 @@ fun WorkoutPlanCard(
             ) {
                 Icon(Icons.Default.PlayArrow, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Start Workout")
+                Text(
+                    text = "Start Workout",
+                    style = MaterialTheme.typography.labelLarge
+                )
             }
         }
     }

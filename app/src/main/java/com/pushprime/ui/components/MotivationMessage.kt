@@ -6,7 +6,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.pushprime.ui.theme.PushPrimeColors
@@ -45,7 +44,6 @@ fun MotivationMessage(
             Text(
                 text = message.title,
                 style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
                 color = PushPrimeColors.OnSurface,
                 textAlign = TextAlign.Center
             )

@@ -12,7 +12,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.pushprime.data.ExerciseRepository
 import com.pushprime.data.LocalStore
@@ -144,7 +143,6 @@ fun MetricsScreen(
             Text(
                 text = "Metrics & Progress",
                 style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
                 color = PushPrimeColors.OnSurface
             )
         }

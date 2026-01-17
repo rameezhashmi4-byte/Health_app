@@ -10,7 +10,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.pushprime.ui.theme.PushPrimeColors
 
@@ -80,7 +79,6 @@ fun StoryCircle(
         Text(
             text = story.label,
             style = MaterialTheme.typography.labelSmall,
-            fontWeight = FontWeight.Medium,
             color = MaterialTheme.colorScheme.onSurface
         )
     }

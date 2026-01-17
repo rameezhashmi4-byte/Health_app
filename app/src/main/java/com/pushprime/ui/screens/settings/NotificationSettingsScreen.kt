@@ -9,21 +9,21 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -36,24 +36,22 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.pushprime.data.notifications.NotificationPermissions
 import com.pushprime.data.notifications.NotificationPreferences
 import com.pushprime.data.notifications.NotificationPreferencesStore
 import com.pushprime.data.notifications.NotificationScheduler
 import com.pushprime.data.notifications.NotificationTimeUtils
-import com.pushprime.ui.theme.PushPrimeColors
+import com.pushprime.ui.components.AppCard
+import com.pushprime.ui.components.AppSecondaryButton
+import com.pushprime.ui.components.PremiumFadeSlideIn
+import com.pushprime.ui.theme.AppSpacing
 import kotlinx.coroutines.launch
 
-/**
- * Notification Settings Screen
- * Configure local reminders and permissions.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationSettingsScreen(
@@ -99,7 +97,7 @@ fun NotificationSettingsScreen(
                 title = {
                     Text(
                         text = "Notifications",
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.headlineMedium
                     )
                 },
                 navigationIcon = {
@@ -108,123 +106,133 @@ fun NotificationSettingsScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = PushPrimeColors.Surface
+                    containerColor = MaterialTheme.colorScheme.surface
                 )
             )
         },
         modifier = modifier
     ) { paddingValues ->
-        LazyColumn(
+        PremiumFadeSlideIn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(paddingValues)
         ) {
-            item {
-                SectionCard(
-                    title = "Enable notifications",
-                    description = "Allow reminders to keep you on track",
-                    checked = preferences.notificationsEnabled,
-                    onCheckedChange = { enabled ->
-                        coroutineScope.launch {
-                            preferencesStore.setNotificationsEnabled(enabled)
-                        }
-                        if (enabled) {
-                            requestPermissionIfNeeded()
-                        }
-                    }
-                )
-            }
-
-            if (preferences.notificationsEnabled && needsNotificationPermission && !isNotificationPermissionGranted.value) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(AppSpacing.lg),
+                verticalArrangement = Arrangement.spacedBy(AppSpacing.lg)
+            ) {
                 item {
-                    Text(
-                        text = "Enable in system settings",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = PushPrimeColors.OnSurfaceVariant
+                    SectionCard(
+                        title = "Enable Notifications",
+                        description = "Allow reminders to keep you on track",
+                        checked = preferences.notificationsEnabled,
+                        onCheckedChange = { enabled ->
+                            coroutineScope.launch {
+                                preferencesStore.setNotificationsEnabled(enabled)
+                            }
+                            if (enabled) {
+                                requestPermissionIfNeeded()
+                            }
+                        }
                     )
                 }
-            }
 
-            item {
-                SectionCard(
-                    title = "Daily reminder",
-                    description = "“Time to train” at your chosen time",
-                    checked = preferences.dailyReminderEnabled,
-                    onCheckedChange = { enabled ->
-                        coroutineScope.launch {
-                            preferencesStore.setDailyReminderEnabled(enabled)
-                        }
-                        if (enabled) {
-                            requestPermissionIfNeeded()
-                        }
-                    },
-                    enabled = preferences.notificationsEnabled
-                )
-            }
-
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text(
-                            text = "Daily reminder time",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                        Text(
-                            text = NotificationTimeUtils.formatTime(preferences.dailyReminderTimeMinutes),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = PushPrimeColors.OnSurfaceVariant
-                        )
-                    }
-                    OutlinedButton(
-                        onClick = {
-                            val current = NotificationTimeUtils.minutesToLocalTime(
-                                preferences.dailyReminderTimeMinutes
+                if (preferences.notificationsEnabled && needsNotificationPermission && !isNotificationPermissionGranted.value) {
+                    item {
+                        AppCard(containerColor = MaterialTheme.colorScheme.errorContainer) {
+                            Text(
+                                text = "Permission denied. Please enable notifications in system settings to receive reminders.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onErrorContainer
                             )
-                            TimePickerDialog(
-                                context,
-                                { _, hour, minute ->
-                                    coroutineScope.launch {
-                                        preferencesStore.setDailyReminderTimeMinutes(
-                                            hour * 60 + minute
-                                        )
-                                    }
-                                },
-                                current.hour,
-                                current.minute,
-                                false
-                            ).show()
-                        },
-                        enabled = preferences.notificationsEnabled && preferences.dailyReminderEnabled
-                    ) {
-                        Text("Change")
+                        }
                     }
                 }
-            }
 
-            item {
-                SectionCard(
-                    title = "Streak protection",
-                    description = "Ping me if I haven’t worked out today",
-                    checked = preferences.streakProtectionEnabled,
-                    onCheckedChange = { enabled ->
-                        coroutineScope.launch {
-                            preferencesStore.setStreakProtectionEnabled(enabled)
-                        }
-                        if (enabled) {
-                            requestPermissionIfNeeded()
-                        }
-                    },
-                    enabled = preferences.notificationsEnabled
-                )
-            }
+                item {
+                    SectionCard(
+                        title = "Daily Reminder",
+                        description = "“Time to train” at your chosen time",
+                        checked = preferences.dailyReminderEnabled,
+                        onCheckedChange = { enabled ->
+                            coroutineScope.launch {
+                                preferencesStore.setDailyReminderEnabled(enabled)
+                            }
+                            if (enabled) {
+                                requestPermissionIfNeeded()
+                            }
+                        },
+                        enabled = preferences.notificationsEnabled
+                    )
+                }
 
+                item {
+                    AppCard(modifier = Modifier.alpha(if (preferences.notificationsEnabled && preferences.dailyReminderEnabled) 1f else 0.5f)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column {
+                                Text(
+                                    text = "Reminder Time",
+                                    style = MaterialTheme.typography.titleLarge
+                                )
+                                Text(
+                                    text = NotificationTimeUtils.formatTime(preferences.dailyReminderTimeMinutes),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                            AppSecondaryButton(
+                                text = "Change",
+                                onClick = {
+                                    val current = NotificationTimeUtils.minutesToLocalTime(
+                                        preferences.dailyReminderTimeMinutes
+                                    )
+                                    TimePickerDialog(
+                                        context,
+                                        { _, hour, minute ->
+                                            coroutineScope.launch {
+                                                preferencesStore.setDailyReminderTimeMinutes(
+                                                    hour * 60 + minute
+                                                )
+                                            }
+                                        },
+                                        current.hour,
+                                        current.minute,
+                                        false
+                                    ).show()
+                                },
+                                enabled = preferences.notificationsEnabled && preferences.dailyReminderEnabled,
+                                fullWidth = false
+                            )
+                        }
+                    }
+                }
+
+                item {
+                    SectionCard(
+                        title = "Streak Protection",
+                        description = "Ping me if I haven’t worked out today",
+                        checked = preferences.streakProtectionEnabled,
+                        onCheckedChange = { enabled ->
+                            coroutineScope.launch {
+                                preferencesStore.setStreakProtectionEnabled(enabled)
+                            }
+                            if (enabled) {
+                                requestPermissionIfNeeded()
+                            }
+                        },
+                        enabled = preferences.notificationsEnabled
+                    )
+                }
+                
+                item {
+                    Spacer(modifier = Modifier.height(AppSpacing.xxl))
+                }
+            }
         }
     }
 }
@@ -237,15 +245,11 @@ private fun SectionCard(
     onCheckedChange: (Boolean) -> Unit,
     enabled: Boolean = true
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = PushPrimeColors.Surface)
+    AppCard(
+        modifier = Modifier.fillMaxWidth()
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -256,18 +260,20 @@ private fun SectionCard(
                 Icon(
                     imageVector = Icons.Default.Notifications,
                     contentDescription = null,
-                    tint = PushPrimeColors.Primary
+                    tint = if (enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(24.dp)
                 )
-                Column(modifier = Modifier.padding(start = 12.dp)) {
+                Spacer(modifier = Modifier.width(AppSpacing.md))
+                Column {
                     Text(
                         text = title,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Medium
+                        style = MaterialTheme.typography.titleLarge,
+                        color = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
                         text = description,
                         style = MaterialTheme.typography.bodySmall,
-                        color = PushPrimeColors.OnSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }

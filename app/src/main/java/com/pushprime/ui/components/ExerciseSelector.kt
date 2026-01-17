@@ -11,7 +11,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.pushprime.model.ExerciseType
@@ -40,7 +39,6 @@ fun ExerciseSelector(
             Text(
                 text = "Select Exercise",
                 style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
                 color = PushPrimeColors.OnSurface
             )
             Spacer(modifier = Modifier.height(16.dp))
@@ -103,8 +101,7 @@ private fun ExerciseOption(
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = exercise.displayName,
-                style = MaterialTheme.typography.bodySmall,
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                style = MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.Center,
                 color = PushPrimeColors.OnSurface
             )

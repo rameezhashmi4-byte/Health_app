@@ -7,7 +7,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 // Vico charts - simplified for MVP
 // import com.patrykandpatrick.vico.compose.axis.horizontal.rememberBottomAxis
@@ -45,7 +44,6 @@ fun WeeklyTrendChart(
             Text(
                 text = exerciseName?.let { "Weekly Trend: $it" } ?: "Weekly Trend",
                 style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
                 color = PushPrimeColors.OnSurface
             )
             Spacer(modifier = Modifier.height(16.dp))
@@ -112,7 +110,6 @@ fun WeeklyTrendChart(
                             Text(
                                 text = "${dataPoint.total}",
                                 style = MaterialTheme.typography.bodySmall,
-                                fontWeight = FontWeight.Bold,
                                 color = PushPrimeColors.OnSurface,
                                 modifier = Modifier.width(40.dp)
                             )
@@ -153,8 +150,7 @@ private fun StatItem(label: String, value: String) {
     ) {
         Text(
             text = value,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
+            style = MaterialTheme.typography.titleLarge,
             color = PushPrimeColors.Primary
         )
         Text(

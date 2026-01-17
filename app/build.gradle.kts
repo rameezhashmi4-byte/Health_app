@@ -16,6 +16,9 @@ if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
 
+val spotifyClientId = providers.gradleProperty("SPOTIFY_CLIENT_ID").orNull
+    ?: System.getenv("SPOTIFY_CLIENT_ID")
+
 android {
     namespace = "com.pushprime"
     compileSdk = 34
@@ -26,6 +29,11 @@ android {
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
+        buildConfigField(
+            "String",
+            "SPOTIFY_CLIENT_ID",
+            "\"${spotifyClientId ?: ""}\""
+        )
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -78,6 +86,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.8"
@@ -166,6 +175,9 @@ dependencies {
     // WorkManager
     val workVersion = "2.9.0"
     implementation("androidx.work:work-runtime-ktx:$workVersion")
+
+    // Spotify App Remote
+    // implementation("com.spotify.android:appremote2:2.0.2")
     
     // Testing
     testImplementation("junit:junit:4.13.2")

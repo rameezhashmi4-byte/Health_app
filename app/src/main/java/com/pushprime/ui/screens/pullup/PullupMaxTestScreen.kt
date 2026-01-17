@@ -28,11 +28,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.pushprime.ui.components.RamboostTextField
+import com.pushprime.ui.components.AppTextField
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -51,7 +50,12 @@ fun PullupMaxTestScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Max Reps Test", fontWeight = FontWeight.Black) },
+                title = {
+                    Text(
+                        text = "Max Reps Test",
+                        style = MaterialTheme.typography.headlineMedium
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
@@ -70,7 +74,7 @@ fun PullupMaxTestScreen(
                 .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            RamboostTextField(
+            AppTextField(
                 value = maxRepsText,
                 onValueChange = {
                     maxRepsText = it.filter { ch -> ch.isDigit() }
@@ -82,7 +86,10 @@ fun PullupMaxTestScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Text("Form quality (optional)", fontWeight = FontWeight.Bold)
+            Text(
+                text = "Form quality (optional)",
+                style = MaterialTheme.typography.titleLarge
+            )
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 (1..5).forEach { rating ->
                     OutlinedButton(
@@ -91,14 +98,18 @@ fun PullupMaxTestScreen(
                     ) {
                         Text(
                             rating.toString(),
-                            fontWeight = if (formRating == rating) FontWeight.Bold else FontWeight.Medium
+                            style = MaterialTheme.typography.labelLarge
                         )
                     }
                 }
             }
 
             if (isNewPr) {
-                Text("🔥 New PR!", color = Color(0xFFFF6D00), fontWeight = FontWeight.Bold)
+                Text(
+                    text = "🔥 New PR!",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = Color(0xFFFF6D00)
+                )
             }
 
             Button(
@@ -111,7 +122,10 @@ fun PullupMaxTestScreen(
                 modifier = Modifier.fillMaxWidth(),
                 enabled = isFormValid
             ) {
-                Text("Save Test")
+                Text(
+                    text = "Save Test",
+                    style = MaterialTheme.typography.labelLarge
+                )
             }
         }
     }

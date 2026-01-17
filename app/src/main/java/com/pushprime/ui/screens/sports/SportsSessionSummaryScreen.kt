@@ -29,12 +29,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.pushprime.model.Intensity
 import com.pushprime.model.SportType
 import com.pushprime.model.SportsSession
-import com.pushprime.ui.components.RamboostTextField
+import com.pushprime.ui.components.AppTextField
 import com.pushprime.ui.theme.PushPrimeColors
 import kotlin.math.roundToInt
 
@@ -60,7 +59,12 @@ fun SportsSessionSummaryScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Session Summary", fontWeight = FontWeight.Bold) },
+                title = {
+                    Text(
+                        text = "Session Summary",
+                        style = MaterialTheme.typography.headlineMedium
+                    )
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = PushPrimeColors.Surface
                 )
@@ -86,8 +90,7 @@ fun SportsSessionSummaryScreen(
                 ) {
                     Text(
                         text = sportType.displayName,
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.titleLarge
                     )
                     Text(
                         text = "Duration: ${formatDuration(durationSeconds)}",
@@ -105,7 +108,10 @@ fun SportsSessionSummaryScreen(
             }
 
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("How did it feel?", fontWeight = FontWeight.Bold)
+                Text(
+                    text = "How did it feel?",
+                    style = MaterialTheme.typography.titleLarge
+                )
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     (1..5).forEach { value ->
                         val selected = rating == value
@@ -122,14 +128,14 @@ fun SportsSessionSummaryScreen(
                                 text = value.toString(),
                                 modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
                                 color = if (selected) Color.White else Color.Black,
-                                fontWeight = FontWeight.Bold
+                                style = MaterialTheme.typography.labelLarge
                             )
                         }
                     }
                 }
             }
 
-            RamboostTextField(
+            AppTextField(
                 value = notes,
                 onValueChange = { notes = it },
                 label = "Notes (optional)",
@@ -164,7 +170,10 @@ fun SportsSessionSummaryScreen(
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Black, contentColor = Color.White)
             ) {
-                Text("Save Session", fontWeight = FontWeight.Bold)
+                Text(
+                    text = "Save Session",
+                    style = MaterialTheme.typography.labelLarge
+                )
             }
 
             Button(
@@ -178,7 +187,10 @@ fun SportsSessionSummaryScreen(
                     contentColor = Color.Black
                 )
             ) {
-                Text("Discard", fontWeight = FontWeight.Bold)
+                Text(
+                    text = "Discard",
+                    style = MaterialTheme.typography.labelLarge
+                )
             }
         }
     }

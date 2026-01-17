@@ -15,7 +15,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.pushprime.network.VoipService
 import com.pushprime.ui.theme.PushPrimeColors
@@ -108,8 +107,7 @@ fun GroupSessionScreen(
                 Text(
                     text = "${countdown}",
                     style = MaterialTheme.typography.displayLarge,
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold
+                    color = Color.White
                 )
             }
         }
@@ -129,8 +127,7 @@ fun GroupSessionScreen(
             Text(
                 text = if (callState.isConnected) "Connected" else "Connecting...",
                 color = Color.White,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Medium,
+                style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.align(Alignment.CenterHorizontally)
             )
             
@@ -239,8 +236,7 @@ fun ParticipantCard(participant: VoipService.Participant) {
                 }
                 Text(
                     text = participant.username,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
+                style = MaterialTheme.typography.titleLarge,
                     color = PushPrimeColors.OnSurface
                 )
                 if (participant.isLeading) {
@@ -253,8 +249,7 @@ fun ParticipantCard(participant: VoipService.Participant) {
             }
             Text(
                 text = "${participant.pushups}",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.headlineMedium,
                 color = PushPrimeColors.Primary
             )
         }

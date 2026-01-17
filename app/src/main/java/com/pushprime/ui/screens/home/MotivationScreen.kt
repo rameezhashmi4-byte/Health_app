@@ -11,7 +11,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.pushprime.network.NewsService
 import com.pushprime.network.QuoteService
@@ -69,7 +68,6 @@ fun MotivationScreen(
             Text(
                 text = "Motivation",
                 style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
                 color = PushPrimeColors.OnSurface
             )
         }
@@ -127,7 +125,6 @@ fun MotivationScreen(
                     Text(
                         text = "Health News",
                         style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
                         color = PushPrimeColors.OnSurface,
                         modifier = Modifier.padding(vertical = 8.dp)
                     )
@@ -146,8 +143,7 @@ fun MotivationScreen(
                         ) {
                             Text(
                                 text = newsItem.title,
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold,
+                                style = MaterialTheme.typography.titleLarge,
                                 color = PushPrimeColors.OnSurface
                             )
                             Spacer(modifier = Modifier.height(8.dp))
@@ -158,8 +154,7 @@ fun MotivationScreen(
                                 Text(
                                     text = newsItem.source,
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = PushPrimeColors.Primary,
-                                    fontWeight = FontWeight.Medium
+                                    color = PushPrimeColors.Primary
                                 )
                                 Text(
                                     text = newsItem.getFormattedDate(),

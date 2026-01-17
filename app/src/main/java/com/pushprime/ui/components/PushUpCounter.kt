@@ -19,7 +19,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.pushprime.ui.theme.PushPrimeColors
 
@@ -53,7 +52,6 @@ fun PushUpCounter(
             Text(
                 text = "Push-Up Counter",
                 style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.SemiBold,
                 color = PushPrimeColors.OnSurface
             )
             
@@ -63,8 +61,7 @@ fun PushUpCounter(
             Text(
                 text = formatTime(elapsedTime),
                 style = MaterialTheme.typography.headlineMedium,
-                color = PushPrimeColors.OnSurfaceVariant,
-                fontWeight = FontWeight.Medium
+                color = PushPrimeColors.OnSurfaceVariant
             )
             
             Spacer(modifier = Modifier.height(28.dp))
@@ -98,7 +95,6 @@ fun PushUpCounter(
                     Text(
                         text = "$pushupCount",
                         style = MaterialTheme.typography.displayMedium,
-                        fontWeight = FontWeight.Bold,
                         color = PushPrimeColors.Primary
                     )
                     Text(
@@ -127,8 +123,7 @@ fun PushUpCounter(
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
                         text = "Tap to Add Push-Up",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold
+                        style = MaterialTheme.typography.labelLarge
                     )
                 }
                 Spacer(modifier = Modifier.height(16.dp))
@@ -147,7 +142,10 @@ fun PushUpCounter(
                 ) {
                     Icon(Icons.Default.Refresh, contentDescription = "Reset")
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Reset")
+                    Text(
+                        text = "Reset",
+                        style = MaterialTheme.typography.labelLarge
+                    )
                 }
                 
                 Button(
@@ -163,7 +161,10 @@ fun PushUpCounter(
                         contentDescription = if (isActive) "Stop" else "Start"
                     )
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text(if (isActive) "Stop" else "Start")
+                    Text(
+                        text = if (isActive) "Stop" else "Start",
+                        style = MaterialTheme.typography.labelLarge
+                    )
                 }
             }
         }

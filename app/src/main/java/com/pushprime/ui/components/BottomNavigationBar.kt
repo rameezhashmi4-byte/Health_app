@@ -8,7 +8,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.pushprime.navigation.Screen
 
@@ -64,8 +63,7 @@ fun BottomNavigationBar(
                     if (isSelected) {
                         Text(
                             text = item.label,
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Black
+                            style = MaterialTheme.typography.labelSmall
                         )
                     }
                 },

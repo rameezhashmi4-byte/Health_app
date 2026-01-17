@@ -36,6 +36,10 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
+import com.pushprime.ui.components.AppCard
+import com.pushprime.ui.components.AppPrimaryButton
+import com.pushprime.ui.components.AppSecondaryButton
+import com.pushprime.ui.components.AppTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -45,11 +49,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.pushprime.ui.components.RamboostTextField
-import androidx.compose.ui.unit.sp
+import com.pushprime.ui.components.AppTextField
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.pushprime.model.NutritionEntry
 
@@ -70,9 +72,7 @@ fun NutritionScreen(
                 title = {
                     Text(
                         text = "Nutrition",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Black,
-                        letterSpacing = 1.sp
+                        style = MaterialTheme.typography.headlineMedium
                     )
                 },
                 navigationIcon = {
@@ -105,44 +105,39 @@ fun NutritionScreen(
 
             item {
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
-                    Button(
+                    AppPrimaryButton(
+                        text = "Add Meal",
                         onClick = onNavigateToAddMeal,
-                        modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color.Black, contentColor = Color.White)
-                    ) {
-                        Icon(Icons.Default.Add, contentDescription = null)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Add Meal", fontWeight = FontWeight.Bold)
-                    }
-                    OutlinedButton(
+                        modifier = Modifier.weight(1f)
+                    )
+                    AppSecondaryButton(
+                        text = "Quick Cals",
                         onClick = { quickCalories = QuickAddState("Quick Add Calories") },
                         modifier = Modifier.weight(1f)
-                    ) {
-                        Icon(Icons.Default.Bolt, contentDescription = null)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Quick Add Calories")
-                    }
+                    )
                 }
             }
 
             item {
-                OutlinedButton(
-                    onClick = { quickProtein = QuickAddState("Quick Add Protein") },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(Icons.Default.LocalDining, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Quick Add Protein")
-                }
+                AppSecondaryButton(
+                    text = "Quick Add Protein",
+                    onClick = { quickProtein = QuickAddState("Quick Add Protein") }
+                )
             }
 
             item {
-                Text("7-Day Calories", fontWeight = FontWeight.Black, style = MaterialTheme.typography.labelLarge)
+                Text(
+                    text = "7-Day Calories",
+                    style = MaterialTheme.typography.titleLarge
+                )
                 NutritionMiniChart(summaries = uiState.last7Days)
             }
 
             item {
-                Text("Today Logs", fontWeight = FontWeight.Black, style = MaterialTheme.typography.labelLarge)
+                Text(
+                    text = "Today Logs",
+                    style = MaterialTheme.typography.titleLarge
+                )
             }
 
             if (uiState.entries.isEmpty()) {
@@ -189,34 +184,32 @@ fun NutritionTotalsCard(
     totalProtein: Int,
     proteinGoal: Int
 ) {
-    Surface(
-        color = Color.Black,
-        shape = RoundedCornerShape(20.dp),
+    AppCard(
+        containerColor = Color.Black,
+        contentColor = Color.White,
         modifier = Modifier.fillMaxWidth()
     ) {
-        Column(modifier = Modifier.padding(20.dp)) {
+        Column {
             Text(
                 "Today Calories",
                 color = Color(0xFFFFD100),
-                fontWeight = FontWeight.Bold
+                style = MaterialTheme.typography.bodyMedium
             )
             Text(
                 "$totalCalories / $calorieGoal",
                 color = Color.White,
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Black
+                style = MaterialTheme.typography.titleLarge
             )
             Spacer(modifier = Modifier.height(12.dp))
             Text(
                 "Today Protein",
                 color = Color(0xFFFFD100),
-                fontWeight = FontWeight.Bold
+                style = MaterialTheme.typography.bodyMedium
             )
             Text(
                 "${totalProtein}g / ${proteinGoal}g",
                 color = Color.White,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Black
+                style = MaterialTheme.typography.titleLarge
             )
         }
     }
@@ -250,31 +243,26 @@ fun NutritionMiniChart(summaries: List<NutritionDaySummary>) {
 
 @Composable
 fun NutritionEntryCard(entry: NutritionEntry) {
-    Surface(
-        color = Color.White,
-        shape = RoundedCornerShape(16.dp),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE6E6E6)),
+    AppCard(
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = entry.name.ifBlank { entry.mealType.lowercase().replaceFirstChar { it.uppercase() } },
-                    fontWeight = FontWeight.Black
+                    style = MaterialTheme.typography.bodyLarge
                 )
                 Text(
                     text = "${entry.calories ?: 0} kcal • ${entry.proteinGrams ?: 0}g protein",
-                    color = Color.Gray,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodySmall
                 )
             }
-            Icon(Icons.Default.Restaurant, contentDescription = null, tint = Color.LightGray)
+            Icon(Icons.Default.Restaurant, contentDescription = null, tint = MaterialTheme.colorScheme.outline)
         }
     }
 }
@@ -290,9 +278,14 @@ fun QuickAddDialog(
     val valueError = if (value <= 0) "Enter a value" else null
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(title, fontWeight = FontWeight.Bold) },
+        title = {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleLarge
+            )
+        },
         text = {
-            RamboostTextField(
+            AppTextField(
                 value = valueText,
                 onValueChange = { valueText = it.filter { ch -> ch.isDigit() } },
                 label = "Value",
@@ -304,17 +297,14 @@ fun QuickAddDialog(
         },
         confirmButton = {
             val isFormValid = value > 0
-            TextButton(
+            AppTextButton(
+                text = "Save",
                 onClick = { onSave(value) },
                 enabled = isFormValid
-            ) {
-                Text("Save")
-            }
+            )
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
-            }
+            AppTextButton(onClick = onDismiss, text = "Cancel")
         }
     )
 }

@@ -43,7 +43,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.pushprime.model.QuickSessionTemplates
 import com.pushprime.ui.theme.PushPrimeColors
@@ -123,7 +122,12 @@ fun QuickSessionPlayerScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(template.name, fontWeight = FontWeight.Bold) },
+                title = {
+                    Text(
+                        text = template.name,
+                        style = MaterialTheme.typography.headlineMedium
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = { showEndConfirm = true }) {
                         Icon(Icons.Default.Close, contentDescription = "Close")
@@ -144,8 +148,7 @@ fun QuickSessionPlayerScreen(
         ) {
             Text(
                 text = formatSeconds(totalRemaining),
-                style = MaterialTheme.typography.displayLarge,
-                fontWeight = FontWeight.Black
+                style = MaterialTheme.typography.displayLarge
             )
 
             Text(
@@ -160,8 +163,7 @@ fun QuickSessionPlayerScreen(
             ) { target ->
                 Text(
                     text = target,
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold
+                    style = MaterialTheme.typography.titleLarge
                 )
             }
 
@@ -186,7 +188,10 @@ fun QuickSessionPlayerScreen(
                 ) {
                     Column {
                         Text("Next", color = PushPrimeColors.OnSurfaceVariant)
-                        Text(nextExercise, fontWeight = FontWeight.Bold)
+                        Text(
+                            text = nextExercise,
+                            style = MaterialTheme.typography.titleLarge
+                        )
                     }
                 }
             }
@@ -203,7 +208,10 @@ fun QuickSessionPlayerScreen(
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text(if (isPaused) "Resume" else "Pause")
+                    Text(
+                        text = if (isPaused) "Resume" else "Pause",
+                        style = MaterialTheme.typography.labelLarge
+                    )
                 }
                 Button(
                     onClick = {
@@ -225,7 +233,10 @@ fun QuickSessionPlayerScreen(
                     colors = ButtonDefaults.buttonColors(containerColor = PushPrimeColors.PrimaryLight),
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text("Skip")
+                    Text(
+                        text = "Skip",
+                        style = MaterialTheme.typography.labelLarge
+                    )
                 }
             }
 
@@ -235,7 +246,11 @@ fun QuickSessionPlayerScreen(
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("End session early", color = Color(0xFFB3261E))
+                Text(
+                    text = "End session early",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = Color(0xFFB3261E)
+                )
             }
         }
     }
@@ -253,7 +268,10 @@ fun QuickSessionPlayerScreen(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFB3261E))
                 ) {
-                    Text("End")
+                    Text(
+                        text = "End",
+                        style = MaterialTheme.typography.labelLarge
+                    )
                 }
             },
             dismissButton = {
@@ -278,7 +296,10 @@ private fun SegmentCard(label: String, value: String, modifier: Modifier = Modif
         ) {
             Text(label, color = PushPrimeColors.OnSurfaceVariant)
             Spacer(modifier = Modifier.height(6.dp))
-            Text(value, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+            Text(
+                text = value,
+                style = MaterialTheme.typography.titleLarge
+            )
         }
     }
 }

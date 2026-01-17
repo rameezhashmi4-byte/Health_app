@@ -50,7 +50,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
@@ -80,7 +79,12 @@ fun ProgressCollageScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Create Collage", fontWeight = FontWeight.Bold) },
+                title = {
+                    Text(
+                        text = "Create Collage",
+                        style = MaterialTheme.typography.headlineMedium
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
@@ -112,7 +116,10 @@ fun ProgressCollageScreen(
                 ) {
                     Icon(Icons.Default.PhotoLibrary, contentDescription = null)
                     Spacer(modifier = Modifier.size(6.dp))
-                    Text("Auto Pick")
+                    Text(
+                        text = "Auto Pick",
+                        style = MaterialTheme.typography.labelLarge
+                    )
                 }
                 Button(
                     onClick = {
@@ -120,7 +127,10 @@ fun ProgressCollageScreen(
                     },
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text("Clear")
+                    Text(
+                        text = "Clear",
+                        style = MaterialTheme.typography.labelLarge
+                    )
                 }
             }
 
@@ -179,7 +189,10 @@ fun ProgressCollageScreen(
                         modifier = Modifier.size(20.dp)
                     )
                 } else {
-                    Text("Generate Collage")
+                    Text(
+                        text = "Generate Collage",
+                        style = MaterialTheme.typography.labelLarge
+                    )
                 }
             }
         }
@@ -225,7 +238,7 @@ private fun CollagePhotoTile(
                             text = selectionIndex.toString(),
                             color = Color.White,
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                            fontWeight = FontWeight.Bold
+                            style = MaterialTheme.typography.bodySmall
                         )
                     }
                 }

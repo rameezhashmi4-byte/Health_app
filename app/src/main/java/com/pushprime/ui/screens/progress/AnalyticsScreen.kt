@@ -6,25 +6,24 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.pushprime.data.SessionDao
 import com.pushprime.data.WeeklyAggregationResult
 import com.pushprime.data.MonthlyAggregationResult
 import com.pushprime.model.ActivityType
 import com.pushprime.model.SessionEntity
-import com.pushprime.ui.components.FeedCard
+import com.pushprime.ui.components.AppCard
+import com.pushprime.ui.components.AppChoiceChip
+import com.pushprime.ui.components.PremiumFadeSlideIn
 import com.pushprime.ui.screens.common.ErrorScreen
-import com.pushprime.ui.theme.PushPrimeColors
+import com.pushprime.ui.theme.AppSpacing
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlinx.coroutines.flow.first
 
-/**
- * Analytics Screen
- * Weekly/monthly/yearly aggregations and charts
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AnalyticsScreen(
@@ -97,7 +96,7 @@ fun AnalyticsScreen(
                 title = {
                     Text(
                         text = "Analytics",
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.headlineMedium
                     )
                 },
                 navigationIcon = {
@@ -106,129 +105,152 @@ fun AnalyticsScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = PushPrimeColors.Surface
+                    containerColor = MaterialTheme.colorScheme.surface
                 )
             )
         }
     ) { paddingValues ->
-        LazyColumn(
+        PremiumFadeSlideIn(
             modifier = modifier
                 .fillMaxSize()
-                .padding(paddingValues),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(paddingValues)
         ) {
-            // Period selector
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    AnalyticsPeriod.values().forEach { period ->
-                        FilterChip(
-                            selected = selectedPeriod == period,
-                            onClick = { selectedPeriod = period },
-                            label = { Text(period.displayName) },
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                }
-            }
-
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    ActivityFilter.values().forEach { filter ->
-                        FilterChip(
-                            selected = selectedFilter == filter,
-                            onClick = { selectedFilter = filter },
-                            label = { Text(filter.displayName) },
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                }
-            }
-            
-            // Summary cards
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    SummaryCard(
-                        title = "Sessions",
-                        value = totalSessions.toString(),
-                        icon = Icons.Default.FitnessCenter,
-                        modifier = Modifier.weight(1f)
-                    )
-                    SummaryCard(
-                        title = "Minutes",
-                        value = totalMinutes.toString(),
-                        icon = Icons.Default.Timer,
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-            }
-            
-            // Activity breakdown
-            item {
-                FeedCard(
-                    title = "Activity Breakdown",
-                    icon = Icons.Default.PieChart
-                ) {
-                    monthlyData.forEach { data: MonthlyAggregationResult ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 8.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(
-                                text = data.activityType,
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Medium
-                            )
-                            Text(
-                                text = "${data.count} sessions",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = PushPrimeColors.OnSurfaceVariant
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(AppSpacing.lg),
+                verticalArrangement = Arrangement.spacedBy(AppSpacing.lg)
+            ) {
+                // Period selector
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
+                    ) {
+                        AnalyticsPeriod.values().forEach { period ->
+                            AppChoiceChip(
+                                label = period.displayName,
+                                selected = selectedPeriod == period,
+                                onSelectedChange = { if (it) selectedPeriod = period },
+                                modifier = Modifier.weight(1f)
                             )
                         }
                     }
                 }
-            }
-            
-            // Weekly chart (simplified for MVP)
-            item {
-                FeedCard(
-                    title = "Weekly Trend",
-                    icon = Icons.Default.TrendingUp
-                ) {
-                    if (weeklyData.isEmpty()) {
-                        Text(
-                            text = "No data for this period",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = PushPrimeColors.OnSurfaceVariant
+
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
+                    ) {
+                        ActivityFilter.values().forEach { filter ->
+                            AppChoiceChip(
+                                label = filter.displayName,
+                                selected = selectedFilter == filter,
+                                onSelectedChange = { if (it) selectedFilter = filter },
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                    }
+                }
+                
+                // Summary cards
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(AppSpacing.md)
+                    ) {
+                        SummaryCard(
+                            title = "Sessions",
+                            value = totalSessions.toString(),
+                            icon = Icons.Default.FitnessCenter,
+                            modifier = Modifier.weight(1f)
                         )
-                    } else {
-                        weeklyData.forEach { dayData: WeeklyAggregationResult ->
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 4.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
+                        SummaryCard(
+                            title = "Minutes",
+                            value = totalMinutes.toString(),
+                            icon = Icons.Default.Timer,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+                
+                // Activity breakdown
+                item {
+                    AppCard(
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.PieChart, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+                                Spacer(modifier = Modifier.width(AppSpacing.sm))
                                 Text(
-                                    text = dayData.date,
-                                    style = MaterialTheme.typography.bodySmall
+                                    text = "Activity Breakdown",
+                                    style = MaterialTheme.typography.titleLarge
                                 )
+                            }
+                            Spacer(modifier = Modifier.height(AppSpacing.md))
+                            monthlyData.forEach { data: MonthlyAggregationResult ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = AppSpacing.xs),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(
+                                        text = data.activityType,
+                                        style = MaterialTheme.typography.bodyLarge
+                                    )
+                                    Text(
+                                        text = "${data.count} sessions",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // Weekly trend
+                item {
+                    AppCard(
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.TrendingUp, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+                                Spacer(modifier = Modifier.width(AppSpacing.sm))
                                 Text(
-                                    text = "${dayData.count} sessions",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = PushPrimeColors.OnSurfaceVariant
+                                    text = "Weekly Trend",
+                                    style = MaterialTheme.typography.titleLarge
                                 )
+                            }
+                            Spacer(modifier = Modifier.height(AppSpacing.md))
+                            if (weeklyData.isEmpty()) {
+                                Text(
+                                    text = "No data for this period",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            } else {
+                                weeklyData.forEach { dayData: WeeklyAggregationResult ->
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = AppSpacing.xs),
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Text(
+                                            text = dayData.date,
+                                            style = MaterialTheme.typography.bodySmall
+                                        )
+                                        Text(
+                                            text = "${dayData.count} sessions",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
@@ -242,35 +264,31 @@ fun AnalyticsScreen(
 fun SummaryCard(
     title: String,
     value: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    icon: ImageVector,
     modifier: Modifier = Modifier
 ) {
-    Card(
-        modifier = modifier,
-        colors = CardDefaults.cardColors(
-            containerColor = PushPrimeColors.Surface
-        )
+    AppCard(
+        modifier = modifier
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
-            horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.fillMaxWidth()
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = PushPrimeColors.Primary,
+                tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(24.dp)
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(AppSpacing.sm))
             Text(
                 text = value,
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
+                style = MaterialTheme.typography.headlineMedium
             )
             Text(
                 text = title,
                 style = MaterialTheme.typography.bodySmall,
-                color = PushPrimeColors.OnSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }

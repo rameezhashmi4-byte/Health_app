@@ -872,6 +872,7 @@ fun RamboostApp(
 
             composable(Screen.SpotifyConnect.route) {
                 SpotifyConnectScreen(
+                    spotifyHelper = spotifyHelper,
                     onNavigateBack = { navController.popBackStack() }
                 )
             }

@@ -13,7 +13,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -37,8 +36,7 @@ fun WorkoutGeneratorSummaryScreen(
         ) {
             Text(
                 text = "Plan #$planId",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
+                style = MaterialTheme.typography.titleLarge
             )
             Text(
                 text = "Session #$sessionId complete",
@@ -49,7 +47,10 @@ fun WorkoutGeneratorSummaryScreen(
                 onClick = onNavigateHome,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Back to Home")
+                Text(
+                    text = "Back to Home",
+                    style = MaterialTheme.typography.labelLarge
+                )
             }
         }
     }

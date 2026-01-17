@@ -14,13 +14,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.pushprime.ai.PredictionHelper
 import com.pushprime.data.LocalStore
 import com.pushprime.model.User
-import com.pushprime.ui.components.RamboostTextField
+import com.pushprime.ui.components.AppTextField
 import com.pushprime.ui.theme.PushPrimeColors
 
 /**
@@ -58,7 +57,6 @@ fun CoachingScreen(
             Text(
                 text = "Smart Coaching",
                 style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
                 color = PushPrimeColors.OnSurface
             )
         }
@@ -86,7 +84,6 @@ fun CoachingScreen(
                     Text(
                         text = "Let's personalize your journey",
                         style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.SemiBold,
                         color = PushPrimeColors.OnSurface
                     )
                     Spacer(modifier = Modifier.height(8.dp))
@@ -111,12 +108,11 @@ fun CoachingScreen(
                 ) {
                     Text(
                         text = "Age",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
+                        style = MaterialTheme.typography.titleLarge,
                         color = PushPrimeColors.OnSurface
                     )
                     Spacer(modifier = Modifier.height(12.dp))
-                    RamboostTextField(
+                    AppTextField(
                         value = age,
                         onValueChange = { if (it.all { char -> char.isDigit() }) age = it },
                         label = "Enter your age",
@@ -143,8 +139,7 @@ fun CoachingScreen(
                 ) {
                     Text(
                         text = "Gender",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
+                        style = MaterialTheme.typography.titleLarge,
                         color = PushPrimeColors.OnSurface
                     )
                     Spacer(modifier = Modifier.height(12.dp))
@@ -187,8 +182,7 @@ fun CoachingScreen(
                 ) {
                     Text(
                         text = "Fitness Level",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
+                        style = MaterialTheme.typography.titleLarge,
                         color = PushPrimeColors.OnSurface
                     )
                     Spacer(modifier = Modifier.height(12.dp))
@@ -254,8 +248,7 @@ fun CoachingScreen(
             ) {
                 Text(
                     text = "Get My Prediction",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
+                    style = MaterialTheme.typography.labelLarge
                 )
             }
             
@@ -286,8 +279,7 @@ fun CoachingScreen(
                         )
                         Text(
                             text = "$prediction push-ups",
-                            style = MaterialTheme.typography.displayMedium,
-                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.headlineMedium,
                             color = PushPrimeColors.Success
                         )
                         Spacer(modifier = Modifier.height(8.dp))
@@ -346,8 +338,7 @@ fun FitnessLevelOption(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = label,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold,
+                    style = MaterialTheme.typography.bodyLarge,
                     color = PushPrimeColors.OnSurface
                 )
                 Text(

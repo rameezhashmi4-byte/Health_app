@@ -13,11 +13,25 @@
 3. Copy your Client ID
 4. Add redirect URI: `pushprime://callback`
 
-### 2. Update SpotifyHelper.kt
-Replace `YOUR_SPOTIFY_CLIENT_ID` in `SpotifyHelper.kt` with your actual Client ID.
+### 2. Set Spotify Client ID
+Provide your client ID via Gradle:
 
-### 3. Add Spotify Maven Repository
-Add to `settings.gradle.kts`:
+```
+SPOTIFY_CLIENT_ID=your_client_id
+```
+
+Add it to `~/.gradle/gradle.properties` or your project `gradle.properties`.
+
+### 3. Add Spotify Maven Repository Credentials
+The Spotify SDK is hosted on GitHub Packages. Provide credentials in `~/.gradle/gradle.properties`:
+
+```
+gpr.user=YOUR_GITHUB_USERNAME
+gpr.key=YOUR_GITHUB_TOKEN
+```
+
+Alternatively set environment variables:
+`GITHUB_ACTOR` and `GITHUB_TOKEN`.
 ```kotlin
 repositories {
     maven {
@@ -30,8 +44,8 @@ repositories {
 }
 ```
 
-### 4. Uncomment Spotify SDK
-In `app/build.gradle.kts`, uncomment:
+### 4. Spotify SDK Dependency
+The dependency is now declared in `app/build.gradle.kts`:
 ```kotlin
 implementation("com.spotify.android:appremote2:2.0.2")
 ```

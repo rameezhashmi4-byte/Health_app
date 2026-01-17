@@ -24,7 +24,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -41,8 +40,13 @@ import com.google.firebase.auth.FirebaseAuthWeakPasswordException
 import com.pushprime.R
 import com.pushprime.auth.AuthMode
 import com.pushprime.auth.AuthViewModel
-import com.pushprime.ui.components.RamboostTextField
-import com.pushprime.ui.components.Spacing
+import com.pushprime.ui.components.AppPrimaryButton
+import com.pushprime.ui.components.AppSecondaryButton
+import com.pushprime.ui.components.AppCard
+import com.pushprime.ui.components.AppTextButton
+import com.pushprime.ui.components.AppTextField
+import com.pushprime.ui.components.PremiumFadeSlideIn
+import com.pushprime.ui.theme.AppSpacing
 import com.pushprime.ui.validation.FormValidation
 import com.pushprime.ui.validation.rememberFormValidationState
 
@@ -191,24 +195,22 @@ fun AuthScreen(
                 exit = slideOutVertically() + fadeOut(),
                 modifier = Modifier
                     .align(Alignment.TopCenter)
-                    .padding(horizontal = Spacing.md, vertical = Spacing.lg)
+                    .padding(horizontal = AppSpacing.md, vertical = AppSpacing.lg)
             ) {
-                Surface(
-                    color = MaterialTheme.colorScheme.errorContainer,
-                    shape = MaterialTheme.shapes.small,
-                    tonalElevation = 4.dp,
+                AppCard(
+                    containerColor = MaterialTheme.colorScheme.errorContainer,
+                    contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                    contentPadding = PaddingValues(AppSpacing.md),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Row(
-                        modifier = Modifier.padding(Spacing.md),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(Icons.Default.Error, contentDescription = null, tint = MaterialTheme.colorScheme.error)
-                        Spacer(modifier = Modifier.width(Spacing.sm))
+                        Spacer(modifier = Modifier.width(AppSpacing.sm))
                         Text(
                             text = displayError ?: "",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onErrorContainer,
                             modifier = Modifier.weight(1f)
                         )
                         IconButton(onClick = {
@@ -221,220 +223,214 @@ fun AuthScreen(
                 }
             }
 
-            Column(
+            PremiumFadeSlideIn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = Spacing.xl),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+                    .padding(AppSpacing.lg)
             ) {
-                Text(
-                    text = "RAMBOOST",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
-
-                Spacer(modifier = Modifier.height(Spacing.xl))
-
-                // Title & Subtitle with Animation
-                AnimatedContent(
-                    targetState = authMode == AuthMode.SIGN_UP,
-                    transitionSpec = { fadeIn() with fadeOut() }
-                ) { targetIsCreate ->
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text = if (targetIsCreate) "Create Account" else "Welcome Back",
-                            style = MaterialTheme.typography.titleLarge,
-                            textAlign = TextAlign.Center
-                        )
-                        Spacer(modifier = Modifier.height(Spacing.sm))
-                        Text(
-                            text = if (targetIsCreate) 
-                                "Join the RAMBOOST mission today" 
-                            else "Sign in to resume your mission",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                }
-
-
-                Spacer(modifier = Modifier.height(32.dp))
-
-                // Form
                 Column(
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.Start,
+                    verticalArrangement = Arrangement.Top
                 ) {
-                    RamboostTextField(
-                        value = email,
-                        onValueChange = {
-                            email = it
-                            authViewModel.clearAuthError()
-                        },
-                        label = "Email",
-                        modifier = Modifier.fillMaxWidth(),
-                        required = true,
-                        errorText = emailError,
-                        showError = validation.shouldShowError("email"),
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Email,
-                            imeAction = ImeAction.Next
-                        ),
-                        keyboardActions = KeyboardActions(
-                            onNext = { passwordFocusRequester.requestFocus() }
-                        ),
-                        onFocusChanged = { state ->
-                            if (!state.isFocused) {
-                                validation.markTouched("email")
-                            }
-                        }
+                    Spacer(modifier = Modifier.height(AppSpacing.xxl))
+                    
+                    Text(
+                        text = "RAMBOOST",
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = MaterialTheme.colorScheme.primary
                     )
 
-                    Spacer(modifier = Modifier.height(Spacing.md))
-                    RamboostTextField(
-                        value = password,
-                        onValueChange = {
-                            password = it
-                            authViewModel.clearAuthError()
-                        },
-                        label = "Password",
-                        modifier = Modifier.fillMaxWidth(),
-                        required = true,
-                        errorText = passwordError,
-                        showError = validation.shouldShowError("password"),
-                        visualTransformation = if (passwordVisible) {
-                            VisualTransformation.None
-                        } else {
-                            PasswordVisualTransformation()
-                        },
-                        trailingIcon = {
-                            IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                                Icon(
-                                    imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                                    contentDescription = null
-                                )
-                            }
-                        },
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Password,
-                            imeAction = ImeAction.Done
-                        ),
-                        keyboardActions = KeyboardActions(
-                            onDone = { focusManager.clearFocus() }
-                        ),
-                        focusRequester = passwordFocusRequester,
-                        onFocusChanged = { state ->
-                            if (!state.isFocused) {
-                                validation.markTouched("password")
-                            }
-                        }
-                    )
+                    Spacer(modifier = Modifier.height(AppSpacing.xl))
 
-                        if (authMode == AuthMode.SIGN_IN) {
-                            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
-                                TextButton(onClick = { /* Forgot password logic */ }) {
-                                    Text("Forgot password?")
-                                }
-                            }
-                        }
-
-                    Spacer(modifier = Modifier.height(Spacing.lg))
-
-                    Button(
-                        onClick = {
-                            authError = null
-                            authViewModel.clearAuthError()
-                            validation.markSubmitAttempt()
-                            if (isFormValid) {
-                                loadingAction = LoadingAction.Email
-                                authViewModel.signInWithEmail(trimmedEmail, password) { result ->
-                                    loadingAction = LoadingAction.None
-                                    result.onFailure { authError = mapAuthError(it) }
-                                }
-                            }
-                        },
-                        enabled = isFormValid && !isLoading,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(56.dp),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color.Black)
-                    ) {
-                        if (loadingAction == LoadingAction.Email) {
-                            CircularProgressIndicator(modifier = Modifier.size(24.dp), color = Color.White, strokeWidth = 2.dp)
-                        } else {
+                    // Title & Subtitle with Animation
+                    AnimatedContent(
+                        targetState = authMode == AuthMode.SIGN_UP,
+                        transitionSpec = { fadeIn() with fadeOut() },
+                        modifier = Modifier.fillMaxWidth()
+                    ) { targetIsCreate ->
+                        Column(horizontalAlignment = Alignment.Start) {
                             Text(
-                                text = if (authMode == AuthMode.SIGN_UP) "Create Account" else "Sign In",
-                                style = MaterialTheme.typography.labelLarge
+                                text = if (targetIsCreate) "Create Account" else "Welcome Back",
+                                style = MaterialTheme.typography.headlineMedium,
+                                textAlign = TextAlign.Start
+                            )
+                            Spacer(modifier = Modifier.height(AppSpacing.sm))
+                            Text(
+                                text = if (targetIsCreate) 
+                                    "Join the RAMBOOST mission today" 
+                                else "Sign in to resume your mission",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Start
                             )
                         }
                     }
-                }
 
-                Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(AppSpacing.xxl))
 
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(1.dp)
-                            .background(Color.LightGray)
-                    )
-                    Text("or", modifier = Modifier.padding(horizontal = 16.dp), color = Color.Gray, style = MaterialTheme.typography.bodySmall)
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(1.dp)
-                            .background(Color.LightGray)
-                    )
-                }
+                    // Form
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
+                    ) {
+                        AppTextField(
+                            value = email,
+                            onValueChange = {
+                                email = it
+                                authViewModel.clearAuthError()
+                            },
+                            label = "Email",
+                            modifier = Modifier.fillMaxWidth(),
+                            required = true,
+                            errorText = emailError,
+                            showError = validation.shouldShowError("email"),
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Email,
+                                imeAction = ImeAction.Next
+                            ),
+                            keyboardActions = KeyboardActions(
+                                onNext = { passwordFocusRequester.requestFocus() }
+                            ),
+                            onFocusChanged = { state ->
+                                if (!state.isFocused) {
+                                    validation.markTouched("email")
+                                }
+                            }
+                        )
 
-                Spacer(modifier = Modifier.height(24.dp))
+                        AppTextField(
+                            value = password,
+                            onValueChange = {
+                                password = it
+                                authViewModel.clearAuthError()
+                            },
+                            label = "Password",
+                            modifier = Modifier.fillMaxWidth(),
+                            required = true,
+                            errorText = passwordError,
+                            showError = validation.shouldShowError("password"),
+                            visualTransformation = if (passwordVisible) {
+                                VisualTransformation.None
+                            } else {
+                                PasswordVisualTransformation()
+                            },
+                            trailingIcon = {
+                                IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                                    Icon(
+                                        imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                                        contentDescription = null
+                                    )
+                                }
+                            },
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Password,
+                                imeAction = ImeAction.Done
+                            ),
+                            keyboardActions = KeyboardActions(
+                                onDone = { focusManager.clearFocus() }
+                            ),
+                            focusRequester = passwordFocusRequester,
+                            onFocusChanged = { state ->
+                                if (!state.isFocused) {
+                                    validation.markTouched("password")
+                                }
+                            }
+                        )
 
-                // Google Button
-                OutlinedButton(
-                    onClick = {
-                        authError = null
-                        authViewModel.clearAuthError()
-                        loadingAction = LoadingAction.Google
-                        startGoogleSignIn()
-                    },
-                    enabled = !isLoading && isGoogleConfigured,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color.LightGray)
-                ) {
-                    if (loadingAction == LoadingAction.Google) {
-                        CircularProgressIndicator(modifier = Modifier.size(24.dp), color = Color.Black, strokeWidth = 2.dp)
-                    } else {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(painter = painterResource(id = R.drawable.ic_google), contentDescription = null, tint = Color.Unspecified, modifier = Modifier.size(20.dp))
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Text("Continue with Google", color = Color.Black, fontWeight = FontWeight.Medium)
+                        if (authMode == AuthMode.SIGN_IN) {
+                            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
+                                AppTextButton(
+                                    text = "Forgot password?",
+                                    onClick = { /* Forgot password logic */ }
+                                )
+                            }
                         }
+
+                        Spacer(modifier = Modifier.height(AppSpacing.md))
+
+                        AppPrimaryButton(
+                            text = if (authMode == AuthMode.SIGN_UP) "Create Account" else "Sign In",
+                            onClick = {
+                                authError = null
+                                authViewModel.clearAuthError()
+                                validation.markSubmitAttempt()
+                                if (isFormValid) {
+                                    loadingAction = LoadingAction.Email
+                                    authViewModel.signInWithEmail(trimmedEmail, password) { result ->
+                                        loadingAction = LoadingAction.None
+                                        result.onFailure { authError = mapAuthError(it) }
+                                    }
+                                }
+                            },
+                            enabled = isFormValid && !isLoading,
+                            loading = loadingAction == LoadingAction.Email
+                        )
                     }
-                }
 
-                Spacer(modifier = Modifier.height(32.dp))
+                    Spacer(modifier = Modifier.height(AppSpacing.xl))
 
-                // Switch Mode
-                TextButton(
-                    onClick = { 
-                        authViewModel.toggleAuthMode()
-                        validation.reset()
-                        authError = null
-                        authViewModel.clearAuthError()
-                    },
-                    enabled = !isLoading
-                ) {
-                    Text(
-                        text = if (authMode == AuthMode.SIGN_UP) "Already have an account? Sign In" else "New to RAMBOOST? Create Account",
-                        fontWeight = FontWeight.Bold
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(vertical = AppSpacing.md)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(1.dp)
+                                .background(MaterialTheme.colorScheme.outlineVariant)
+                        )
+                        Text(
+                            "or", 
+                            modifier = Modifier.padding(horizontal = AppSpacing.lg), 
+                            color = MaterialTheme.colorScheme.onSurfaceVariant, 
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(1.dp)
+                                .background(MaterialTheme.colorScheme.outlineVariant)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(AppSpacing.xl))
+
+                    AppSecondaryButton(
+                        text = "Continue with Google",
+                        onClick = {
+                            authError = null
+                            authViewModel.clearAuthError()
+                            loadingAction = LoadingAction.Google
+                            startGoogleSignIn()
+                        },
+                        enabled = !isLoading && isGoogleConfigured,
+                        loading = loadingAction == LoadingAction.Google,
+                        icon = {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_google),
+                                contentDescription = null,
+                                tint = Color.Unspecified,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
                     )
+
+                    Spacer(modifier = Modifier.weight(1f))
+
+                    AppTextButton(
+                        text = if (authMode == AuthMode.SIGN_UP) "Already have an account? Sign In" else "New to RAMBOOST? Create Account",
+                        onClick = {
+                            authViewModel.toggleAuthMode()
+                            validation.reset()
+                            authError = null
+                            authViewModel.clearAuthError()
+                        },
+                        enabled = !isLoading,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    
+                    Spacer(modifier = Modifier.height(AppSpacing.lg))
                 }
             }
         }

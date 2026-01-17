@@ -1,5 +1,6 @@
 package com.pushprime.ui.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -12,8 +13,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import com.pushprime.R
 import com.pushprime.data.SpotifyHelper
 import com.pushprime.data.WorkoutPlaylist
 import com.pushprime.data.Track
@@ -59,7 +61,7 @@ fun SpotifyBrowserScreen(
                 title = {
                     Text(
                         text = "Workout Music",
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.headlineMedium
                     )
                 },
                 navigationIcon = {
@@ -109,17 +111,15 @@ fun SpotifyBrowserScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.padding(32.dp)
                 ) {
-                    Icon(
-                        Icons.Default.MusicNote,
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_spotify),
                         contentDescription = "Not Connected",
-                        modifier = Modifier.size(64.dp),
-                        tint = PushPrimeColors.OnSurfaceVariant
+                        modifier = Modifier.size(64.dp)
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
                         text = "Not Connected",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.titleLarge
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
@@ -141,7 +141,6 @@ fun SpotifyBrowserScreen(
                     Text(
                         text = "Workout Playlists",
                         style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(vertical = 8.dp)
                     )
                 }
@@ -205,8 +204,7 @@ fun PlaylistCard(
                 Column {
                     Text(
                         text = playlist.name,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.titleLarge
                     )
                     Text(
                         text = playlist.description,
@@ -250,17 +248,15 @@ fun SpotifyNowPlayingBar(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Icon(
-                    Icons.Default.MusicNote,
+                Image(
+                    painter = painterResource(id = R.drawable.ic_spotify),
                     contentDescription = "Now Playing",
-                    tint = Color(0xFF1DB954),
                     modifier = Modifier.size(24.dp)
                 )
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = track.name,
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium,
+                        style = MaterialTheme.typography.bodyLarge,
                         maxLines = 1
                     )
                     Text(

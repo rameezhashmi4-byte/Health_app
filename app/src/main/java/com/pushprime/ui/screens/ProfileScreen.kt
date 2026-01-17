@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Logout
@@ -42,15 +44,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.pushprime.ui.components.RamboostCard
-import com.pushprime.ui.components.RamboostPrimaryButton
-import com.pushprime.ui.components.RamboostSecondaryButton
-import com.pushprime.ui.components.RamboostStatTile
-import com.pushprime.ui.components.RamboostTextField
-import com.pushprime.ui.components.Spacing
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.pushprime.coach.CoachFrequency
 import com.pushprime.coach.CoachIntelligence
@@ -72,13 +67,19 @@ import com.pushprime.model.ExperienceLevel
 import com.pushprime.model.FitnessGoal
 import com.pushprime.model.UserProfile
 import com.pushprime.ui.components.DailyDataPoint
+import com.pushprime.ui.components.PremiumFadeSlideIn
+import com.pushprime.ui.components.RamboostCard
+import com.pushprime.ui.components.RamboostPrimaryButton
+import com.pushprime.ui.components.RamboostSecondaryButton
+import com.pushprime.ui.components.RamboostStatTile
+import com.pushprime.ui.components.AppTextField
 import com.pushprime.ui.components.WeeklyTrendChart
 import com.pushprime.ui.screens.common.ErrorScreen
+import com.pushprime.ui.theme.AppSpacing
 import com.pushprime.ui.validation.FormValidation
 import kotlinx.coroutines.launch
 import java.time.ZoneId
 import java.util.Date
-import androidx.annotation.VisibleForTesting
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -155,97 +156,106 @@ fun ProfileScreen(
 
     Scaffold(
         modifier = modifier,
-        snackbarHost = { SnackbarHost(snackbarHostState) }
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
-        LazyColumn(
+        PremiumFadeSlideIn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = Spacing.lg, vertical = Spacing.md),
-            verticalArrangement = Arrangement.spacedBy(Spacing.lg)
         ) {
-            item {
-                HeaderSection(profile = uiState.profile)
-            }
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(AppSpacing.lg),
+                verticalArrangement = Arrangement.spacedBy(AppSpacing.lg)
+            ) {
+                item {
+                    HeaderSection(profile = uiState.profile)
+                }
 
-            item {
-                ProfileDetailsCard(
-                    profile = uiState.profile,
-                    onEditClick = { showEditSheet = true }
-                )
-            }
+                item {
+                    ProfileDetailsCard(
+                        profile = uiState.profile,
+                        onEditClick = { showEditSheet = true }
+                    )
+                }
 
-            item {
-                StatsRow(
-                    streakDays = uiState.streakDays,
-                    sessionsThisWeek = uiState.sessionsThisWeek,
-                    stepsToday = if (uiState.stepTrackingEnabled) uiState.stepsToday else null
-                )
-            }
+                item {
+                    StatsRow(
+                        streakDays = uiState.streakDays,
+                        sessionsThisWeek = uiState.sessionsThisWeek,
+                        stepsToday = if (uiState.stepTrackingEnabled) uiState.stepsToday else null
+                    )
+                }
 
-            item {
-                StreakSummaryCard(
-                    hasSessions = uiState.hasSessions,
-                    streakDays = uiState.streakDays,
-                    lastWorkoutLabel = uiState.lastWorkoutLabel
-                )
-            }
+                item {
+                    StreakSummaryCard(
+                        hasSessions = uiState.hasSessions,
+                        streakDays = uiState.streakDays,
+                        lastWorkoutLabel = uiState.lastWorkoutLabel
+                    )
+                }
 
-            item {
-                StepsSection(
-                    stepsEnabled = uiState.stepTrackingEnabled,
-                    weeklySteps = uiState.weeklySteps,
-                    onEnableSteps = { viewModel.setStepTrackingEnabled(true) }
-                )
-            }
+                item {
+                    StepsSection(
+                        stepsEnabled = uiState.stepTrackingEnabled,
+                        weeklySteps = uiState.weeklySteps,
+                        onEnableSteps = { viewModel.setStepTrackingEnabled(true) }
+                    )
+                }
 
-            item {
-                CoachSettingsSection(
-                    settings = coachSettings,
-                    onHybridToggle = { enabled ->
-                        coroutineScope.launch { coachSettingsRepository.setHybridEnabled(enabled) }
-                    },
-                    onIntelligenceChange = { value ->
-                        coroutineScope.launch {
-                            coachSettingsRepository.setCoachIntelligence(value)
-                            val mode = if (value == CoachIntelligence.BASIC) {
-                                AiCoachMode.BASIC
-                            } else {
-                                AiCoachMode.OPENAI
+                item {
+                    CoachSettingsSection(
+                        settings = coachSettings,
+                        onHybridToggle = { enabled ->
+                            coroutineScope.launch { coachSettingsRepository.setHybridEnabled(enabled) }
+                        },
+                        onIntelligenceChange = { value ->
+                            coroutineScope.launch {
+                                coachSettingsRepository.setCoachIntelligence(value)
+                                val mode = if (value == CoachIntelligence.BASIC) {
+                                    AiCoachMode.BASIC
+                                } else {
+                                    AiCoachMode.OPENAI
+                                }
+                                aiCoachSettingsRepository.updateMode(mode)
                             }
-                            aiCoachSettingsRepository.updateMode(mode)
+                        },
+                        onVoiceProviderChange = { value ->
+                            coroutineScope.launch { coachSettingsRepository.setVoiceProvider(value) }
+                        },
+                        onStyleChange = { value ->
+                            coroutineScope.launch { coachSettingsRepository.setCoachStyle(value) }
+                        },
+                        onFrequencyChange = { value ->
+                            coroutineScope.launch { coachSettingsRepository.setCoachFrequency(value) }
                         }
-                    },
-                    onVoiceProviderChange = { value ->
-                        coroutineScope.launch { coachSettingsRepository.setVoiceProvider(value) }
-                    },
-                    onStyleChange = { value ->
-                        coroutineScope.launch { coachSettingsRepository.setCoachStyle(value) }
-                    },
-                    onFrequencyChange = { value ->
-                        coroutineScope.launch { coachSettingsRepository.setCoachFrequency(value) }
-                    }
-                )
-            }
+                    )
+                }
 
-            item {
-                ActionsSection(
-                    stepsEnabled = uiState.stepTrackingEnabled,
-                    onEnableSteps = { viewModel.setStepTrackingEnabled(true) },
-                    onExport = { viewModel.onExportData() },
-                    onPrivacy = { viewModel.onPrivacy() },
-                    onLogout = onLogout,
-                    onNavigateToShareProgress = onNavigateToShareProgress,
-                    onNavigateToAchievements = onNavigateToAchievements,
-                    onNavigateToPhotoVault = onNavigateToPhotoVault,
-                    onNavigateToNotificationSettings = onNavigateToNotificationSettings,
-                    onNavigateToNutritionGoals = onNavigateToNutritionGoals,
-                    onNavigateToAiSetup = onNavigateToAiSetup,
-                    onNavigateToCoachChat = onNavigateToCoachChat,
-                    onNavigateToVoiceCoachSettings = onNavigateToVoiceCoachSettings,
-                    onNavigateToMusicSettings = onNavigateToMusicSettings,
-                    onNavigateToAccount = onNavigateToAccount
-                )
+                item {
+                    ActionsSection(
+                        stepsEnabled = uiState.stepTrackingEnabled,
+                        onEnableSteps = { viewModel.setStepTrackingEnabled(true) },
+                        onExport = { viewModel.onExportData() },
+                        onPrivacy = { viewModel.onPrivacy() },
+                        onLogout = onLogout,
+                        onNavigateToShareProgress = onNavigateToShareProgress,
+                        onNavigateToAchievements = onNavigateToAchievements,
+                        onNavigateToPhotoVault = onNavigateToPhotoVault,
+                        onNavigateToNotificationSettings = onNavigateToNotificationSettings,
+                        onNavigateToNutritionGoals = onNavigateToNutritionGoals,
+                        onNavigateToAiSetup = onNavigateToAiSetup,
+                        onNavigateToCoachChat = onNavigateToCoachChat,
+                        onNavigateToVoiceCoachSettings = onNavigateToVoiceCoachSettings,
+                        onNavigateToMusicSettings = onNavigateToMusicSettings,
+                        onNavigateToAccount = onNavigateToAccount
+                    )
+                }
+                
+                item {
+                    Spacer(modifier = Modifier.height(AppSpacing.xxl))
+                }
             }
         }
     }
@@ -268,38 +278,36 @@ private fun HeaderSection(profile: UserProfile) {
     ) {
         Text(
             text = "Profile",
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold
+            style = MaterialTheme.typography.headlineMedium,
+            color = MaterialTheme.colorScheme.primary
         )
         Text(
-            text = "RAMBOOST settings & progress",
-            style = MaterialTheme.typography.bodyMedium,
+            text = "Settings & your progress",
+            style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        Spacer(modifier = Modifier.height(Spacing.lg))
+        Spacer(modifier = Modifier.height(AppSpacing.lg))
         Row(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
                 modifier = Modifier
-                    .size(72.dp)
+                    .size(80.dp)
                     .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
+                    .background(MaterialTheme.colorScheme.primaryContainer),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = initialsForName(profile.fullName),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             }
-            Spacer(modifier = Modifier.width(Spacing.md))
+            Spacer(modifier = Modifier.width(AppSpacing.lg))
             Column {
                 Text(
                     text = profile.fullName.ifBlank { "RAMBOOST User" },
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
+                    style = MaterialTheme.typography.titleLarge
                 )
                 Text(
                     text = profile.experience.label(),
@@ -321,7 +329,7 @@ private fun ProfileDetailsCard(
     ) {
         Column(
             modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(Spacing.sm)
+            verticalArrangement = Arrangement.spacedBy(AppSpacing.sm)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -329,13 +337,12 @@ private fun ProfileDetailsCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Profile details",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    text = "Profile Details",
+                    style = MaterialTheme.typography.titleLarge
                 )
                 TextButton(onClick = onEditClick) {
                     Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(Spacing.xs))
+                    Spacer(modifier = Modifier.width(AppSpacing.xs))
                     Text(text = "Edit")
                 }
             }
@@ -351,7 +358,7 @@ private fun ProfileDetailsCard(
 @Composable
 private fun ProfileDetailRow(label: String, value: String) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().padding(vertical = AppSpacing.xs),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -362,8 +369,7 @@ private fun ProfileDetailRow(label: String, value: String) {
         )
         Text(
             text = value,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Medium
+            style = MaterialTheme.typography.bodyLarge
         )
     }
 }
@@ -372,7 +378,7 @@ private fun ProfileDetailRow(label: String, value: String) {
 private fun StatsRow(streakDays: Int, sessionsThisWeek: Int, stepsToday: Long?) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
+        horizontalArrangement = Arrangement.spacedBy(AppSpacing.md)
     ) {
         RamboostStatTile(
             label = "Streak",
@@ -403,7 +409,7 @@ private fun StreakSummaryCard(
     ) {
         Column(
             modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(Spacing.xs)
+            verticalArrangement = Arrangement.spacedBy(AppSpacing.xs)
         ) {
             if (!hasSessions) {
                 Text(
@@ -414,11 +420,10 @@ private fun StreakSummaryCard(
             } else {
                 Text(
                     text = "Current streak: $streakDays days",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    style = MaterialTheme.typography.titleLarge
                 )
                 Text(
-                    text = "Last workout: ${lastWorkoutLabel ?: "Unknown"}",
+                    text = "Last: ${lastWorkoutLabel ?: "Unknown"}",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -435,12 +440,11 @@ private fun StepsSection(
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(Spacing.md)
+        verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
     ) {
         Text(
             text = "Weekly step trend",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold
+            style = MaterialTheme.typography.titleLarge
         )
         if (stepsEnabled) {
             WeeklyTrendChart(
@@ -452,7 +456,7 @@ private fun StepsSection(
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(Spacing.sm)
+                    verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
                 ) {
                     Text(
                         text = "Step tracking is off",
@@ -479,12 +483,11 @@ private fun CoachSettingsSection(
     RamboostCard(containerColor = MaterialTheme.colorScheme.surface) {
         Column(
             modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(Spacing.sm)
+            verticalArrangement = Arrangement.spacedBy(AppSpacing.sm)
         ) {
             Text(
-                text = "Coach settings",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                text = "Coach Settings",
+                style = MaterialTheme.typography.titleLarge
             )
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -545,7 +548,7 @@ private fun CoachOptionRow(
     onNext: () -> Unit
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().padding(vertical = AppSpacing.xs),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -583,12 +586,11 @@ private fun ActionsSection(
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(Spacing.md)
+        verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
     ) {
         Text(
             text = "Actions",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold
+            style = MaterialTheme.typography.titleLarge
         )
         if (!stepsEnabled) {
             RamboostSecondaryButton(
@@ -596,6 +598,27 @@ private fun ActionsSection(
                 onClick = onEnableSteps
             )
         }
+        
+        val actions = listOfNotNull(
+            onNavigateToAccount?.let { "Account" to it },
+            onNavigateToCoachChat?.let { "AI Coach Chat" to it },
+            onNavigateToShareProgress?.let { "Share progress" to it },
+            onNavigateToAchievements?.let { "Achievements" to it },
+            onNavigateToPhotoVault?.let { "Photo vault" to it },
+            onNavigateToNotificationSettings?.let { "Notifications" to it },
+            onNavigateToNutritionGoals?.let { "Nutrition goals" to it },
+            onNavigateToAiSetup?.let { "AI Coach setup" to it },
+            onNavigateToVoiceCoachSettings?.let { "Voice coach" to it },
+            onNavigateToMusicSettings?.let { "Music mode" to it }
+        )
+
+        actions.forEach { (label, navigate) ->
+            RamboostSecondaryButton(
+                text = label,
+                onClick = navigate
+            )
+        }
+
         RamboostSecondaryButton(
             text = "Export my data",
             onClick = onExport
@@ -604,66 +627,9 @@ private fun ActionsSection(
             text = "Privacy",
             onClick = onPrivacy
         )
-        onNavigateToCoachChat?.let { navigate ->
-            RamboostSecondaryButton(
-                text = "AI Coach Chat",
-                onClick = navigate
-            )
-        }
-        onNavigateToShareProgress?.let { navigate ->
-            RamboostSecondaryButton(
-                text = "Share progress",
-                onClick = navigate
-            )
-        }
-        onNavigateToAchievements?.let { navigate ->
-            RamboostSecondaryButton(
-                text = "Achievements",
-                onClick = navigate
-            )
-        }
-        onNavigateToPhotoVault?.let { navigate ->
-            RamboostSecondaryButton(
-                text = "Photo vault",
-                onClick = navigate
-            )
-        }
-        onNavigateToNotificationSettings?.let { navigate ->
-            RamboostSecondaryButton(
-                text = "Notifications",
-                onClick = navigate
-            )
-        }
-        onNavigateToNutritionGoals?.let { navigate ->
-            RamboostSecondaryButton(
-                text = "Nutrition goals",
-                onClick = navigate
-            )
-        }
-        onNavigateToAiSetup?.let { navigate ->
-            RamboostSecondaryButton(
-                text = "AI Coach setup",
-                onClick = navigate
-            )
-        }
-        onNavigateToVoiceCoachSettings?.let { navigate ->
-            RamboostSecondaryButton(
-                text = "Voice coach",
-                onClick = navigate
-            )
-        }
-        onNavigateToMusicSettings?.let { navigate ->
-            RamboostSecondaryButton(
-                text = "Music mode",
-                onClick = navigate
-            )
-        }
-        onNavigateToAccount?.let { navigate ->
-            RamboostSecondaryButton(
-                text = "Account",
-                onClick = navigate
-            )
-        }
+        
+        Spacer(modifier = Modifier.height(AppSpacing.md))
+        
         RamboostPrimaryButton(
             text = "Log out",
             onClick = onLogout,
@@ -675,7 +641,6 @@ private fun ActionsSection(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-@VisibleForTesting
 internal fun EditProfileSheet(
     profile: UserProfile,
     isSaving: Boolean,
@@ -697,21 +662,22 @@ internal fun EditProfileSheet(
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        sheetState = sheetState
+        sheetState = sheetState,
+        containerColor = MaterialTheme.colorScheme.surface
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(Spacing.lg),
-            verticalArrangement = Arrangement.spacedBy(Spacing.md)
+                .padding(AppSpacing.lg)
+                .padding(bottom = AppSpacing.xxl),
+            verticalArrangement = Arrangement.spacedBy(AppSpacing.lg)
         ) {
             Text(
-                text = "Edit profile",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
+                text = "Edit Profile",
+                style = MaterialTheme.typography.titleLarge
             )
 
-            RamboostTextField(
+            AppTextField(
                 value = name,
                 onValueChange = { name = it },
                 label = "Name",
@@ -720,41 +686,48 @@ internal fun EditProfileSheet(
                 fieldModifier = Modifier.testTag("profile_edit_name")
             )
 
-            DropdownField(
-                label = "Goal",
-                selected = selectedGoal.label(),
-                options = FitnessGoal.values().toList(),
-                onOptionSelected = { selectedGoal = it },
-                optionLabel = { it.label() }
-            )
+            Row(horizontalArrangement = Arrangement.spacedBy(AppSpacing.md)) {
+                Box(modifier = Modifier.weight(1f)) {
+                    DropdownField(
+                        label = "Goal",
+                        selected = selectedGoal.label(),
+                        options = FitnessGoal.values().toList(),
+                        onOptionSelected = { selectedGoal = it },
+                        optionLabel = { it.label() }
+                    )
+                }
+                Box(modifier = Modifier.weight(1f)) {
+                    DropdownField(
+                        label = "Experience",
+                        selected = selectedExperience.label(),
+                        options = ExperienceLevel.values().toList(),
+                        onOptionSelected = { selectedExperience = it },
+                        optionLabel = { it.label() }
+                    )
+                }
+            }
 
-            DropdownField(
-                label = "Experience",
-                selected = selectedExperience.label(),
-                options = ExperienceLevel.values().toList(),
-                onOptionSelected = { selectedExperience = it },
-                optionLabel = { it.label() }
-            )
+            Row(horizontalArrangement = Arrangement.spacedBy(AppSpacing.md)) {
+                AppTextField(
+                    value = weight,
+                    onValueChange = { weight = it },
+                    label = "Weight (kg)",
+                    required = true,
+                    errorText = if (!isWeightValid) "Required" else null,
+                    fieldModifier = Modifier.weight(1f).testTag("profile_edit_weight")
+                )
 
-            RamboostTextField(
-                value = weight,
-                onValueChange = { weight = it },
-                label = "Weight (kg)",
-                required = true,
-                errorText = if (!isWeightValid) "Enter a valid weight" else null,
-                fieldModifier = Modifier.testTag("profile_edit_weight")
-            )
-
-            RamboostTextField(
-                value = height,
-                onValueChange = { height = it },
-                label = "Height (cm)",
-                enabled = false,
-                fieldModifier = Modifier.testTag("profile_edit_height")
-            )
+                AppTextField(
+                    value = height,
+                    onValueChange = { height = it },
+                    label = "Height (cm)",
+                    enabled = false,
+                    fieldModifier = Modifier.weight(1f).testTag("profile_edit_height")
+                )
+            }
 
             RamboostPrimaryButton(
-                text = "Save",
+                text = "Save Changes",
                 onClick = {
                     if (canSave) {
                         onSave(
@@ -792,7 +765,7 @@ private fun <T> DropdownField(
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Box {
-            RamboostTextField(
+            AppTextField(
                 value = selected,
                 onValueChange = {},
                 label = "",

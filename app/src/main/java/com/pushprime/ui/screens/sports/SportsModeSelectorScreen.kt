@@ -23,7 +23,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.pushprime.model.SportType
 import com.pushprime.ui.theme.PushPrimeColors
@@ -55,8 +54,7 @@ fun SportsModeSelectorScreen(
                 title = {
                     Text(
                         text = "Sports Mode",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.headlineMedium
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -68,8 +66,7 @@ fun SportsModeSelectorScreen(
                         modifier = Modifier
                             .padding(horizontal = 16.dp)
                             .clickable { onNavigateBack() },
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.titleLarge
                     )
                 }
             )
@@ -121,7 +118,6 @@ fun SportsModeSelectorScreen(
                                 Text(
                                     text = info.sport.displayName,
                                     style = MaterialTheme.typography.titleLarge,
-                                    fontWeight = FontWeight.Bold,
                                     color = if (isSelected) Color.White else Color.Black
                                 )
                             }
@@ -155,7 +151,10 @@ fun SportsModeSelectorScreen(
                         disabledContentColor = Color.Gray
                     )
                 ) {
-                    Text("Start Session", fontWeight = FontWeight.Bold)
+                    Text(
+                        text = "Start Session",
+                        style = MaterialTheme.typography.labelLarge
+                    )
                 }
             }
         }

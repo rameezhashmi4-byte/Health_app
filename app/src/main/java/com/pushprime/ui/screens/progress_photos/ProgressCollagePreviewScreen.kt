@@ -25,7 +25,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
@@ -48,7 +47,12 @@ fun ProgressCollagePreviewScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Collage Preview", fontWeight = FontWeight.Bold) },
+                title = {
+                    Text(
+                        text = "Collage Preview",
+                        style = MaterialTheme.typography.headlineMedium
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
@@ -89,7 +93,10 @@ fun ProgressCollagePreviewScreen(
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Done")
+                Text(
+                    text = "Done",
+                    style = MaterialTheme.typography.labelLarge
+                )
             }
         }
     }

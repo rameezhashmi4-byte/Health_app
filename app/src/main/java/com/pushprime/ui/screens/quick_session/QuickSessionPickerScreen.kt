@@ -35,7 +35,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.pushprime.model.QuickSessionTemplate
@@ -55,7 +54,10 @@ fun QuickSessionPickerScreen(
             TopAppBar(
                 title = {
                     Column {
-                        Text("Quick Sessions", fontWeight = FontWeight.Black)
+                        Text(
+                            text = "Quick Sessions",
+                            style = MaterialTheme.typography.headlineMedium
+                        )
                         Text(
                             "10 minutes. No excuses.",
                             style = MaterialTheme.typography.bodySmall,
@@ -113,7 +115,10 @@ private fun StreakRiskBanner() {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column {
-                Text("Protect your streak today ❄️🔥", fontWeight = FontWeight.Bold)
+                Text(
+                    text = "Protect your streak today ❄️🔥",
+                    style = MaterialTheme.typography.titleLarge
+                )
                 Text(
                     "Quick 10 minutes keeps it alive.",
                     style = MaterialTheme.typography.bodySmall,
@@ -144,8 +149,7 @@ private fun QuickSessionTemplateCard(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = template.name,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.titleLarge
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     Text(
@@ -190,7 +194,10 @@ private fun QuickSessionTemplateCard(
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Text("Start", fontWeight = FontWeight.Bold)
+                Text(
+                    text = "Start",
+                    style = MaterialTheme.typography.labelLarge
+                )
             }
         }
     }

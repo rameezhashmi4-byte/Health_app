@@ -9,7 +9,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.pushprime.ui.theme.PushPrimeColors
 
@@ -30,8 +29,7 @@ fun MissionHUD(
         Text(
             text = "$${String.format("%,d", points)}",
             style = MaterialTheme.typography.displaySmall,
-            color = PushPrimeColors.GTAGreen,
-            fontWeight = FontWeight.Black
+            color = PushPrimeColors.GTAGreen
         )
         
         Spacer(modifier = Modifier.height(8.dp))
@@ -42,7 +40,6 @@ fun MissionHUD(
                 text = "HP",
                 style = MaterialTheme.typography.labelSmall,
                 color = Color.White,
-                fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(end = 8.dp)
             )
             LinearProgressIndicator(
@@ -63,7 +60,6 @@ fun MissionHUD(
                 text = "ST",
                 style = MaterialTheme.typography.labelSmall,
                 color = Color.White,
-                fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(end = 8.dp)
             )
             LinearProgressIndicator(

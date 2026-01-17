@@ -12,7 +12,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.pushprime.data.FirebaseHelper
 import com.pushprime.data.LocalStore
@@ -22,7 +21,6 @@ import com.pushprime.ui.theme.PushPrimeColors
 import kotlinx.coroutines.launch
 
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.sp
 import com.pushprime.model.WeeklyChallenges
 import com.pushprime.model.ChallengeTargetType
 
@@ -64,9 +62,7 @@ fun CompeteScreen(
                 title = {
                     Text(
                         text = "COMPETE",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Black,
-                        letterSpacing = 4.sp
+                        style = MaterialTheme.typography.headlineMedium
                     )
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -94,16 +90,14 @@ fun CompeteScreen(
                     Column(modifier = Modifier.padding(24.dp)) {
                         Text(
                             text = "WEEKLY CHALLENGE",
-                            style = MaterialTheme.typography.labelLarge,
-                            color = PushPrimeColors.GTAYellow,
-                            fontWeight = FontWeight.Black
+                            style = MaterialTheme.typography.titleLarge,
+                            color = PushPrimeColors.GTAYellow
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(
                             text = weeklyChallenge.title,
-                            style = MaterialTheme.typography.headlineLarge,
-                            color = Color.White,
-                            fontWeight = FontWeight.Black
+                            style = MaterialTheme.typography.headlineMedium,
+                            color = Color.White
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
@@ -122,14 +116,12 @@ fun CompeteScreen(
                             Text(
                                 text = "120 / ${weeklyChallenge.targetValue}",
                                 style = MaterialTheme.typography.titleLarge,
-                                color = Color.White,
-                                fontWeight = FontWeight.Bold
+                                color = Color.White
                             )
                             Text(
                                 text = "24% COMPLETE",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = PushPrimeColors.GTAGreen,
-                                fontWeight = FontWeight.Black
+                                style = MaterialTheme.typography.bodySmall,
+                                color = PushPrimeColors.GTAGreen
                             )
                         }
                         Spacer(modifier = Modifier.height(12.dp))
@@ -161,7 +153,7 @@ fun CompeteScreen(
                     ) {
                         Text(
                             "GLOBAL",
-                            fontWeight = FontWeight.Black,
+                            style = MaterialTheme.typography.labelLarge,
                             color = if (!showLocal) Color.White else Color.Black
                         )
                     }
@@ -175,7 +167,7 @@ fun CompeteScreen(
                     ) {
                         Text(
                             "FRIENDS",
-                            fontWeight = FontWeight.Black,
+                            style = MaterialTheme.typography.labelLarge,
                             color = if (showLocal) Color.White else Color.Black
                         )
                     }

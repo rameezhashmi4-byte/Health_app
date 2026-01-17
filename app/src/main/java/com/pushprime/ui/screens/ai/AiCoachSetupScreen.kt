@@ -31,12 +31,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.pushprime.data.AiCoachMode
-import com.pushprime.ui.components.RamboostTextField
+import com.pushprime.ui.components.AppTextField
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -54,7 +53,12 @@ fun AiCoachSetupScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("AI Coach Setup", fontWeight = FontWeight.Black) },
+                title = {
+                    Text(
+                        text = "AI Coach Setup",
+                        style = MaterialTheme.typography.headlineMedium
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
@@ -73,7 +77,10 @@ fun AiCoachSetupScreen(
                 .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text("Choose mode", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text(
+                text = "Choose mode",
+                style = MaterialTheme.typography.titleLarge
+            )
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 RadioButton(
@@ -81,7 +88,10 @@ fun AiCoachSetupScreen(
                     onClick = { viewModel.updateMode(AiCoachMode.OPENAI) }
                 )
                 Column {
-                    Text("Use AI Coach (Bring your own API key)", fontWeight = FontWeight.Medium)
+                    Text(
+                        text = "Use AI Coach (Bring your own API key)",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
                     Text("OpenAI supported", color = Color.Gray, style = MaterialTheme.typography.bodySmall)
                 }
             }
@@ -92,7 +102,10 @@ fun AiCoachSetupScreen(
                     onClick = { viewModel.updateMode(AiCoachMode.BASIC) }
                 )
                 Column {
-                    Text("Use RAMBOOST basic coach (no AI)", fontWeight = FontWeight.Medium)
+                    Text(
+                        text = "Use RAMBOOST basic coach (no AI)",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
                     Text("Works offline", color = Color.Gray, style = MaterialTheme.typography.bodySmall)
                 }
             }
@@ -100,9 +113,15 @@ fun AiCoachSetupScreen(
             if (settings?.mode == AiCoachMode.OPENAI) {
                 val modelNameError = if (!isModelNameValid) "Model name is required" else null
                 val apiKeyError = if (!isApiKeyValid) "API key is required" else null
-                Text("Provider", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                Text(
+                    text = "Provider",
+                    style = MaterialTheme.typography.titleLarge
+                )
                 OutlinedButton(onClick = { providerExpanded = true }, modifier = Modifier.fillMaxWidth()) {
-                    Text("OpenAI")
+                    Text(
+                        text = "OpenAI",
+                        style = MaterialTheme.typography.labelLarge
+                    )
                     Spacer(modifier = Modifier.width(8.dp))
                     Icon(Icons.Default.KeyboardArrowDown, contentDescription = null)
                 }
@@ -111,7 +130,7 @@ fun AiCoachSetupScreen(
                     DropdownMenuItem(text = { Text("Custom provider (future)") }, onClick = { providerExpanded = false }, enabled = false)
                 }
 
-                RamboostTextField(
+                AppTextField(
                     value = settings?.modelName.orEmpty(),
                     onValueChange = { viewModel.updateModelName(it) },
                     label = "Model name",
@@ -120,7 +139,7 @@ fun AiCoachSetupScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                RamboostTextField(
+                AppTextField(
                     value = apiKeyInput,
                     onValueChange = { apiKeyInput = it },
                     label = "API key",
@@ -135,7 +154,10 @@ fun AiCoachSetupScreen(
                     modifier = Modifier.fillMaxWidth(),
                     enabled = isApiKeyValid && isModelNameValid && !state.isVerifying
                 ) {
-                    Text(if (state.isVerifying) "Verifying..." else "Verify & Save")
+                    Text(
+                        text = if (state.isVerifying) "Verifying..." else "Verify & Save",
+                        style = MaterialTheme.typography.labelLarge
+                    )
                 }
 
                 Text(

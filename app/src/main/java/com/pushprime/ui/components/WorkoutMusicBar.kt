@@ -13,9 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.pushprime.ui.theme.PushPrimeColors
 
 @Composable
@@ -51,14 +49,12 @@ fun WorkoutMusicBar(
                     Text(
                         text = "SPOTIFY CONNECTED",
                         style = MaterialTheme.typography.labelSmall,
-                        color = Color(0xFF1DB954), // Spotify Green
-                        fontWeight = FontWeight.Bold
+                        color = Color(0xFF1DB954) // Spotify Green
                     )
                     Text(
                         text = currentTrack ?: "No Track Playing",
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.bodyLarge,
                         color = Color.White,
-                        fontWeight = FontWeight.Bold,
                         maxLines = 1
                     )
                 }
@@ -93,8 +89,7 @@ fun WorkoutMusicBar(
             Text(
                 text = "ENERGY PRESETS",
                 style = MaterialTheme.typography.labelSmall,
-                color = Color.Gray,
-                fontWeight = FontWeight.Bold
+                color = Color.Gray
             )
             Spacer(modifier = Modifier.height(8.dp))
             Row(
@@ -118,8 +113,7 @@ fun WorkoutMusicBar(
                         Text(
                             text = preset,
                             style = MaterialTheme.typography.bodySmall,
-                            color = if (isSelected) Color.Black else Color.White,
-                            fontWeight = FontWeight.Bold
+                            color = if (isSelected) Color.Black else Color.White
                         )
                     }
                 }

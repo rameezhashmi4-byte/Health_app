@@ -8,7 +8,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.pushprime.network.QuoteService
 import com.pushprime.ui.theme.PushPrimeColors
@@ -48,7 +47,6 @@ fun QuoteCard(
                         text = quote.text,
                         style = MaterialTheme.typography.bodyLarge,
                         color = PushPrimeColors.OnSurface,
-                        fontWeight = FontWeight.Medium,
                         lineHeight = androidx.compose.ui.unit.TextUnit(26f, androidx.compose.ui.unit.TextUnitType.Sp)
                     )
                     Spacer(modifier = Modifier.height(16.dp))

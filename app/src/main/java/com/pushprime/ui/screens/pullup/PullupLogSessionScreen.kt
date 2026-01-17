@@ -30,11 +30,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.pushprime.ui.components.RamboostTextField
+import com.pushprime.ui.components.AppTextField
 import com.pushprime.ui.validation.rememberFormValidationState
 import kotlin.math.roundToInt
 
@@ -62,7 +61,12 @@ fun PullupLogSessionScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Log Pull-Up Session", fontWeight = FontWeight.Black) },
+                title = {
+                    Text(
+                        text = "Log Pull-Up Session",
+                        style = MaterialTheme.typography.headlineMedium
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
@@ -81,10 +85,13 @@ fun PullupLogSessionScreen(
                 .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text("Sets", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text(
+                text = "Sets",
+                style = MaterialTheme.typography.titleLarge
+            )
             repsInputs.forEachIndexed { index, value ->
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                    RamboostTextField(
+                    AppTextField(
                         value = value,
                         onValueChange = {
                             repsInputs[index] = it.filter { ch -> ch.isDigit() }
@@ -102,10 +109,13 @@ fun PullupLogSessionScreen(
             OutlinedButton(onClick = { repsInputs.add("") }) {
                 Icon(Icons.Default.Add, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Add Set")
+                Text(
+                    text = "Add Set",
+                    style = MaterialTheme.typography.labelLarge
+                )
             }
 
-            RamboostTextField(
+            AppTextField(
                 value = addedWeightText,
                 onValueChange = { addedWeightText = it.filter { ch -> ch.isDigit() || ch == '.' } },
                 label = "Added weight (kg)",
@@ -113,7 +123,7 @@ fun PullupLogSessionScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            RamboostTextField(
+            AppTextField(
                 value = restText,
                 onValueChange = { restText = it.filter { ch -> ch.isDigit() } },
                 label = "Rest time (seconds)",
@@ -121,14 +131,17 @@ fun PullupLogSessionScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            RamboostTextField(
+            AppTextField(
                 value = notes,
                 onValueChange = { notes = it },
                 label = "Notes (optional)",
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Text("Total reps: $totalReps", fontWeight = FontWeight.Bold)
+            Text(
+                text = "Total reps: $totalReps",
+                style = MaterialTheme.typography.bodyLarge
+            )
             Text("Volume score: $volumeScore", color = Color.Gray)
 
             if (showSetError) {
@@ -156,7 +169,10 @@ fun PullupLogSessionScreen(
                 modifier = Modifier.fillMaxWidth(),
                 enabled = isFormValid
             ) {
-                Text("Save Session")
+                Text(
+                    text = "Save Session",
+                    style = MaterialTheme.typography.labelLarge
+                )
             }
         }
     }

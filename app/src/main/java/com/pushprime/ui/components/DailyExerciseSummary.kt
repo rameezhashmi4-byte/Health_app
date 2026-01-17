@@ -7,7 +7,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.pushprime.ui.theme.PushPrimeColors
 
@@ -37,7 +36,6 @@ fun DailyExerciseSummary(
             Text(
                 text = "Today's Summary",
                 style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
                 color = PushPrimeColors.OnSurface
             )
             Spacer(modifier = Modifier.height(16.dp))
@@ -77,8 +75,7 @@ private fun SummaryChip(
             Column {
                 Text(
                     text = "$total",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.titleLarge,
                     color = PushPrimeColors.Primary
                 )
                 Text(

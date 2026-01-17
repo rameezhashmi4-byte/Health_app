@@ -48,14 +48,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.pushprime.model.PoseTag
-import com.pushprime.ui.components.RamboostTextField
+import com.pushprime.ui.components.AppTextField
 import com.pushprime.ui.theme.PushPrimeColors
 import kotlinx.coroutines.launch
 import java.io.File
@@ -115,7 +114,12 @@ fun AddProgressPhotoScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Add Photo", fontWeight = FontWeight.Bold) },
+                title = {
+                    Text(
+                        text = "Add Photo",
+                        style = MaterialTheme.typography.headlineMedium
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.Default.Close, contentDescription = "Close")
@@ -138,8 +142,7 @@ fun AddProgressPhotoScreen(
             if (selectedUri == null) {
                 Text(
                     text = "Choose a source",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    style = MaterialTheme.typography.titleLarge
                 )
                 Button(
                     onClick = {
@@ -157,7 +160,10 @@ fun AddProgressPhotoScreen(
                 ) {
                     Icon(Icons.Default.CameraAlt, contentDescription = null)
                     Spacer(modifier = Modifier.size(8.dp))
-                    Text("Take Photo")
+                    Text(
+                        text = "Take Photo",
+                        style = MaterialTheme.typography.labelLarge
+                    )
                 }
                 OutlinedButton(
                     onClick = {
@@ -170,7 +176,10 @@ fun AddProgressPhotoScreen(
                 ) {
                     Icon(Icons.Default.PhotoLibrary, contentDescription = null)
                     Spacer(modifier = Modifier.size(8.dp))
-                    Text("Pick from Gallery")
+                    Text(
+                        text = "Pick from Gallery",
+                        style = MaterialTheme.typography.labelLarge
+                    )
                 }
             } else {
                 AsyncImage(
@@ -183,7 +192,10 @@ fun AddProgressPhotoScreen(
                     contentScale = ContentScale.Crop
                 )
 
-                Text("Pose tag", fontWeight = FontWeight.Bold)
+                Text(
+                    text = "Pose tag",
+                    style = MaterialTheme.typography.titleLarge
+                )
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     PoseTag.values().forEach { tag ->
                         FilterChip(
@@ -194,7 +206,10 @@ fun AddProgressPhotoScreen(
                     }
                 }
 
-                Text("Date", fontWeight = FontWeight.Bold)
+                Text(
+                    text = "Date",
+                    style = MaterialTheme.typography.titleLarge
+                )
                 OutlinedButton(
                     onClick = {
                         val cal = Calendar.getInstance().apply { timeInMillis = takenAt }
@@ -216,10 +231,13 @@ fun AddProgressPhotoScreen(
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(dateFormat.format(takenAt))
+                    Text(
+                        text = dateFormat.format(takenAt),
+                        style = MaterialTheme.typography.labelLarge
+                    )
                 }
 
-                RamboostTextField(
+                AppTextField(
                     value = notes,
                     onValueChange = { notes = it },
                     label = "Notes (optional)",
@@ -232,7 +250,10 @@ fun AddProgressPhotoScreen(
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Cancel")
+                        Text(
+                            text = "Cancel",
+                            style = MaterialTheme.typography.labelLarge
+                        )
                     }
                     Button(
                         onClick = {
@@ -257,7 +278,10 @@ fun AddProgressPhotoScreen(
                                 modifier = Modifier.size(20.dp)
                             )
                         } else {
-                            Text("Save")
+                            Text(
+                                text = "Save",
+                                style = MaterialTheme.typography.labelLarge
+                            )
                         }
                     }
                 }

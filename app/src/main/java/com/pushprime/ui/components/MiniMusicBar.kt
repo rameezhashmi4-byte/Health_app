@@ -22,7 +22,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.pushprime.ui.theme.PushPrimeColors
 
@@ -61,7 +60,7 @@ fun MiniMusicBar(
                 Button(onClick = onConnect) {
                     Text(
                         text = "Connect",
-                        fontWeight = FontWeight.SemiBold
+                        style = MaterialTheme.typography.labelLarge
                     )
                 }
             } else {
@@ -77,8 +76,7 @@ fun MiniMusicBar(
                     )
                     Text(
                         text = trackName ?: "Now playing",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.SemiBold,
+                        style = MaterialTheme.typography.bodyLarge,
                         maxLines = 1
                     )
                 }

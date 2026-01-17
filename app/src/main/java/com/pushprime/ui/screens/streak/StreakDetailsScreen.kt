@@ -28,7 +28,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.pushprime.model.DailyStatusType
@@ -62,8 +61,7 @@ fun StreakDetailsScreen(
         ) {
             Text(
                 text = "Last 30 days",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Black
+                style = MaterialTheme.typography.titleLarge
             )
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -92,8 +90,7 @@ fun StreakDetailsScreen(
                                 ) {
                                     Text(
                                         text = day.date.dayOfMonth.toString(),
-                                        style = MaterialTheme.typography.labelMedium,
-                                        fontWeight = FontWeight.Bold,
+                                        style = MaterialTheme.typography.bodySmall,
                                         color = Color.Black
                                     )
                                     Text(
@@ -120,7 +117,11 @@ fun StreakDetailsScreen(
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Save my streak", color = Color.White, fontWeight = FontWeight.Bold)
+                Text(
+                    text = "Save my streak",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = Color.White
+                )
             }
         }
     }

@@ -58,7 +58,6 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.pushprime.coach.BasicCoachProvider
 import com.pushprime.coach.CoachOrchestrator
@@ -570,9 +569,8 @@ private fun LiveSessionContent(
             }
             Text(
                 text = "SESSION MODE",
-                style = MaterialTheme.typography.titleMedium,
-                color = Color.White,
-                fontWeight = FontWeight.Bold
+                style = MaterialTheme.typography.headlineMedium,
+                color = Color.White
             )
             IconButton(onClick = { }) {
                 Icon(Icons.Default.Settings, contentDescription = "Settings", tint = Color.White)
@@ -623,15 +621,13 @@ private fun LiveSessionContent(
                 Text(
                     text = formatTime(totalSeconds - elapsedSeconds),
                     style = MaterialTheme.typography.displayLarge,
-                    fontWeight = FontWeight.Black,
                     color = Color.White
                 )
             }
 
             Text(
                 text = motivationText,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
+                style = MaterialTheme.typography.titleLarge,
                 color = if (isBeastMode) accentColor else Color.White
             )
 
@@ -683,8 +679,8 @@ private fun LiveSessionContent(
                 ) {
                     Text(
                         text = if (isPaused) "Resume" else "Pause",
-                        color = Color.Black,
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.labelLarge,
+                        color = Color.Black
                     )
                 }
                 Button(
@@ -694,8 +690,8 @@ private fun LiveSessionContent(
                 ) {
                     Text(
                         text = "End session",
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.labelLarge,
+                        color = Color.White
                     )
                 }
             }
@@ -726,7 +722,6 @@ private fun SessionCompletionContent(
             Text(
                 text = "DONE 🔥",
                 style = MaterialTheme.typography.displaySmall,
-                fontWeight = FontWeight.Black,
                 color = Color.White
             )
             Spacer(modifier = Modifier.height(12.dp))
@@ -752,14 +747,21 @@ private fun SessionCompletionContent(
                 enabled = !savedSession,
                 colors = ButtonDefaults.buttonColors(containerColor = PushPrimeColors.Primary)
             ) {
-                Text(if (savedSession) "Saved ✅" else "Save Session")
+                Text(
+                    text = if (savedSession) "Saved ✅" else "Save Session",
+                    style = MaterialTheme.typography.labelLarge
+                )
             }
             Button(
                 onClick = onNavigateHome,
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = Color.White)
             ) {
-                Text("Back to Home", color = Color.Black, fontWeight = FontWeight.Bold)
+                Text(
+                    text = "Back to Home",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = Color.Black
+                )
             }
         }
     }
@@ -799,8 +801,8 @@ private fun TogglePill(
         ) {
             Text(
                 text = label,
-                color = if (enabled) Color.White else Color.LightGray,
-                fontWeight = FontWeight.SemiBold
+                style = MaterialTheme.typography.labelLarge,
+                color = if (enabled) Color.White else Color.LightGray
             )
         }
     }

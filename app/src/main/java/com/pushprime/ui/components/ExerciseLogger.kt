@@ -10,7 +10,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -52,7 +51,6 @@ fun ExerciseLogger(
                         Text(
                             text = exercise.displayName,
                             style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
                             color = PushPrimeColors.OnSurface
                         )
                         Spacer(modifier = Modifier.height(4.dp))
@@ -71,20 +69,22 @@ fun ExerciseLogger(
                     ) {
                         Icon(Icons.Default.Add, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Log")
+                        Text(
+                            text = "Log",
+                            style = MaterialTheme.typography.labelLarge
+                        )
                     }
                 }
             } else {
                 // Show input form
                 Text(
                     text = "Log ${exercise.displayName}",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.titleLarge,
                     color = PushPrimeColors.OnSurface
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 
-                RamboostTextField(
+                AppTextField(
                     value = value,
                     onValueChange = { 
                         if (it.all { char -> char.isDigit() }) {
@@ -133,7 +133,10 @@ fun ExerciseLogger(
                     ) {
                         Icon(Icons.Default.Close, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Cancel")
+                        Text(
+                            text = "Cancel",
+                            style = MaterialTheme.typography.labelLarge
+                        )
                     }
                     Button(
                         onClick = {
@@ -154,7 +157,10 @@ fun ExerciseLogger(
                     ) {
                         Icon(Icons.Default.Check, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Save")
+                        Text(
+                            text = "Save",
+                            style = MaterialTheme.typography.labelLarge
+                        )
                     }
                 }
             }

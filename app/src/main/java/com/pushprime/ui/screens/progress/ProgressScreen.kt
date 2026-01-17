@@ -8,7 +8,6 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.pushprime.data.AppDatabase
 import com.pushprime.data.SessionDao
@@ -68,7 +67,7 @@ fun ProgressScreen(
                 title = {
                     Text(
                         text = "Progress",
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.headlineMedium
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(

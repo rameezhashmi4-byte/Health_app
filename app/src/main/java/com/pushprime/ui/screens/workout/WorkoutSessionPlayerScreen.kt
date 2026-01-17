@@ -17,7 +17,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -52,8 +51,7 @@ fun WorkoutSessionPlayerScreen(
         ) {
             Text(
                 text = "Plan #$planId",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
+                style = MaterialTheme.typography.titleLarge
             )
             Text(
                 text = "User: ${currentUserId ?: "Guest"}",
@@ -65,7 +63,10 @@ fun WorkoutSessionPlayerScreen(
                 onClick = { onFinishSession(0L) },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Finish Session")
+                Text(
+                    text = "Finish Session",
+                    style = MaterialTheme.typography.labelLarge
+                )
             }
         }
     }

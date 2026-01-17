@@ -62,7 +62,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import coil.compose.AsyncImage
@@ -76,7 +75,12 @@ import com.pushprime.data.calculateStreak
 import com.pushprime.model.PhotoEntryEntity
 import com.pushprime.model.PhotoType
 import com.pushprime.ui.screens.common.ErrorScreen
+import com.pushprime.ui.components.AppCard
+import com.pushprime.ui.components.AppPrimaryButton
+import com.pushprime.ui.components.AppSecondaryButton
+import com.pushprime.ui.components.AppChoiceChip
 import com.pushprime.ui.theme.PushPrimeColors
+import androidx.compose.foundation.layout.PaddingValues
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -178,7 +182,12 @@ fun ShareProgressScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Share Progress", fontWeight = FontWeight.Bold) },
+                title = {
+                    Text(
+                        text = "Share Progress",
+                        style = MaterialTheme.typography.headlineMedium
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
@@ -201,8 +210,7 @@ fun ShareProgressScreen(
         ) {
             Text(
                 text = "Share Template",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                style = MaterialTheme.typography.titleLarge
             )
             Row(
                 modifier = Modifier
@@ -212,11 +220,10 @@ fun ShareProgressScreen(
             ) {
                 ShareTemplate.values().forEach { template ->
                     val enabled = template != ShareTemplate.BEFORE_AFTER || hasAnyPhotos
-                    FilterChip(
+                    AppChoiceChip(
                         selected = selectedTemplate == template,
-                        onClick = { if (enabled) selectedTemplate = template },
-                        label = { Text(template.displayName) },
-                        enabled = enabled
+                        onSelectedChange = { if (it && enabled) selectedTemplate = template },
+                        label = template.displayName
                     )
                 }
             }
@@ -263,7 +270,8 @@ fun ShareProgressScreen(
                 isAvailable = currentUserId != null
             )
 
-            Button(
+            AppPrimaryButton(
+                text = "Share",
                 onClick = {
                     scope.launch {
                         isSharing = true
@@ -315,22 +323,8 @@ fun ShareProgressScreen(
                         }
                     }
                 },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = !isSharing
-            ) {
-                if (isSharing) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(18.dp),
-                        strokeWidth = 2.dp,
-                        color = Color.White
-                    )
-                    Spacer(modifier = Modifier.width(10.dp))
-                } else {
-                    Icon(Icons.Default.Share, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                }
-                Text("Share")
-            }
+                loading = isSharing
+            )
         }
     }
 
@@ -404,7 +398,6 @@ private fun ShareProgressPreviewCard(
                         Text(
                             text = avatarInitials,
                             style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
                             color = Color(0xFF111111)
                         )
                     }
@@ -413,7 +406,6 @@ private fun ShareProgressPreviewCard(
                         Text(
                             text = name,
                             style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
                             color = Color.White
                         )
                         Text(
@@ -460,9 +452,8 @@ private fun ShareProgressPreviewCard(
                                     Spacer(modifier = Modifier.width(12.dp))
                                     Text(
                                         text = badge.label,
-                                        style = MaterialTheme.typography.titleMedium,
-                                        color = Color.White,
-                                        fontWeight = FontWeight.Bold
+                                        style = MaterialTheme.typography.titleLarge,
+                                        color = Color.White
                                     )
                                 }
                             }
@@ -520,9 +511,8 @@ private fun StatTile(icon: String, value: String, label: String) {
         Text(text = icon, style = MaterialTheme.typography.titleLarge)
         Text(
             text = value,
-            style = MaterialTheme.typography.titleMedium,
-            color = Color.White,
-            fontWeight = FontWeight.Bold
+            style = MaterialTheme.typography.titleLarge,
+            color = Color.White
         )
         Text(
             text = label,
@@ -597,8 +587,7 @@ private fun PhotoSelectionSection(
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(
             text = "Before/After Photos",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold
+            style = MaterialTheme.typography.titleLarge
         )
         PhotoSelectionRow(
             label = "Before Photo",
@@ -628,7 +617,10 @@ private fun PhotoSelectionRow(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column {
-            Text(text = label, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyLarge
+            )
             Text(
                 text = photo?.getFormattedDate() ?: "Not selected",
                 style = MaterialTheme.typography.bodySmall,
@@ -636,11 +628,17 @@ private fun PhotoSelectionRow(
             )
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedButton(onClick = onPick) {
-                Text(if (photo == null) "Pick" else "Change")
-            }
+            AppSecondaryButton(
+                text = if (photo == null) "Pick" else "Change",
+                onClick = onPick,
+                fullWidth = false
+            )
             if (photo != null) {
-                OutlinedButton(onClick = onClear) { Text("Clear") }
+                AppSecondaryButton(
+                    text = "Clear",
+                    onClick = onClear,
+                    fullWidth = false
+                )
             }
         }
     }
@@ -656,7 +654,10 @@ private fun PhotoPickerDialog(
     androidx.compose.ui.window.Dialog(onDismissRequest = onDismiss) {
         Card(shape = RoundedCornerShape(16.dp)) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Text(text = title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleLarge
+                )
                 Spacer(modifier = Modifier.height(12.dp))
                 if (photos.isEmpty()) {
                     Text(
@@ -689,9 +690,7 @@ private fun PhotoPickerDialog(
                     }
                 }
                 Spacer(modifier = Modifier.height(12.dp))
-                OutlinedButton(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) {
-                    Text("Close")
-                }
+                AppSecondaryButton(text = "Close", onClick = onDismiss)
             }
         }
     }
@@ -703,27 +702,23 @@ private fun CloudSaveRow(
     onEnabledChange: (Boolean) -> Unit,
     isAvailable: Boolean
 ) {
-    Card(
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = PushPrimeColors.Surface)
+    AppCard(
+        containerColor = MaterialTheme.colorScheme.surfaceVariant
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(14.dp),
+            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = "Save share card to cloud",
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold
+                style = MaterialTheme.typography.titleLarge
                 )
                 Text(
                     text = if (isAvailable) "Optional backup to Firebase" else "Sign in to enable cloud save",
                     style = MaterialTheme.typography.bodySmall,
-                    color = PushPrimeColors.OnSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             Switch(

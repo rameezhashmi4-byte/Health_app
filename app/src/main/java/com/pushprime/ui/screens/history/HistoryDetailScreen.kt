@@ -45,12 +45,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.pushprime.model.SessionEntity
-import com.pushprime.ui.components.RamboostTextField
+import com.pushprime.ui.components.AppTextField
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -88,7 +87,12 @@ fun HistoryDetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Session Details", fontWeight = FontWeight.Black) },
+                title = {
+                    Text(
+                        text = "Session Details",
+                        style = MaterialTheme.typography.headlineMedium
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
@@ -150,8 +154,7 @@ fun HistoryDetailScreen(
                             Column(modifier = Modifier.padding(16.dp)) {
                                 Text(
                                     text = currentTitle(current),
-                                    fontWeight = FontWeight.Bold,
-                                    style = MaterialTheme.typography.titleMedium
+                                    style = MaterialTheme.typography.titleLarge
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Text(
@@ -184,7 +187,10 @@ fun HistoryDetailScreen(
                                 onRatingChange = { rating = it }
                             )
                         } else {
-                            Text("Notes", fontWeight = FontWeight.Bold)
+                            Text(
+                                text = "Notes",
+                                style = MaterialTheme.typography.titleLarge
+                            )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(notes.ifBlank { "No notes added." }, color = Color.Gray)
                         }
@@ -207,7 +213,10 @@ fun HistoryDetailScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 colors = ButtonDefaults.buttonColors(containerColor = Color.Black)
                             ) {
-                                Text("Save Changes")
+                                Text(
+                                    text = "Save Changes",
+                                    style = MaterialTheme.typography.labelLarge
+                                )
                             }
                         }
                     }
@@ -256,14 +265,17 @@ private fun EditSection(
     onRatingChange: (Float) -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text("Edit Session", fontWeight = FontWeight.Bold)
-        RamboostTextField(
+        Text(
+            text = "Edit Session",
+            style = MaterialTheme.typography.titleLarge
+        )
+        AppTextField(
             value = notes,
             onValueChange = onNotesChange,
             modifier = Modifier.fillMaxWidth(),
             label = "Notes"
         )
-        RamboostTextField(
+        AppTextField(
             value = durationMinutes.toString(),
             onValueChange = { value ->
                 val parsed = value.toIntOrNull() ?: durationMinutes
@@ -275,7 +287,10 @@ private fun EditSection(
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
         )
         if (session.activityType.equals("SPORT", ignoreCase = true)) {
-            Text("Effort Level", fontWeight = FontWeight.SemiBold)
+            Text(
+                text = "Effort Level",
+                style = MaterialTheme.typography.titleLarge
+            )
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOf("LOW", "MEDIUM", "HIGH").forEach { level ->
                     FilterChip(
@@ -286,7 +301,10 @@ private fun EditSection(
                 }
             }
         }
-        Text("Rating", fontWeight = FontWeight.SemiBold)
+        Text(
+            text = "Rating",
+            style = MaterialTheme.typography.titleLarge
+        )
         Slider(
             value = rating,
             onValueChange = onRatingChange,
@@ -303,8 +321,15 @@ private fun InfoRow(label: String, value: String) {
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(label, color = Color.Gray)
-        Text(value, fontWeight = FontWeight.Bold)
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = Color.Gray
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyLarge
+        )
     }
 }
 

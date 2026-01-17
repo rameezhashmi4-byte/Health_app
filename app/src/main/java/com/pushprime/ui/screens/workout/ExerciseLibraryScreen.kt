@@ -12,7 +12,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.pushprime.model.Exercise
 import com.pushprime.model.ExerciseCatalog
@@ -46,7 +45,7 @@ fun ExerciseLibraryScreen(
                 title = {
                     Text(
                         text = "Exercise Library",
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.headlineMedium
                     )
                 },
                 navigationIcon = {
@@ -131,8 +130,7 @@ fun ExerciseCard(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = exercise.name,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.titleLarge
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Row(

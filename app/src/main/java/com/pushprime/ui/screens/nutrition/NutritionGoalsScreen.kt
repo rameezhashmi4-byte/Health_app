@@ -26,11 +26,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.pushprime.ui.components.RamboostTextField
+import com.pushprime.ui.components.AppTextField
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,7 +49,12 @@ fun NutritionGoalsScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Nutrition Goals", fontWeight = FontWeight.Black) },
+                title = {
+                    Text(
+                        text = "Nutrition Goals",
+                        style = MaterialTheme.typography.headlineMedium
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
@@ -71,11 +75,10 @@ fun NutritionGoalsScreen(
         ) {
             Text(
                 "Daily Targets",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                style = MaterialTheme.typography.titleLarge
             )
 
-            RamboostTextField(
+            AppTextField(
                 value = caloriesText,
                 onValueChange = { caloriesText = it.filter { ch -> ch.isDigit() } },
                 label = "Calorie goal",
@@ -85,7 +88,7 @@ fun NutritionGoalsScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            RamboostTextField(
+            AppTextField(
                 value = proteinText,
                 onValueChange = { proteinText = it.filter { ch -> ch.isDigit() } },
                 label = "Protein goal (g)",
@@ -104,10 +107,16 @@ fun NutritionGoalsScreen(
                     modifier = Modifier.weight(1f),
                     enabled = isFormValid
                 ) {
-                    Text("Save")
+                    Text(
+                        text = "Save",
+                        style = MaterialTheme.typography.labelLarge
+                    )
                 }
                 OutlinedButton(onClick = onNavigateBack, modifier = Modifier.weight(1f)) {
-                    Text("Cancel")
+                    Text(
+                        text = "Cancel",
+                        style = MaterialTheme.typography.labelLarge
+                    )
                 }
             }
         }

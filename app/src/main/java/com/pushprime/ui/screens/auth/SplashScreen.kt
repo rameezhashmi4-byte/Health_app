@@ -16,8 +16,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.sp
 
 @Composable
 fun SplashScreen() {
@@ -40,9 +38,7 @@ fun SplashScreen() {
     ) {
         Text(
             text = "✅ RAMBOOST",
-            style = MaterialTheme.typography.headlineLarge,
-            fontWeight = FontWeight.Black,
-            letterSpacing = 2.sp,
+            style = MaterialTheme.typography.headlineMedium,
             color = Color.Black.copy(alpha = alpha)
         )
     }

@@ -13,23 +13,23 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.TrendingUp
-import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
+import com.pushprime.ui.components.AppCard
+import com.pushprime.ui.components.AppPrimaryButton
+import com.pushprime.ui.components.AppSecondaryButton
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 
@@ -47,7 +47,12 @@ fun PullupTrackerScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Pull-Up Tracker", fontWeight = FontWeight.Black) },
+                title = {
+                    Text(
+                        text = "Pull-Up Tracker",
+                        style = MaterialTheme.typography.headlineMedium
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
@@ -66,24 +71,32 @@ fun PullupTrackerScreen(
                 .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Surface(
-                color = Color.Black,
+            AppCard(
+                containerColor = Color.Black,
+                contentColor = Color.White,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Column(modifier = Modifier.padding(20.dp)) {
-                    Text("Current Max Reps", color = Color.Gray, fontWeight = FontWeight.Bold)
+                Column {
+                    Text(
+                        text = "Current Max Reps",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.Gray
+                    )
                     Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
                         Text(
                             "${uiState.currentMax}",
                             color = Color.White,
-                            style = MaterialTheme.typography.displaySmall,
-                            fontWeight = FontWeight.Black
+                            style = MaterialTheme.typography.displaySmall
                         )
                         if (uiState.isNewPr) {
                             Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                                 Icon(Icons.Default.EmojiEvents, contentDescription = null, tint = Color(0xFFFFD100))
                                 Spacer(modifier = Modifier.width(6.dp))
-                                Text("New PR", color = Color(0xFFFFD100), fontWeight = FontWeight.Bold)
+                                Text(
+                                    text = "New PR",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = Color(0xFFFFD100)
+                                )
                             }
                         }
                     }
@@ -105,15 +118,9 @@ fun PullupTrackerScreen(
                 )
             }
 
-            Button(onClick = onLogSession, modifier = Modifier.fillMaxWidth()) {
-                Text("Log Pull-Up Session")
-            }
-            OutlinedButton(onClick = onTestMax, modifier = Modifier.fillMaxWidth()) {
-                Text("Test Max Reps")
-            }
-            OutlinedButton(onClick = onOpenPlan, modifier = Modifier.fillMaxWidth()) {
-                Text("Start Plan")
-            }
+            AppPrimaryButton(text = "Log Pull-Up Session", onClick = onLogSession)
+            AppSecondaryButton(text = "Test Max Reps", onClick = onTestMax)
+            AppSecondaryButton(text = "Start Plan", onClick = onOpenPlan)
         }
     }
 }
@@ -125,14 +132,16 @@ private fun StatCard(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     modifier: Modifier = Modifier
 ) {
-    Surface(
-        color = Color(0xFFF6F6F6),
+    AppCard(
         modifier = modifier
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Icon(icon, contentDescription = null, tint = Color.Black)
+        Column {
+            Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
             Spacer(modifier = Modifier.height(8.dp))
-            Text(value, fontWeight = FontWeight.Black)
+            Text(
+                text = value,
+                style = MaterialTheme.typography.titleLarge
+            )
             Text(label, color = Color.Gray, style = MaterialTheme.typography.labelSmall)
         }
     }

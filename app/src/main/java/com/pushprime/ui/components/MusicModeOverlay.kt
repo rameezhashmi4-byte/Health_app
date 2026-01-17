@@ -2,6 +2,7 @@ package com.pushprime.ui.components
 
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -36,8 +37,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import com.pushprime.R
 import com.pushprime.music.EnergyLevel
 import com.pushprime.music.MusicPhase
 import com.pushprime.music.MusicPhaseLogic
@@ -115,8 +117,7 @@ fun MusicModeOverlay(
                 Column {
                     Text(
                         text = "Music Mode",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.titleLarge
                     )
                     Text(
                         text = "${currentPhase.label} • ${bpmRange.first}–${bpmRange.last} BPM",
@@ -154,8 +155,7 @@ fun MusicModeOverlay(
                         )
                         Text(
                             text = "${bpmRange.first}–${bpmRange.last}",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
+                            style = MaterialTheme.typography.titleLarge
                         )
                     }
                     Column(horizontalAlignment = Alignment.End) {
@@ -166,8 +166,7 @@ fun MusicModeOverlay(
                         )
                         Text(
                             text = suggestedTrackType,
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.SemiBold
+                            style = MaterialTheme.typography.bodyLarge
                         )
                     }
                 }
@@ -185,7 +184,10 @@ fun MusicModeOverlay(
                 ) {
                     Icon(Icons.Default.Bolt, contentDescription = null)
                     Spacer(modifier = Modifier.size(6.dp))
-                    Text(if (boostActive) "Boosting +15 BPM" else "Energy Boost")
+                    Text(
+                        text = if (boostActive) "Boosting +15 BPM" else "Energy Boost",
+                        style = MaterialTheme.typography.labelLarge
+                    )
                 }
                 Button(
                     onClick = { musicProvider.skipNext() },
@@ -194,7 +196,10 @@ fun MusicModeOverlay(
                 ) {
                     Icon(Icons.Default.SkipNext, contentDescription = null)
                     Spacer(modifier = Modifier.size(6.dp))
-                    Text("Skip")
+                    Text(
+                        text = "Skip",
+                        style = MaterialTheme.typography.labelLarge
+                    )
                 }
             }
 
@@ -217,11 +222,19 @@ fun MusicModeOverlay(
                                 .background(PushPrimeColors.Primary.copy(alpha = 0.15f), RoundedCornerShape(10.dp)),
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(
-                                Icons.Default.MusicNote,
-                                contentDescription = null,
-                                tint = PushPrimeColors.Primary
-                            )
+                            if (musicSource == MusicSource.SPOTIFY) {
+                                Image(
+                                    painter = painterResource(id = R.drawable.ic_spotify),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            } else {
+                                Icon(
+                                    Icons.Default.MusicNote,
+                                    contentDescription = null,
+                                    tint = PushPrimeColors.Primary
+                                )
+                            }
                         }
                         Spacer(modifier = Modifier.size(10.dp))
                         Column {
@@ -232,8 +245,7 @@ fun MusicModeOverlay(
                             )
                             Text(
                                 text = currentTrack?.title ?: "Suggested mix ready",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.SemiBold
+                                style = MaterialTheme.typography.bodyLarge
                             )
                         }
                     }
@@ -257,7 +269,10 @@ fun MusicModeOverlay(
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = PushPrimeColors.UberBlack)
                 ) {
-                    Text("Open Spotify")
+                    Text(
+                        text = "Open Spotify",
+                        style = MaterialTheme.typography.labelLarge
+                    )
                 }
             }
         }

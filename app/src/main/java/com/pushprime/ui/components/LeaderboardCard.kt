@@ -9,7 +9,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.pushprime.model.LeaderboardEntry
 import com.pushprime.ui.theme.PushPrimeColors
@@ -69,7 +68,6 @@ fun LeaderboardCard(
                     Text(
                         text = "#${entry.rank}",
                         style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
                         color = PushPrimeColors.OnSurfaceVariant
                     )
                 }
@@ -82,8 +80,7 @@ fun LeaderboardCard(
                 Column {
                     Text(
                         text = entry.username,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
+                        style = MaterialTheme.typography.titleLarge,
                         color = PushPrimeColors.OnSurface
                     )
                     Text(
@@ -100,8 +97,7 @@ fun LeaderboardCard(
             ) {
                 Text(
                     text = "${entry.pushups}",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.headlineMedium,
                     color = PushPrimeColors.Primary
                 )
                 Text(

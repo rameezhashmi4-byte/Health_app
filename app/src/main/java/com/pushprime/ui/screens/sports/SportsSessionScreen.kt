@@ -31,7 +31,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.pushprime.coach.BasicCoachProvider
 import com.pushprime.coach.CoachOrchestrator
@@ -206,8 +205,7 @@ fun SportsSessionScreen(
                 title = {
                     Text(
                         text = sportType.displayName,
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.headlineMedium
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -219,8 +217,7 @@ fun SportsSessionScreen(
                         modifier = Modifier
                             .padding(horizontal = 16.dp)
                             .clickable { onNavigateBack() },
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.titleLarge
                     )
                 }
             )
@@ -250,7 +247,6 @@ fun SportsSessionScreen(
                 Text(
                     text = formatTimer(seconds),
                     style = MaterialTheme.typography.displayLarge,
-                    fontWeight = FontWeight.Black,
                     color = Color.Black
                 )
             }
@@ -269,7 +265,7 @@ fun SportsSessionScreen(
             ) {
                 Text(
                     text = "Effort Level",
-                    fontWeight = FontWeight.Bold
+                    style = MaterialTheme.typography.titleLarge
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Intensity.values().forEach { level ->
@@ -334,7 +330,10 @@ fun SportsSessionScreen(
                         contentColor = Color.Black
                     )
                 ) {
-                    Text(if (isRunning) "Pause" else "Resume", fontWeight = FontWeight.Bold)
+                    Text(
+                        text = if (isRunning) "Pause" else "Resume",
+                        style = MaterialTheme.typography.labelLarge
+                    )
                 }
                 Button(
                     onClick = {
@@ -359,7 +358,10 @@ fun SportsSessionScreen(
                         contentColor = Color.White
                     )
                 ) {
-                    Text("Finish", fontWeight = FontWeight.Bold)
+                    Text(
+                        text = "Finish",
+                        style = MaterialTheme.typography.labelLarge
+                    )
                 }
             }
         }
@@ -382,7 +384,10 @@ private fun ToggleRow(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(title, fontWeight = FontWeight.Medium)
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge
+            )
             Switch(checked = enabled, onCheckedChange = onToggle)
         }
     }

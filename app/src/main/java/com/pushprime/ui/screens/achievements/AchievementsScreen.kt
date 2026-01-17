@@ -42,7 +42,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.pushprime.model.Achievement
@@ -67,7 +66,7 @@ fun AchievementsScreen(
                     Column {
                         Text(
                             text = "Achievements",
-                            fontWeight = FontWeight.Bold
+                            style = MaterialTheme.typography.headlineMedium
                         )
                         Text(
                             text = "Earn badges by showing up.",
@@ -147,8 +146,7 @@ private fun AchievementSummaryCard(
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
                 text = "Progress Summary",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                style = MaterialTheme.typography.titleLarge
             )
             Spacer(modifier = Modifier.height(12.dp))
             Row(
@@ -168,8 +166,7 @@ private fun SummaryStat(label: String, value: String) {
     Column(horizontalAlignment = Alignment.Start) {
         Text(
             text = value,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold
+            style = MaterialTheme.typography.titleLarge
         )
         Text(
             text = label,
@@ -220,8 +217,7 @@ private fun AchievementBadgeCard(
             }
             Text(
                 text = achievement.title,
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.titleLarge,
                 color = contentColor
             )
             Text(
@@ -276,8 +272,7 @@ private fun AchievementDetailSheet(achievement: Achievement) {
             Column {
                 Text(
                     text = achievement.title,
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
+                    style = MaterialTheme.typography.titleLarge
                 )
                 Text(
                     text = achievement.description,
@@ -288,8 +283,7 @@ private fun AchievementDetailSheet(achievement: Achievement) {
         }
         Text(
             text = "Requirement",
-            style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.Bold
+            style = MaterialTheme.typography.titleLarge
         )
         Text(
             text = progressLabel(achievement),

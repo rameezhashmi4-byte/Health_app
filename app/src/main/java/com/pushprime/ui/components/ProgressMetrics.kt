@@ -6,7 +6,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.pushprime.ui.theme.PushPrimeColors
 import kotlin.math.roundToInt
@@ -36,7 +35,6 @@ fun ProgressMetrics(
             Text(
                 text = "Your Progress",
                 style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
                 color = PushPrimeColors.OnSurface
             )
             Spacer(modifier = Modifier.height(20.dp))
@@ -103,8 +101,7 @@ private fun ComparisonCard(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = title,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
+                        style = MaterialTheme.typography.titleLarge,
                         color = PushPrimeColors.OnSurface
                     )
                     Text(
@@ -116,7 +113,6 @@ private fun ComparisonCard(
                 Text(
                     text = "$current",
                     style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold,
                     color = PushPrimeColors.Primary
                 )
             }
@@ -136,7 +132,6 @@ private fun ComparisonCard(
                 Text(
                     text = "${if (change >= 0) "+" else ""}$change (${if (percentChange >= 0) "+" else ""}$percentChange%)",
                     style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.SemiBold,
                     color = changeColor
                 )
                 Text(

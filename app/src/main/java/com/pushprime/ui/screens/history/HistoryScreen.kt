@@ -53,11 +53,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.pushprime.model.SessionEntity
-import com.pushprime.ui.components.RamboostTextField
+import com.pushprime.ui.components.AppTextField
 import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -127,8 +126,7 @@ fun HistoryScreen(
                     Column {
                         Text(
                             text = "History",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold
+                            style = MaterialTheme.typography.headlineMedium
                         )
                         Text(
                             "Your progress over time.",
@@ -161,7 +159,7 @@ fun HistoryScreen(
                 .padding(paddingValues)
                 .padding(horizontal = 20.dp, vertical = 12.dp)
         ) {
-            RamboostTextField(
+            AppTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
                 modifier = Modifier.fillMaxWidth(),
@@ -224,8 +222,7 @@ fun HistoryScreen(
             Column(modifier = Modifier.padding(20.dp)) {
                 Text(
                     text = selectedItem?.title.orEmpty(),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    style = MaterialTheme.typography.titleLarge
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 TextButton(
@@ -312,8 +309,7 @@ private fun SessionCard(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = item.title,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleLarge,
                         color = Color.Black
                     )
                     Spacer(modifier = Modifier.height(4.dp))
@@ -345,8 +341,7 @@ private fun EmptyHistoryState(onStartSession: () -> Unit) {
     ) {
         Text(
             text = "No sessions yet",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold
+            style = MaterialTheme.typography.titleLarge
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
@@ -359,7 +354,10 @@ private fun EmptyHistoryState(onStartSession: () -> Unit) {
             onClick = onStartSession,
             colors = ButtonDefaults.buttonColors(containerColor = Color.Black)
         ) {
-            Text("Start your first session")
+            Text(
+                text = "Start your first session",
+                style = MaterialTheme.typography.labelLarge
+            )
         }
     }
 }

@@ -25,7 +25,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import java.text.SimpleDateFormat
@@ -45,7 +44,12 @@ fun PullupPlanScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Pull-Up Plan", fontWeight = FontWeight.Black) },
+                title = {
+                    Text(
+                        text = "Pull-Up Plan",
+                        style = MaterialTheme.typography.headlineMedium
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
@@ -66,20 +70,26 @@ fun PullupPlanScreen(
         ) {
             Text(
                 "Plan based on max reps: ${uiState.maxReps}",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                style = MaterialTheme.typography.titleLarge
             )
             uiState.plan.forEach { day ->
                 Surface(color = Color(0xFFF6F6F6), modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text(day.title, fontWeight = FontWeight.Bold)
+                        Text(
+                            text = day.title,
+                            style = MaterialTheme.typography.titleLarge
+                        )
                         Text(day.detail, color = Color.Gray)
                     }
                 }
             }
 
             if (completedToday) {
-                Text("Completed today ✅", color = Color(0xFF2E7D32), fontWeight = FontWeight.Bold)
+                Text(
+                    text = "Completed today ✅",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = Color(0xFF2E7D32)
+                )
             }
 
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
@@ -87,13 +97,19 @@ fun PullupPlanScreen(
                     onClick = { viewModel.startTodayPlan() },
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text("Start today's plan")
+                    Text(
+                        text = "Start today's plan",
+                        style = MaterialTheme.typography.labelLarge
+                    )
                 }
                 OutlinedButton(
                     onClick = { viewModel.markCompletedToday() },
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text("Mark completed")
+                    Text(
+                        text = "Mark completed",
+                        style = MaterialTheme.typography.labelLarge
+                    )
                 }
             }
         }

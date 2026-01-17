@@ -15,14 +15,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.pushprime.ui.components.RamboostCard
-import com.pushprime.ui.components.RamboostPrimaryButton
-import com.pushprime.ui.components.RamboostSecondaryButton
-import com.pushprime.ui.components.RamboostStatTile
-import com.pushprime.ui.components.Spacing
+import com.pushprime.ui.components.AppCard
+import com.pushprime.ui.components.AppPrimaryButton
+import com.pushprime.ui.components.AppSecondaryButton
+import com.pushprime.ui.components.AppTextButton
+import com.pushprime.ui.components.PremiumFadeSlideIn
+import com.pushprime.ui.theme.AppSpacing
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,393 +49,293 @@ fun HomeScreen(
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
-        LazyColumn(
+        PremiumFadeSlideIn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues),
-            contentPadding = PaddingValues(horizontal = Spacing.lg, vertical = Spacing.lg),
-            verticalArrangement = Arrangement.spacedBy(Spacing.lg)
+                .padding(paddingValues)
         ) {
-            // 1) Top Header
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text(
-                            text = "Hey, ${uiState.user?.username ?: "RAMBOOSTER"}",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
-                        Text(
-                            text = "Let's get a win today.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    IconButton(
-                        onClick = onNavigateToProfile,
-                        modifier = Modifier
-                            .size(48.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.surfaceVariant)
-                    ) {
-                        Icon(
-                            Icons.Default.Person,
-                            contentDescription = "Profile",
-                            tint = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                }
-            }
-
-            // 2) Hero Card
-            item {
-                RamboostCard(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary,
-                    onClick = { onNavigateToSessionMode() }
-                ) {
-                    Text(
-                        text = "TODAY'S FOCUS",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f),
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(modifier = Modifier.height(Spacing.sm))
-                    Text(
-                        text = uiState.user?.fitnessLevel?.name?.replace("_", " ") ?: "BUILD MUSCLE",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(modifier = Modifier.height(Spacing.xs))
-                    Text(
-                        text = "🔥 ${uiState.streak}-day streak",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.tertiary,
-                        fontWeight = FontWeight.Bold
-                    )
-                    if (uiState.lastWorkoutLabel != null) {
-                        Spacer(modifier = Modifier.height(Spacing.xs))
-                        Text(
-                            text = "Last workout: ${uiState.lastWorkoutLabel}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f)
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(Spacing.lg))
-
-                    Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
-                        RamboostPrimaryButton(
-                            text = "Start Session",
-                            onClick = onNavigateToSessionMode,
-                            fullWidth = false,
-                            modifier = Modifier.weight(1f),
-                            containerColor = MaterialTheme.colorScheme.onPrimary,
-                            contentColor = MaterialTheme.colorScheme.primary
-                        )
-                        RamboostSecondaryButton(
-                            text = "Log Manual",
-                            onClick = onNavigateToProgress,
-                            fullWidth = false,
-                            modifier = Modifier.weight(1f),
-                            contentColor = MaterialTheme.colorScheme.onPrimary,
-                            borderColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.5f)
-                        )
-                    }
-                }
-            }
-
-            // 2.3) Streak Card
-            item {
-                StreakCard(
-                    currentStreak = uiState.streak,
-                    bestStreak = uiState.bestStreakDays,
-                    freezeTokensRemaining = uiState.freezeTokensRemaining,
-                    restDaysLeft = uiState.restDaysLeftThisWeek,
-                    isFrozenToday = uiState.isStreakProtectedToday,
-                    hasWorkoutToday = uiState.hasWorkoutToday,
-                    isRestDayToday = uiState.isRestDayToday,
-                    onMarkRestDay = { viewModel.markRestDay() },
-                    onStartQuickSession = onNavigateToQuickSession,
-                    onOpenDetails = onNavigateToStreakDetails
-                )
-            }
-
-            // 2.5) History Shortcut
-            item {
-                RamboostCard(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    onClick = { onNavigateToHistory() }
-                ) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(AppSpacing.lg),
+                verticalArrangement = Arrangement.spacedBy(AppSpacing.lg)
+            ) {
+                // 1) Top Header
+                item {
                     Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "History",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                text = "Review every session",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                        Icon(
-                            Icons.Default.History,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                }
-            }
-
-            // 2.6) Progress Photos Shortcut
-            item {
-                Surface(
-                    color = Color.White,
-                    shape = RoundedCornerShape(20.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { onNavigateToProgressPhotos() }
-                ) {
-                    Row(
-                        modifier = Modifier.padding(20.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column {
                             Text(
-                                "Progress Photos",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Black,
-                                color = Color.Black
+                                text = "Hey, ${uiState.user?.username ?: "RAMBOOSTER"}",
+                                style = MaterialTheme.typography.headlineMedium,
+                                color = MaterialTheme.colorScheme.onBackground
                             )
                             Text(
-                                "Track your transformation",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = Color.Gray
-                            )
-                        }
-                        Icon(Icons.Default.PhotoCamera, contentDescription = null, tint = Color.Black)
-                    }
-                }
-            }
-
-            // 2.75) Sports Mode Shortcut
-            item {
-                RamboostCard(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    onClick = { onNavigateToSportsMode() }
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "Sports Mode",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                text = "Pick a sport and go beast mode",
-                                style = MaterialTheme.typography.bodySmall,
+                                text = "Let's get a win today.",
+                                style = MaterialTheme.typography.bodyLarge,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
-                        Text("🏉")
+                        IconButton(
+                            onClick = onNavigateToProfile,
+                            modifier = Modifier
+                                .size(48.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.surfaceVariant)
+                        ) {
+                            Icon(
+                                Icons.Default.Person,
+                                contentDescription = "Profile",
+                                tint = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
                     }
                 }
-            }
 
-            // 3) Quick Stats Row
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    StatTile(
-                        label = "Steps",
-                        value = if (uiState.isStepsEnabled) uiState.todaySteps.toString() else "Off",
-                        icon = Icons.Default.DirectionsWalk,
-                        enabled = uiState.isStepsEnabled,
-                        modifier = Modifier.weight(1f)
-                    )
-                    StatTile(
-                        label = "Sessions",
-                        value = uiState.weeklySessions.toString(),
-                        icon = Icons.Default.Event,
-                        modifier = Modifier.weight(1f)
-                    )
-                    StatTile(
-                        label = "Burned",
-                        value = "${uiState.caloriesBurned}",
-                        icon = Icons.Default.Whatshot,
-                        modifier = Modifier.weight(1f)
+                // 2) Hero Card
+                item {
+                    AppCard(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
+                        onClick = { onNavigateToSessionMode() }
+                    ) {
+                        Column {
+                            Text(
+                                text = "TODAY'S FOCUS",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
+                            )
+                            Spacer(modifier = Modifier.height(AppSpacing.sm))
+                            Text(
+                                text = uiState.user?.fitnessLevel?.name?.replace("_", " ") ?: "BUILD MUSCLE",
+                                style = MaterialTheme.typography.titleLarge,
+                                color = MaterialTheme.colorScheme.onPrimary
+                            )
+                            Spacer(modifier = Modifier.height(AppSpacing.xs))
+                            Text(
+                                text = "🔥 ${uiState.streak}-day streak",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.tertiary
+                            )
+                            if (uiState.lastWorkoutLabel != null) {
+                                Spacer(modifier = Modifier.height(AppSpacing.xs))
+                                Text(
+                                    text = "Last: ${uiState.lastWorkoutLabel}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f)
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(AppSpacing.lg))
+
+                            Row(horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)) {
+                                AppPrimaryButton(
+                                    text = "Start Session",
+                                    onClick = onNavigateToSessionMode,
+                                    fullWidth = false,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                AppSecondaryButton(
+                                    text = "Log Manual",
+                                    onClick = onNavigateToProgress,
+                                    fullWidth = false,
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // 3) Streak Card
+                item {
+                    StreakCard(
+                        currentStreak = uiState.streak,
+                        bestStreak = uiState.bestStreakDays,
+                        freezeTokensRemaining = uiState.freezeTokensRemaining,
+                        restDaysLeft = uiState.restDaysLeftThisWeek,
+                        isFrozenToday = uiState.isStreakProtectedToday,
+                        hasWorkoutToday = uiState.hasWorkoutToday,
+                        isRestDayToday = uiState.isRestDayToday,
+                        onMarkRestDay = { viewModel.markRestDay() },
+                        onStartQuickSession = onNavigateToQuickSession,
+                        onOpenDetails = onNavigateToStreakDetails
                     )
                 }
-            }
 
-            // 4) Weekly Progress
-            item {
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    Text(
-                        "WEEKLY PROGRESS",
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Black,
-                        color = Color.Black
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    WeeklyChart(progress = uiState.weeklyProgress)
+                // 4) Quick Actions Grid (Replaces the vertical list for premium feel)
+                item {
+                    Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.md)) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(AppSpacing.md)) {
+                            ActionCard(
+                                title = "History",
+                                icon = Icons.Default.History,
+                                onClick = onNavigateToHistory,
+                                modifier = Modifier.weight(1f)
+                            )
+                            ActionCard(
+                                title = "Photos",
+                                icon = Icons.Default.PhotoCamera,
+                                onClick = onNavigateToProgressPhotos,
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                        Row(horizontalArrangement = Arrangement.spacedBy(AppSpacing.md)) {
+                            ActionCard(
+                                title = "Sports",
+                                icon = Icons.Default.SportsFootball,
+                                onClick = onNavigateToSportsMode,
+                                modifier = Modifier.weight(1f)
+                            )
+                            ActionCard(
+                                title = "Music",
+                                icon = Icons.Default.MusicNote,
+                                onClick = onNavigateToMusicMode,
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                    }
                 }
-            }
 
-            // 5) Workout Plan Section
-            item {
-                Surface(
-                    color = Color(0xFFF6F6F6),
-                    shape = RoundedCornerShape(24.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(modifier = Modifier.padding(20.dp)) {
-                        Text(
-                            "YOUR PLAN",
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.Black,
-                            color = Color.Black
+                // 5) Quick Stats Row
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(AppSpacing.md)
+                    ) {
+                        StatTile(
+                            label = "Steps",
+                            value = if (uiState.isStepsEnabled) uiState.todaySteps.toString() else "Off",
+                            icon = Icons.Default.DirectionsWalk,
+                            enabled = uiState.isStepsEnabled,
+                            modifier = Modifier.weight(1f)
                         )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        if (uiState.savedPlans.isNotEmpty()) {
-                            val latestPlan = uiState.savedPlans.first()
-                            Surface(
-                                color = Color.White,
-                                shape = RoundedCornerShape(16.dp),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable { onNavigateToSavedPlan(latestPlan.id) }
-                            ) {
-                                Column(modifier = Modifier.padding(16.dp)) {
-                                    Text(
-                                        text = latestPlan.title,
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Black,
-                                        color = Color.Black
-                                    )
-                                    Spacer(modifier = Modifier.height(6.dp))
-                                    Text(
-                                        text = "${latestPlan.totalDurationMinutes} min • ${latestPlan.goal.displayName}",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = Color.Gray
-                                    )
-                                    Spacer(modifier = Modifier.height(12.dp))
-                                    Button(
-                                        onClick = { onNavigateToSavedPlan(latestPlan.id) },
-                                        modifier = Modifier.fillMaxWidth(),
-                                        colors = ButtonDefaults.buttonColors(containerColor = Color.Black)
-                                    ) {
-                                        Text("View Plan", fontWeight = FontWeight.Bold)
+                        StatTile(
+                            label = "Sessions",
+                            value = uiState.weeklySessions.toString(),
+                            icon = Icons.Default.Event,
+                            modifier = Modifier.weight(1f)
+                        )
+                        StatTile(
+                            label = "Burned",
+                            value = "${uiState.caloriesBurned}",
+                            icon = Icons.Default.Whatshot,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+
+                // 6) Weekly Progress
+                item {
+                    AppCard(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                    ) {
+                        Column {
+                            Text(
+                                "WEEKLY PROGRESS",
+                                style = MaterialTheme.typography.titleLarge,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(modifier = Modifier.height(AppSpacing.lg))
+                            WeeklyChart(progress = uiState.weeklyProgress)
+                        }
+                    }
+                }
+
+                // 7) Workout Plan Section
+                item {
+                    AppCard(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        contentPadding = PaddingValues(AppSpacing.lg)
+                    ) {
+                        Column {
+                            Text(
+                                "YOUR PLAN",
+                                style = MaterialTheme.typography.titleLarge
+                            )
+                            Spacer(modifier = Modifier.height(AppSpacing.lg))
+                            if (uiState.savedPlans.isNotEmpty()) {
+                                val latestPlan = uiState.savedPlans.first()
+                                AppCard(
+                                    onClick = { onNavigateToSavedPlan(latestPlan.id) },
+                                    containerColor = MaterialTheme.colorScheme.surface,
+                                    contentPadding = PaddingValues(AppSpacing.lg)
+                                ) {
+                                    Column {
+                                        Text(
+                                            text = latestPlan.title,
+                                            style = MaterialTheme.typography.titleLarge
+                                        )
+                                        Spacer(modifier = Modifier.height(AppSpacing.xs))
+                                        Text(
+                                            text = "${latestPlan.totalDurationMinutes} min • ${latestPlan.goal.displayName}",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                        Spacer(modifier = Modifier.height(AppSpacing.md))
+                                        AppPrimaryButton(
+                                            text = "View Plan",
+                                            onClick = { onNavigateToSavedPlan(latestPlan.id) }
+                                        )
                                     }
                                 }
+                                Spacer(modifier = Modifier.height(AppSpacing.md))
                             }
-                            Spacer(modifier = Modifier.height(12.dp))
-                        }
-                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                            PlanButton("Push", Modifier.weight(1f)) { onNavigateToWorkout("PUSH") }
-                            PlanButton("Pull", Modifier.weight(1f)) { onNavigateToWorkout("PULL") }
-                            PlanButton("Legs", Modifier.weight(1f)) { onNavigateToWorkout("LEGS") }
-                        }
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Button(
-                            onClick = { onNavigateToWorkout("SPORTS") },
-                            modifier = Modifier.fillMaxWidth().height(48.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Text("Sports Mode ⚽", fontWeight = FontWeight.Black)
-                        }
-                        Spacer(modifier = Modifier.height(12.dp))
-                        OutlinedButton(
-                            onClick = onNavigateToWorkoutGenerator,
-                            modifier = Modifier.fillMaxWidth().height(48.dp),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, Color.Black),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Text("Workout Generator", fontWeight = FontWeight.Bold)
+                            Row(horizontalArrangement = Arrangement.spacedBy(AppSpacing.md)) {
+                                AppSecondaryButton(text = "Push", modifier = Modifier.weight(1f)) { onNavigateToWorkout("PUSH") }
+                                AppSecondaryButton(text = "Pull", modifier = Modifier.weight(1f)) { onNavigateToWorkout("PULL") }
+                                AppSecondaryButton(text = "Legs", modifier = Modifier.weight(1f)) { onNavigateToWorkout("LEGS") }
+                            }
+                            Spacer(modifier = Modifier.height(AppSpacing.md))
+                            AppPrimaryButton(
+                                text = "Sports Mode ⚽",
+                                onClick = { onNavigateToWorkout("SPORTS") }
+                            )
+                            Spacer(modifier = Modifier.height(AppSpacing.md))
+                            AppSecondaryButton(
+                                text = "Workout Generator",
+                                onClick = onNavigateToWorkoutGenerator
+                            )
                         }
                     }
                 }
-            }
 
-            // 6) Session Mode Screen entry
-            item {
-                Surface(
-                    color = Color(0xFF276EF1), // Uber Blue
-                    shape = RoundedCornerShape(24.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { onNavigateToSessionMode() }
-                ) {
-                    Row(
-                        modifier = Modifier.padding(20.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Column {
-                            Text(
-                                "Session Mode",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Black,
-                                color = Color.White
-                            )
-                            Text(
-                                "Focus + Music + Voice",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = Color.White.copy(alpha = 0.8f)
-                            )
-                        }
-                        Icon(Icons.Default.ArrowForward, contentDescription = null, tint = Color.White)
-                    }
+                // Footer padding
+                item {
+                    Spacer(modifier = Modifier.height(AppSpacing.xxl))
                 }
             }
+        }
+    }
+}
 
-            item {
-                Surface(
-                    color = Color.Black,
-                    shape = RoundedCornerShape(24.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { onNavigateToMusicMode() }
-                ) {
-                    Row(
-                        modifier = Modifier.padding(20.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Column {
-                            Text(
-                                "Music Mode",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Black,
-                                color = Color.White
-                            )
-                            Text(
-                                "Warm-up • Main • Finisher energy",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = Color.White.copy(alpha = 0.8f)
-                            )
-                        }
-                        Icon(Icons.Default.MusicNote, contentDescription = null, tint = Color.White)
-                    }
-                }
-            }
+@Composable
+private fun ActionCard(
+    title: String,
+    icon: ImageVector,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    AppCard(
+        onClick = onClick,
+        modifier = modifier,
+        containerColor = MaterialTheme.colorScheme.surface,
+        contentPadding = PaddingValues(AppSpacing.lg)
+    ) {
+        Column(
+            horizontalAlignment = Alignment.Start,
+            verticalArrangement = Arrangement.spacedBy(AppSpacing.sm)
+        ) {
+            Icon(
+                icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(24.dp)
+            )
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleLarge
+            )
         }
     }
 }
@@ -454,14 +354,12 @@ private fun StreakCard(
     onOpenDetails: () -> Unit
 ) {
     val canMarkRestDay = !hasWorkoutToday && !isRestDayToday && restDaysLeft > 0
-    Surface(
-        color = Color(0xFFF6F6F6),
-        shape = RoundedCornerShape(20.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onOpenDetails() }
+    AppCard(
+        onClick = onOpenDetails,
+        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+        contentPadding = PaddingValues(AppSpacing.lg)
     ) {
-        Column(modifier = Modifier.padding(20.dp)) {
+        Column {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -470,104 +368,80 @@ private fun StreakCard(
                 Column {
                     Text(
                         text = "Streak",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Black,
-                        color = Color.Black
+                        style = MaterialTheme.typography.titleLarge
                     )
                     Text(
-                        text = "Stay consistent, stay strong",
+                        text = "Stay consistent",
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color.Gray
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
                 if (isFrozenToday) {
-                    Surface(
-                        color = Color(0xFFDCEBFF),
-                        shape = RoundedCornerShape(12.dp)
+                    AppCard(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentPadding = PaddingValues(horizontal = AppSpacing.sm, vertical = AppSpacing.xs)
                     ) {
                         Text(
                             text = "Streak Protected ❄️",
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF1D4ED8)
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.primary
                         )
                     }
                 }
             }
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(AppSpacing.lg))
             Text(
-                text = "🔥 Current streak: $currentStreak days",
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black
+                text = "🔥 $currentStreak days",
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.primary
             )
             Text(
                 text = "🏆 Best: $bestStreak days",
-                style = MaterialTheme.typography.bodyMedium,
-                color = Color.Black
+                style = MaterialTheme.typography.bodyMedium
             )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "❄️ Freeze tokens: $freezeTokensRemaining left",
-                style = MaterialTheme.typography.bodySmall,
-                color = Color.DarkGray
-            )
-            Text(
-                text = "Rest days left this week: $restDaysLeft",
-                style = MaterialTheme.typography.bodySmall,
-                color = Color.DarkGray
-            )
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(AppSpacing.md))
+            Row(horizontalArrangement = Arrangement.spacedBy(AppSpacing.lg)) {
+                Text(
+                    text = "❄️ $freezeTokensRemaining left",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = "Rest days: $restDaysLeft left",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Spacer(modifier = Modifier.height(AppSpacing.lg))
             if (!hasWorkoutToday) {
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Button(
+                Row(horizontalArrangement = Arrangement.spacedBy(AppSpacing.md)) {
+                    AppPrimaryButton(
+                        text = if (isRestDayToday) "Rest Day" else "Rest Day",
                         onClick = onMarkRestDay,
                         enabled = canMarkRestDay,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (canMarkRestDay) Color.Black else Color.Gray,
-                            contentColor = Color.White
-                        ),
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.weight(1f).height(44.dp)
-                    ) {
-                        Text(
-                            text = if (isRestDayToday) "Rest Day Marked" else "Mark Rest Day",
-                            style = MaterialTheme.typography.labelLarge
-                        )
-                    }
-                    OutlinedButton(
+                        modifier = Modifier.weight(1f)
+                    )
+                    AppSecondaryButton(
+                        text = "Quick Session",
                         onClick = onStartQuickSession,
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Black),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, Color.LightGray),
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.weight(1f).height(44.dp)
-                    ) {
-                        Text(
-                            text = "Start 10-min Quick Session",
-                            style = MaterialTheme.typography.labelLarge
-                        )
-                    }
-                }
-            } else {
-                Text(
-                    text = "Workout logged today ✅",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFF22C55E),
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.height(10.dp))
-                Button(
-                    onClick = onStartQuickSession,
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.fillMaxWidth().height(44.dp)
-                ) {
-                    Text(
-                        text = "Start 10-min Quick Session",
-                        style = MaterialTheme.typography.labelLarge
+                        modifier = Modifier.weight(1f)
                     )
                 }
+            } else {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.CheckCircle, contentDescription = null, tint = Color(0xFF22C55E), modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(AppSpacing.xs))
+                    Text(
+                        text = "Workout logged today",
+                        style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFF22C55E)
+                    )
+                }
+                Spacer(modifier = Modifier.height(AppSpacing.md))
+                AppPrimaryButton(
+                    text = "Start 10-min Quick Session",
+                    onClick = onStartQuickSession
+                )
             }
         }
     }
@@ -575,53 +449,29 @@ private fun StreakCard(
 
 @Composable
 fun StatTile(label: String, value: String, icon: ImageVector, enabled: Boolean = true, modifier: Modifier = Modifier) {
-    Surface(
-        color = Color(0xFFF6F6F6),
-        shape = RoundedCornerShape(20.dp),
-        modifier = modifier
+    AppCard(
+        modifier = modifier,
+        contentPadding = PaddingValues(AppSpacing.lg)
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
             horizontalAlignment = Alignment.Start
         ) {
             Icon(
                 icon,
                 contentDescription = null,
                 modifier = Modifier.size(20.dp),
-                tint = if (enabled) Color.Black else Color.Gray
+                tint = if (enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
             )
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(AppSpacing.md))
             Text(
                 text = value,
-                style = MaterialTheme.typography.titleLarge,
-                color = if (enabled) Color.Black else Color.Gray
+                style = MaterialTheme.typography.titleLarge
             )
-            Text(label, style = MaterialTheme.typography.labelSmall, color = Color.Gray)
-            if (!enabled) {
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "Enable",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = Color(0xFF276EF1),
-                    modifier = Modifier.clickable { /* Enable */ }
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun PlanButton(label: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
-    Surface(
-        modifier = modifier
-            .height(48.dp)
-            .clickable { onClick() },
-        color = Color.White,
-        shape = RoundedCornerShape(12.dp),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color.LightGray)
-    ) {
-        Box(contentAlignment = Alignment.Center) {
-            Text(label, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
@@ -637,17 +487,22 @@ fun WeeklyChart(progress: List<Int>) {
         verticalAlignment = Alignment.Bottom
     ) {
         progress.forEachIndexed { index, value ->
+            val heightPercent = (value.toFloat() / maxVal).coerceIn(0.1f, 1f)
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Box(
                     modifier = Modifier
-                        .width(24.dp)
-                        .fillMaxHeight((value.toFloat() / maxVal).coerceIn(0.1f, 1f))
-                        .background(if (value > 0) Color.Black else Color.LightGray, RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
+                        .width(28.dp)
+                        .fillMaxHeight(heightPercent)
+                        .clip(RoundedCornerShape(topStart = 6.dp, topEnd = 6.dp))
+                        .background(if (value > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant)
                 )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(labels[index], style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                Spacer(modifier = Modifier.height(AppSpacing.sm))
+                Text(
+                    labels.getOrNull(index) ?: "", 
+                    style = MaterialTheme.typography.labelSmall, 
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
     }
 }
-

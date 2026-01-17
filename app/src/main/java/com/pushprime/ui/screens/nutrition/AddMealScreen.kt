@@ -28,12 +28,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.pushprime.model.MealType
-import com.pushprime.ui.components.RamboostTextField
+import com.pushprime.ui.components.AppTextField
 import com.pushprime.ui.validation.rememberFormValidationState
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -57,7 +56,12 @@ fun AddMealScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Add Meal", fontWeight = FontWeight.Black) },
+                title = {
+                    Text(
+                        text = "Add Meal",
+                        style = MaterialTheme.typography.headlineMedium
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
@@ -76,7 +80,7 @@ fun AddMealScreen(
                 .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            RamboostTextField(
+            AppTextField(
                 value = name,
                 onValueChange = { name = it },
                 label = "Meal name",
@@ -84,7 +88,7 @@ fun AddMealScreen(
             )
 
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                RamboostTextField(
+                AppTextField(
                     value = caloriesText,
                     onValueChange = {
                         caloriesText = it.filter { ch -> ch.isDigit() }
@@ -94,7 +98,7 @@ fun AddMealScreen(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.weight(1f)
                 )
-                RamboostTextField(
+                AppTextField(
                     value = proteinText,
                     onValueChange = {
                         proteinText = it.filter { ch -> ch.isDigit() }
@@ -106,7 +110,10 @@ fun AddMealScreen(
                 )
             }
 
-            Text("Meal type", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+            Text(
+                text = "Meal type",
+                style = MaterialTheme.typography.titleLarge
+            )
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 MealType.values().forEach { type ->
                     OutlinedButton(
@@ -114,14 +121,14 @@ fun AddMealScreen(
                         modifier = Modifier.weight(1f)
                     ) {
                         Text(
-                            type.name.lowercase().replaceFirstChar { it.uppercase() },
-                            fontWeight = if (mealType == type) FontWeight.Bold else FontWeight.Medium
+                            text = type.name.lowercase().replaceFirstChar { it.uppercase() },
+                            style = MaterialTheme.typography.labelLarge
                         )
                     }
                 }
             }
 
-            RamboostTextField(
+            AppTextField(
                 value = notes,
                 onValueChange = { notes = it },
                 label = "Notes (optional)",
@@ -157,13 +164,19 @@ fun AddMealScreen(
                     modifier = Modifier.weight(1f),
                     enabled = isValid
                 ) {
-                    Text("Save")
+                    Text(
+                        text = "Save",
+                        style = MaterialTheme.typography.labelLarge
+                    )
                 }
                 OutlinedButton(
                     onClick = onNavigateBack,
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text("Cancel")
+                    Text(
+                        text = "Cancel",
+                        style = MaterialTheme.typography.labelLarge
+                    )
                 }
             }
         }

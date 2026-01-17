@@ -10,7 +10,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.pushprime.data.SessionDao
 import com.pushprime.model.SessionEntity
@@ -51,7 +50,7 @@ fun CalendarDayDetailScreen(
                 title = {
                     Text(
                         text = displayDate,
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.headlineMedium
                     )
                 },
                 navigationIcon = {
@@ -101,8 +100,7 @@ fun CalendarDayDetailScreen(
                 item {
                     Text(
                         text = "${sessions.size} session${if (sessions.size > 1) "s" else ""}",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleLarge,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
                 }
@@ -136,8 +134,7 @@ fun SessionCard(session: SessionEntity) {
                 Column {
                     Text(
                         text = formatActivityType(session),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.titleLarge
                     )
                     Text(
                         text = timeFormat.format(Date(session.startTime)),
@@ -148,7 +145,6 @@ fun SessionCard(session: SessionEntity) {
                 Text(
                     text = session.getFormattedDuration(),
                     style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
                     color = PushPrimeColors.Primary
                 )
             }

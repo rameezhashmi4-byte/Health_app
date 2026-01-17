@@ -21,7 +21,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.pushprime.model.Achievement
 import com.pushprime.ui.theme.PushPrimeColors
@@ -55,8 +54,7 @@ fun AchievementUnlockedPopup(
                 ) {
                     Text(
                         text = "🔥 Achievement Unlocked!",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.titleLarge
                     )
                     Spacer(modifier = Modifier.size(12.dp))
                     Text(
@@ -66,8 +64,7 @@ fun AchievementUnlockedPopup(
                     Spacer(modifier = Modifier.size(8.dp))
                     Text(
                         text = achievement?.title.orEmpty(),
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.titleLarge
                     )
                     Spacer(modifier = Modifier.size(6.dp))
                     Text(

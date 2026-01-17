@@ -1,5 +1,6 @@
 package com.pushprime.ui.screens.workout
 
+import android.app.Activity
 import android.widget.Toast
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
@@ -59,7 +60,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.pushprime.coach.BasicCoachProvider
@@ -114,6 +114,7 @@ fun WorkoutPlayerScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val activity = context as? Activity
     val database = remember {
         try {
             AppDatabase.getDatabase(context)
@@ -469,7 +470,7 @@ fun WorkoutPlayerScreen(
                     Column {
                         Text(
                             text = "Workout",
-                            fontWeight = FontWeight.Bold
+                            style = MaterialTheme.typography.headlineMedium
                         )
                         Text(
                             text = "${exerciseIndex + 1} of ${workoutPlan.size}",
@@ -519,11 +520,37 @@ fun WorkoutPlayerScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text("Connect Spotify for better beats", color = Color.White)
-                        TextButton(onClick = { /* Spotify login */ }) {
+                        TextButton(
+                            onClick = {
+                                if (spotifyHelper == null) {
+                                    Toast.makeText(
+                                        context,
+                                        "Spotify helper not available",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    return@TextButton
+                                }
+                                if (activity == null) {
+                                    Toast.makeText(
+                                        context,
+                                        "Unable to start Spotify login",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    return@TextButton
+                                }
+                                spotifyHelper.connect(activity) { error ->
+                                    Toast.makeText(
+                                        context,
+                                        error.message ?: "Spotify connection failed",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                }
+                            }
+                        ) {
                             Text(
                                 "CONNECT",
-                                color = PushPrimeColors.GTAYellow,
-                                fontWeight = FontWeight.Black
+                                style = MaterialTheme.typography.labelLarge,
+                                color = PushPrimeColors.GTAYellow
                             )
                         }
                     }
@@ -660,8 +687,7 @@ private fun CountdownContent(
         if (exercise != null) {
             Text(
                 text = exercise.name,
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
+                style = MaterialTheme.typography.titleLarge
             )
             Text(
                 text = exercise.targetLabel(),
@@ -702,8 +728,7 @@ private fun ActiveWorkoutContent(
         ) {
             Text(
                 text = exercise.name,
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
+                style = MaterialTheme.typography.titleLarge
             )
             Text(
                 text = exercise.cue,
@@ -724,8 +749,7 @@ private fun ActiveWorkoutContent(
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
                         text = formatWorkoutTime(secondsRemaining),
-                        style = MaterialTheme.typography.displaySmall,
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.displaySmall
                     )
                     Text(
                         text = exercise.targetLabel(),
@@ -738,8 +762,7 @@ private fun ActiveWorkoutContent(
             if (exercise.targetReps != null) {
                 Text(
                     text = "Reps: $repsCompleted / ${exercise.targetReps}",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
+                    style = MaterialTheme.typography.titleLarge
                 )
                 OutlinedButton(
                     onClick = onAddRep,
@@ -823,13 +846,11 @@ private fun RestContent(
         ) {
             Text(
                 text = "Rest",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
+                style = MaterialTheme.typography.titleLarge
             )
             Text(
                 text = "$restSeconds sec",
                 style = MaterialTheme.typography.displayMedium,
-                fontWeight = FontWeight.Bold,
                 color = PushPrimeColors.Primary
             )
             Text(
@@ -884,8 +905,7 @@ private fun CompletionContent(
             )
             Text(
                 text = "Workout complete",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
+                style = MaterialTheme.typography.headlineMedium
             )
             Text(
                 text = "Nice work finishing strong.",
@@ -934,8 +954,7 @@ private fun CompletionContent(
                         )
                         Text(
                             text = "New personal best!",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold
+                            style = MaterialTheme.typography.titleLarge
                         )
                     }
                 }
@@ -949,8 +968,7 @@ private fun CompletionContent(
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(
                             text = "Summary",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold
+                            style = MaterialTheme.typography.titleLarge
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         completedExercises.forEachIndexed { index, exercise ->
@@ -1005,8 +1023,7 @@ private fun StatCard(
             )
             Text(
                 text = value,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
+                style = MaterialTheme.typography.titleLarge
             )
         }
     }
@@ -1034,8 +1051,7 @@ private fun NextExercisePreview(nextExercise: WorkoutExercise?) {
                 )
                 Text(
                     text = nextExercise.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
+                    style = MaterialTheme.typography.titleLarge
                 )
                 Text(
                     text = nextExercise.targetLabel(),

@@ -27,11 +27,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.pushprime.model.QuickSessionTemplates
-import com.pushprime.ui.components.RamboostTextField
+import com.pushprime.ui.components.AppTextField
 import com.pushprime.ui.theme.PushPrimeColors
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -51,7 +50,12 @@ fun QuickSessionCompletionScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Session Complete", fontWeight = FontWeight.Bold) },
+                title = {
+                    Text(
+                        text = "Session Complete",
+                        style = MaterialTheme.typography.headlineMedium
+                    )
+                },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
             )
         },
@@ -67,7 +71,10 @@ fun QuickSessionCompletionScreen(
             Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
                 Text("🎉", style = MaterialTheme.typography.displayLarge)
                 Spacer(modifier = Modifier.height(8.dp))
-                Text("Session Completed 🔥", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+                Text(
+                    text = "Session Completed 🔥",
+                    style = MaterialTheme.typography.headlineMedium
+                )
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
                     text = template?.name ?: "Quick Session",
@@ -77,11 +84,14 @@ fun QuickSessionCompletionScreen(
             }
 
             Column {
-                Text("Total time", color = PushPrimeColors.OnSurfaceVariant)
+                Text(
+                    text = "Total time",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = PushPrimeColors.OnSurfaceVariant
+                )
                 Text(
                     text = "$durationMinutes minutes",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
+                    style = MaterialTheme.typography.titleLarge
                 )
             }
 
@@ -91,7 +101,10 @@ fun QuickSessionCompletionScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column {
-                    Text("Mark as workout", fontWeight = FontWeight.Medium)
+                    Text(
+                        text = "Mark as workout",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
                     Text(
                         "Counts toward streak",
                         style = MaterialTheme.typography.bodySmall,
@@ -101,7 +114,7 @@ fun QuickSessionCompletionScreen(
                 Switch(checked = markAsWorkout, onCheckedChange = { markAsWorkout = it })
             }
 
-            RamboostTextField(
+            AppTextField(
                 value = notes,
                 onValueChange = { notes = it },
                 modifier = Modifier.fillMaxWidth(),
@@ -128,7 +141,10 @@ fun QuickSessionCompletionScreen(
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Text("Save")
+                Text(
+                    text = "Save",
+                    style = MaterialTheme.typography.labelLarge
+                )
             }
 
             Button(
@@ -137,7 +153,11 @@ fun QuickSessionCompletionScreen(
                 colors = ButtonDefaults.buttonColors(containerColor = PushPrimeColors.UberGrey),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Text("Back to Home", color = Color.Black)
+                Text(
+                    text = "Back to Home",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = Color.Black
+                )
             }
         }
     }

@@ -35,7 +35,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.pushprime.data.MusicSettingsRepository
 import com.pushprime.music.EnergyLevel
@@ -87,7 +86,10 @@ fun MusicModeScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(text = "Music Mode", fontWeight = FontWeight.Bold)
+                    Text(
+                        text = "Music Mode",
+                        style = MaterialTheme.typography.headlineMedium
+                    )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = PushPrimeColors.Surface
@@ -98,7 +100,7 @@ fun MusicModeScreen(
                         modifier = Modifier
                             .padding(horizontal = 16.dp)
                             .clickable { onNavigateBack() },
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.titleLarge
                     )
                 }
             )
@@ -115,8 +117,7 @@ fun MusicModeScreen(
             item {
                 Text(
                     text = "Music Source",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    style = MaterialTheme.typography.titleLarge
                 )
             }
             item {
@@ -138,8 +139,7 @@ fun MusicModeScreen(
                             Column(modifier = Modifier.padding(16.dp)) {
                                 Text(
                                     text = source.label,
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.SemiBold
+                                    style = MaterialTheme.typography.bodyLarge
                                 )
                                 Text(
                                     text = if (source == MusicSource.BASIC) {
@@ -159,8 +159,7 @@ fun MusicModeScreen(
             item {
                 Text(
                     text = "Energy Style",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    style = MaterialTheme.typography.titleLarge
                 )
             }
             item {
@@ -178,8 +177,7 @@ fun MusicModeScreen(
             item {
                 Text(
                     text = "Session Type",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    style = MaterialTheme.typography.titleLarge
                 )
             }
             item {
@@ -197,8 +195,7 @@ fun MusicModeScreen(
             item {
                 Text(
                     text = "BPM Preference",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    style = MaterialTheme.typography.titleLarge
                 )
             }
             item {
@@ -209,8 +206,7 @@ fun MusicModeScreen(
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(
                             text = "${selectedBpm} BPM",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold
+                            style = MaterialTheme.typography.titleLarge
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Slider(
@@ -242,8 +238,7 @@ fun MusicModeScreen(
                         Column {
                             Text(
                                 text = "Autopilot",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold
+                                style = MaterialTheme.typography.titleLarge
                             )
                             Text(
                                 text = "Auto-switch music by workout phase",
@@ -280,7 +275,10 @@ fun MusicModeScreen(
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = PushPrimeColors.Primary)
                 ) {
-                    Text("Start Music Mode")
+                    Text(
+                        text = "Start Music Mode",
+                        style = MaterialTheme.typography.labelLarge
+                    )
                 }
             }
 
@@ -291,7 +289,10 @@ fun MusicModeScreen(
                         modifier = Modifier.fillMaxWidth(),
                         colors = ButtonDefaults.buttonColors(containerColor = PushPrimeColors.GTAYellow)
                     ) {
-                        Text("Connect Spotify")
+                        Text(
+                            text = "Connect Spotify",
+                            style = MaterialTheme.typography.labelLarge
+                        )
                     }
                 }
             }

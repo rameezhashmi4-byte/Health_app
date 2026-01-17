@@ -37,7 +37,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
@@ -69,7 +68,12 @@ fun CompareProgressPhotosScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Compare", fontWeight = FontWeight.Bold) },
+                title = {
+                    Text(
+                        text = "Compare",
+                        style = MaterialTheme.typography.headlineMedium
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
@@ -173,7 +177,10 @@ fun CompareProgressPhotosScreen(
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text("Back")
+                    Text(
+                        text = "Back",
+                        style = MaterialTheme.typography.labelLarge
+                    )
                 }
                 Button(
                     onClick = {
@@ -184,7 +191,10 @@ fun CompareProgressPhotosScreen(
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text("Swap")
+                    Text(
+                        text = "Swap",
+                        style = MaterialTheme.typography.labelLarge
+                    )
                 }
             }
         }

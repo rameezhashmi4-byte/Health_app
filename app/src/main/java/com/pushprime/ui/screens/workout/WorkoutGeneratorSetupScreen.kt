@@ -31,7 +31,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.pushprime.model.EquipmentOption
@@ -58,7 +57,12 @@ fun WorkoutGeneratorSetupScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(text = "Workout Generator", fontWeight = FontWeight.Bold) },
+                title = {
+                    Text(
+                        text = "Workout Generator",
+                        style = MaterialTheme.typography.headlineMedium
+                    )
+                },
                 navigationIcon = {
                     androidx.compose.material3.IconButton(onClick = onNavigateBack) {
                         androidx.compose.material3.Icon(Icons.Default.ArrowBack, contentDescription = "Back")
@@ -178,7 +182,10 @@ fun WorkoutGeneratorSetupScreen(
                         contentDescription = null
                     )
                     Spacer(modifier = Modifier.padding(horizontal = 6.dp))
-                    Text(text = if (uiState.isGenerating) "Generating..." else "Generate Workout")
+                    Text(
+                        text = if (uiState.isGenerating) "Generating..." else "Generate Workout",
+                        style = MaterialTheme.typography.labelLarge
+                    )
                 }
             }
         }
@@ -219,7 +226,10 @@ private fun GeneratorSectionCard(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text(text = title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleLarge
+            )
             Text(text = subtitle, style = MaterialTheme.typography.bodySmall, color = PushPrimeColors.OnSurfaceVariant)
             content()
         }

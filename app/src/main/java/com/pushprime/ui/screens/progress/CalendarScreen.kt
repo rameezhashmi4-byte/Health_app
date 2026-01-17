@@ -11,7 +11,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.pushprime.data.SessionDao
 import com.pushprime.model.ActivityType
@@ -80,7 +79,7 @@ fun CalendarScreen(
                             .format(Calendar.getInstance().apply {
                                 set(selectedYear, selectedMonth, 1)
                             }.time),
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.headlineMedium
                     )
                 },
                 navigationIcon = {
@@ -130,8 +129,7 @@ fun CalendarScreen(
                 listOf("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat").forEach { day ->
                     Text(
                         text = day,
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.bodySmall,
                         color = PushPrimeColors.OnSurfaceVariant,
                         modifier = Modifier.weight(1f).padding(4.dp)
                     )
@@ -213,7 +211,6 @@ fun CalendarDayCell(
             Text(
                 text = day.toString(),
                 style = MaterialTheme.typography.bodyMedium,
-                fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal,
                 color = if (isToday) PushPrimeColors.Primary else PushPrimeColors.OnSurface
             )
             if (hasSessions) {

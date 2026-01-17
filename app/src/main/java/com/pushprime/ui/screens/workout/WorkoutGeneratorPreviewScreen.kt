@@ -35,7 +35,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.pushprime.model.GeneratedExercise
@@ -55,7 +54,12 @@ fun WorkoutGeneratorPreviewScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Generated Workout", fontWeight = FontWeight.Bold) },
+                title = {
+                    Text(
+                        text = "Generated Workout",
+                        style = MaterialTheme.typography.headlineMedium
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
@@ -95,8 +99,7 @@ fun WorkoutGeneratorPreviewScreen(
                         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                             Text(
                                 text = targetPlan.title,
-                                style = MaterialTheme.typography.headlineSmall,
-                                fontWeight = FontWeight.Bold
+                                style = MaterialTheme.typography.headlineMedium
                             )
                             Text(
                                 text = "${targetPlan.totalDurationMinutes} min • ${targetPlan.goal.displayName} • ${targetPlan.equipment.displayName}",
@@ -121,7 +124,10 @@ fun WorkoutGeneratorPreviewScreen(
                             onClick = onStartSession,
                             modifier = Modifier.fillMaxWidth().height(52.dp)
                         ) {
-                            Text("Start Session")
+                            Text(
+                                text = "Start Session",
+                                style = MaterialTheme.typography.labelLarge
+                            )
                         }
                         OutlinedButton(
                             onClick = { viewModel.regeneratePlan() },
@@ -130,7 +136,10 @@ fun WorkoutGeneratorPreviewScreen(
                         ) {
                             Icon(Icons.Default.Refresh, contentDescription = null)
                             Spacer(modifier = Modifier.padding(horizontal = 6.dp))
-                            Text(if (uiState.isRegenerating) "Regenerating..." else "Regenerate")
+                            Text(
+                                text = if (uiState.isRegenerating) "Regenerating..." else "Regenerate",
+                                style = MaterialTheme.typography.labelLarge
+                            )
                         }
                         OutlinedButton(
                             onClick = { viewModel.savePlan() },
@@ -139,7 +148,10 @@ fun WorkoutGeneratorPreviewScreen(
                         ) {
                             Icon(Icons.Default.Save, contentDescription = null)
                             Spacer(modifier = Modifier.padding(horizontal = 6.dp))
-                            Text(if (uiState.isSaved) "Saved" else "Save Plan")
+                            Text(
+                                text = if (uiState.isSaved) "Saved" else "Save Plan",
+                                style = MaterialTheme.typography.labelLarge
+                            )
                         }
                     }
                 }
@@ -164,8 +176,7 @@ private fun WorkoutBlockCard(block: WorkoutBlock) {
             ) {
                 Text(
                     text = block.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    style = MaterialTheme.typography.titleLarge
                 )
                 block.durationMinutes?.let {
                     Text(

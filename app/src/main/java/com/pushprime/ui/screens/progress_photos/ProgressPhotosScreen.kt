@@ -60,7 +60,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -99,7 +98,12 @@ fun ProgressPhotosScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Progress", fontWeight = FontWeight.Bold) },
+                title = {
+                    Text(
+                        text = "Progress",
+                        style = MaterialTheme.typography.headlineMedium
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                     Icon(Icons.Default.ArrowBack, contentDescription = "Back")
@@ -180,8 +184,7 @@ fun ProgressPhotosScreen(
                         is GalleryItem.MonthHeader -> {
                             Text(
                                 text = item.label,
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.titleLarge,
                                 modifier = Modifier.padding(top = 12.dp, bottom = 4.dp)
                             )
                         }
@@ -284,14 +287,20 @@ private fun HeaderSection(
             ) {
                 Icon(Icons.Default.Add, contentDescription = null)
                 Spacer(modifier = Modifier.size(8.dp))
-                Text("Add Photo")
+                Text(
+                    text = "Add Photo",
+                    style = MaterialTheme.typography.labelLarge
+                )
             }
             OutlinedButton(
                 onClick = onCreateCollage,
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier.weight(1f)
             ) {
-                Text("Create Collage")
+                Text(
+                    text = "Create Collage",
+                    style = MaterialTheme.typography.labelLarge
+                )
             }
         }
         if (hasFailedUploads) {
@@ -313,10 +322,16 @@ private fun HeaderSection(
                     enabled = selectedCount == 2,
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text("Compare (${selectedCount}/2)")
+                    Text(
+                        text = "Compare (${selectedCount}/2)",
+                        style = MaterialTheme.typography.labelLarge
+                    )
                 }
                 OutlinedButton(onClick = onClearSelection, shape = RoundedCornerShape(12.dp)) {
-                    Text("Clear")
+                    Text(
+                        text = "Clear",
+                        style = MaterialTheme.typography.labelLarge
+                    )
                 }
             }
         }
@@ -333,8 +348,7 @@ private fun EmptyState(onAddPhoto: () -> Unit) {
     ) {
         Text(
             text = "No photos yet",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold
+            style = MaterialTheme.typography.titleLarge
         )
         Text(
             text = "Add your first photo",
@@ -342,7 +356,10 @@ private fun EmptyState(onAddPhoto: () -> Unit) {
             color = PushPrimeColors.OnSurfaceVariant
         )
         Button(onClick = onAddPhoto, shape = RoundedCornerShape(12.dp)) {
-            Text("Add your first photo")
+            Text(
+                text = "Add your first photo",
+                style = MaterialTheme.typography.labelLarge
+            )
         }
     }
 }

@@ -36,10 +36,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.pushprime.ui.components.RamboostTextField
+import com.pushprime.ui.components.AppTextField
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.platform.LocalContext
 import com.pushprime.coach.CoachSettings
@@ -123,7 +122,12 @@ fun AiCoachChatScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("AI Coach", fontWeight = FontWeight.Black) },
+                title = {
+                    Text(
+                        text = "AI Coach",
+                        style = MaterialTheme.typography.headlineMedium
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
@@ -147,7 +151,10 @@ fun AiCoachChatScreen(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         OutlinedButton(onClick = onNavigateToSetup) {
-                            Text("Setup")
+                            Text(
+                                text = "Setup",
+                                style = MaterialTheme.typography.labelLarge
+                            )
                         }
                     }
                 },
@@ -187,7 +194,7 @@ fun AiCoachChatScreen(
 
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
                 val isMessageValid = input.trim().isNotEmpty()
-                RamboostTextField(
+                AppTextField(
                     value = input,
                     onValueChange = { input = it },
                     label = "Message",

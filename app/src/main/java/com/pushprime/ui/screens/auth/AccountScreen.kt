@@ -11,9 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.google.firebase.auth.FirebaseUser
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -33,9 +31,7 @@ fun AccountScreen(
                 title = { 
                     Text(
                         "ACCOUNT", 
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Black,
-                        letterSpacing = 2.sp
+                        style = MaterialTheme.typography.headlineMedium
                     ) 
                 },
                 navigationIcon = {
@@ -67,7 +63,6 @@ fun AccountScreen(
                     Text(
                         text = user?.email?.take(1)?.uppercase() ?: "R",
                         style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Black,
                         color = Color.Black
                     )
                 }
@@ -77,8 +72,7 @@ fun AccountScreen(
 
             Text(
                 text = user?.email ?: "Unknown User",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
+                style = MaterialTheme.typography.titleLarge
             )
             
             Spacer(modifier = Modifier.height(48.dp))
@@ -110,7 +104,10 @@ fun AccountScreen(
             ) {
                 Icon(Icons.Default.Logout, contentDescription = null)
                 Spacer(modifier = Modifier.width(12.dp))
-                Text("Log Out", fontWeight = FontWeight.Bold)
+                Text(
+                    text = "Log Out",
+                    style = MaterialTheme.typography.labelLarge
+                )
             }
         }
     }
@@ -122,8 +119,15 @@ fun InfoRow(label: String, value: String) {
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(label, color = Color.Gray, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
-        Text(value, fontWeight = FontWeight.Black, style = MaterialTheme.typography.bodySmall)
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = Color.Gray
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyLarge
+        )
     }
 }
 
