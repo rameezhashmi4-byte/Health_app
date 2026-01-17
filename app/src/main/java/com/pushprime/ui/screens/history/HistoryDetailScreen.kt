@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
@@ -25,7 +26,6 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
@@ -46,9 +46,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.pushprime.model.SessionEntity
+import com.pushprime.ui.components.RamboostTextField
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -255,20 +257,22 @@ private fun EditSection(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text("Edit Session", fontWeight = FontWeight.Bold)
-        OutlinedTextField(
+        RamboostTextField(
             value = notes,
             onValueChange = onNotesChange,
             modifier = Modifier.fillMaxWidth(),
-            label = { Text("Notes") }
+            label = "Notes"
         )
-        OutlinedTextField(
+        RamboostTextField(
             value = durationMinutes.toString(),
             onValueChange = { value ->
                 val parsed = value.toIntOrNull() ?: durationMinutes
                 onDurationChange(parsed.coerceAtLeast(1))
             },
             modifier = Modifier.fillMaxWidth(),
-            label = { Text("Duration (mins)") }
+            label = "Duration (mins)",
+            required = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
         )
         if (session.activityType.equals("SPORT", ignoreCase = true)) {
             Text("Effort Level", fontWeight = FontWeight.SemiBold)

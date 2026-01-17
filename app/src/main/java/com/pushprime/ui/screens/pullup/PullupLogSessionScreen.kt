@@ -21,7 +21,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -35,6 +34,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.pushprime.ui.components.RamboostTextField
+import com.pushprime.ui.validation.rememberFormValidationState
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -47,7 +48,7 @@ fun PullupLogSessionScreen(
     var addedWeightText by remember { mutableStateOf("") }
     var restText by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf("") }
-    var showValidation by remember { mutableStateOf(false) }
+    val validation = rememberFormValidationState()
 
     val repsBySet = repsInputs.map { it.toIntOrNull() ?: 0 }
     val totalReps = repsBySet.sum()
@@ -55,6 +56,8 @@ fun PullupLogSessionScreen(
     val volumeScore = calculateVolumeScore(totalReps, addedWeightKg)
 
     val hasValidSet = repsBySet.any { it > 0 }
+    val showSetError = validation.shouldShowError("sets") && !hasValidSet
+    val isFormValid = hasValidSet
 
     Scaffold(
         topBar = {
@@ -81,10 +84,13 @@ fun PullupLogSessionScreen(
             Text("Sets", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             repsInputs.forEachIndexed { index, value ->
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                    TextField(
+                    RamboostTextField(
                         value = value,
-                        onValueChange = { repsInputs[index] = it.filter { ch -> ch.isDigit() } },
-                        label = { Text("Set ${index + 1}") },
+                        onValueChange = {
+                            repsInputs[index] = it.filter { ch -> ch.isDigit() }
+                            validation.markTouched("sets")
+                        },
+                        label = "Set ${index + 1}",
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         modifier = Modifier.weight(1f)
                     )
@@ -99,40 +105,44 @@ fun PullupLogSessionScreen(
                 Text("Add Set")
             }
 
-            TextField(
+            RamboostTextField(
                 value = addedWeightText,
                 onValueChange = { addedWeightText = it.filter { ch -> ch.isDigit() || ch == '.' } },
-                label = { Text("Added weight (kg)") },
+                label = "Added weight (kg)",
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth()
             )
 
-            TextField(
+            RamboostTextField(
                 value = restText,
                 onValueChange = { restText = it.filter { ch -> ch.isDigit() } },
-                label = { Text("Rest time (seconds)") },
+                label = "Rest time (seconds)",
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth()
             )
 
-            TextField(
+            RamboostTextField(
                 value = notes,
                 onValueChange = { notes = it },
-                label = { Text("Notes (optional)") },
+                label = "Notes (optional)",
                 modifier = Modifier.fillMaxWidth()
             )
 
             Text("Total reps: $totalReps", fontWeight = FontWeight.Bold)
             Text("Volume score: $volumeScore", color = Color.Gray)
 
-            if (showValidation && !hasValidSet) {
-                Text("Add at least one set with reps.", color = Color.Red)
+            if (showSetError) {
+                Text(
+                    text = "Add at least one set with reps.",
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
             }
 
             Button(
                 onClick = {
+                    validation.markSubmitAttempt()
                     if (!hasValidSet) {
-                        showValidation = true
                         return@Button
                     }
                     viewModel.saveSession(
@@ -143,7 +153,8 @@ fun PullupLogSessionScreen(
                     )
                     onNavigateBack()
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                enabled = isFormValid
             ) {
                 Text("Save Session")
             }

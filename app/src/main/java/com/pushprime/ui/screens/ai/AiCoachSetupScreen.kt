@@ -22,7 +22,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -37,6 +36,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.pushprime.data.AiCoachMode
+import com.pushprime.ui.components.RamboostTextField
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,6 +48,8 @@ fun AiCoachSetupScreen(
     val state by viewModel.state.collectAsState()
     var apiKeyInput by remember { mutableStateOf(viewModel.getSavedKey().orEmpty()) }
     var providerExpanded by remember { mutableStateOf(false) }
+    val isModelNameValid = !settings?.modelName.isNullOrBlank()
+    val isApiKeyValid = apiKeyInput.trim().isNotEmpty()
 
     Scaffold(
         topBar = {
@@ -96,6 +98,8 @@ fun AiCoachSetupScreen(
             }
 
             if (settings?.mode == AiCoachMode.OPENAI) {
+                val modelNameError = if (!isModelNameValid) "Model name is required" else null
+                val apiKeyError = if (!isApiKeyValid) "API key is required" else null
                 Text("Provider", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
                 OutlinedButton(onClick = { providerExpanded = true }, modifier = Modifier.fillMaxWidth()) {
                     Text("OpenAI")
@@ -107,25 +111,29 @@ fun AiCoachSetupScreen(
                     DropdownMenuItem(text = { Text("Custom provider (future)") }, onClick = { providerExpanded = false }, enabled = false)
                 }
 
-                TextField(
+                RamboostTextField(
                     value = settings?.modelName.orEmpty(),
                     onValueChange = { viewModel.updateModelName(it) },
-                    label = { Text("Model name") },
+                    label = "Model name",
+                    required = true,
+                    errorText = modelNameError,
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                TextField(
+                RamboostTextField(
                     value = apiKeyInput,
                     onValueChange = { apiKeyInput = it },
-                    label = { Text("API key") },
+                    label = "API key",
+                    required = true,
+                    errorText = apiKeyError,
                     modifier = Modifier.fillMaxWidth(),
                     visualTransformation = PasswordVisualTransformation()
                 )
 
                 Button(
-                    onClick = { viewModel.verifyAndSaveKey(apiKeyInput) },
+                    onClick = { viewModel.verifyAndSaveKey(apiKeyInput.trim()) },
                     modifier = Modifier.fillMaxWidth(),
-                    enabled = !state.isVerifying
+                    enabled = isApiKeyValid && isModelNameValid && !state.isVerifying
                 ) {
                     Text(if (state.isVerifying) "Verifying..." else "Verify & Save")
                 }

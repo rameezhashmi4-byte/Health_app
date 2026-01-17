@@ -16,7 +16,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -27,12 +26,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.pushprime.ui.components.RamboostTextField
 import com.pushprime.model.ExperienceLevel
 import com.pushprime.model.FitnessGoal
 import com.pushprime.model.SexOption
+import com.pushprime.ui.validation.FormValidation
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,8 +45,6 @@ fun ProfileSetupScreen(
     val step by viewModel.step.collectAsState()
     val isSaving by viewModel.isSaving.collectAsState()
     val error by viewModel.error.collectAsState()
-
-    var showErrors by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -71,15 +71,8 @@ fun ProfileSetupScreen(
             )
             2 -> BodyStatsStep(
                 viewModel = viewModel,
-                showErrors = showErrors,
                 onBack = { viewModel.prevStep() },
-                onContinue = {
-                    showErrors = true
-                    if ((viewModel.weightKg ?: 0.0) > 0 && (viewModel.heightCm ?: 0.0) > 0) {
-                        viewModel.nextStep()
-                        showErrors = false
-                    }
-                }
+                onContinue = { viewModel.nextStep() }
             )
             3 -> PermissionsStep(
                 viewModel = viewModel,
@@ -135,8 +128,7 @@ private fun BasicDetailsStep(
     var fullName by rememberSaveable { mutableStateOf("") }
     var selectedGoal by rememberSaveable { mutableStateOf<FitnessGoal?>(null) }
     var selectedExperience by rememberSaveable { mutableStateOf<ExperienceLevel?>(null) }
-    val isFullNameValid = fullName.trim().isNotEmpty()
-    val shouldShowNameError = fullName.isNotEmpty() && !isFullNameValid
+    val isFullNameValid = !FormValidation.isBlank(fullName)
     val isFormValid = isFullNameValid && selectedGoal != null && selectedExperience != null
 
     Text(
@@ -144,13 +136,13 @@ private fun BasicDetailsStep(
         style = MaterialTheme.typography.headlineSmall,
         fontWeight = FontWeight.Bold
     )
-    OutlinedTextField(
+    RamboostTextField(
         value = fullName,
         onValueChange = { fullName = it },
-        label = { Text("Full Name") },
+        label = "Full Name",
         modifier = Modifier.fillMaxWidth(),
-        singleLine = true,
-        isError = shouldShowNameError
+        fieldModifier = Modifier.testTag("profile_setup_full_name"),
+        required = true
     )
     GoalSelector(
         selected = selectedGoal,
@@ -164,14 +156,18 @@ private fun BasicDetailsStep(
         OutlinedButton(onClick = onBack, modifier = Modifier.weight(1f)) { Text("Back") }
         Button(
             onClick = {
-                onContinue(
-                    fullName.trim(),
-                    selectedGoal ?: return@Button,
-                    selectedExperience ?: return@Button
-                )
+                if (isFormValid) {
+                    onContinue(
+                        FormValidation.trim(fullName),
+                        selectedGoal ?: return@Button,
+                        selectedExperience ?: return@Button
+                    )
+                }
             },
             enabled = isFormValid,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier
+                .weight(1f)
+                .testTag("profile_setup_continue")
         ) {
             Text("Continue")
         }
@@ -181,37 +177,44 @@ private fun BasicDetailsStep(
 @Composable
 private fun BodyStatsStep(
     viewModel: ProfileSetupViewModel,
-    showErrors: Boolean,
     onBack: () -> Unit,
     onContinue: () -> Unit
 ) {
+    val isWeightValid = (viewModel.weightKg ?: 0.0) > 0
+    val isHeightValid = (viewModel.heightCm ?: 0.0) > 0
+    val weightError = if (!isWeightValid) "Enter a valid weight" else null
+    val heightError = if (!isHeightValid) "Enter a valid height" else null
+    val isFormValid = isWeightValid && isHeightValid
+
     Text(
         text = "Body Stats",
         style = MaterialTheme.typography.headlineSmall,
         fontWeight = FontWeight.Bold
     )
-    OutlinedTextField(
+    RamboostTextField(
         value = viewModel.weightKg?.toString().orEmpty(),
         onValueChange = { viewModel.weightKg = it.toDoubleOrNull() },
-        label = { Text("Weight (kg)") },
+        label = "Weight (kg)",
         modifier = Modifier.fillMaxWidth(),
+        required = true,
+        errorText = weightError,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-        singleLine = true,
-        isError = showErrors && (viewModel.weightKg ?: 0.0) <= 0
+        singleLine = true
     )
-    OutlinedTextField(
+    RamboostTextField(
         value = viewModel.heightCm?.toString().orEmpty(),
         onValueChange = { viewModel.heightCm = it.toDoubleOrNull() },
-        label = { Text("Height (cm)") },
+        label = "Height (cm)",
         modifier = Modifier.fillMaxWidth(),
+        required = true,
+        errorText = heightError,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-        singleLine = true,
-        isError = showErrors && (viewModel.heightCm ?: 0.0) <= 0
+        singleLine = true
     )
-    OutlinedTextField(
+    RamboostTextField(
         value = viewModel.age?.toString().orEmpty(),
         onValueChange = { viewModel.age = it.toIntOrNull() },
-        label = { Text("Age (optional)") },
+        label = "Age (optional)",
         modifier = Modifier.fillMaxWidth(),
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
         singleLine = true
@@ -222,7 +225,17 @@ private fun BodyStatsStep(
     )
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         OutlinedButton(onClick = onBack, modifier = Modifier.weight(1f)) { Text("Back") }
-        Button(onClick = onContinue, modifier = Modifier.weight(1f)) { Text("Continue") }
+        Button(
+            onClick = {
+                if (isFormValid) {
+                    onContinue()
+                }
+            },
+            modifier = Modifier.weight(1f),
+            enabled = isFormValid
+        ) {
+            Text("Continue")
+        }
     }
 }
 

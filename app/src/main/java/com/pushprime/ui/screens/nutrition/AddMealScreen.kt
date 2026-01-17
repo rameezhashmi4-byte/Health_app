@@ -20,7 +20,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -34,6 +33,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.pushprime.model.MealType
+import com.pushprime.ui.components.RamboostTextField
+import com.pushprime.ui.validation.rememberFormValidationState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -46,11 +47,12 @@ fun AddMealScreen(
     var proteinText by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf("") }
     var mealType by remember { mutableStateOf(MealType.BREAKFAST) }
-    var showValidation by remember { mutableStateOf(false) }
+    val validation = rememberFormValidationState()
 
     val calories = caloriesText.toIntOrNull()
     val protein = proteinText.toIntOrNull()
     val isValid = (calories ?: 0) > 0 || (protein ?: 0) > 0
+    val showMacroError = validation.shouldShowError("macros") && !isValid
 
     Scaffold(
         topBar = {
@@ -74,25 +76,31 @@ fun AddMealScreen(
                 .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            TextField(
+            RamboostTextField(
                 value = name,
                 onValueChange = { name = it },
-                label = { Text("Meal name") },
+                label = "Meal name",
                 modifier = Modifier.fillMaxWidth()
             )
 
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                TextField(
+                RamboostTextField(
                     value = caloriesText,
-                    onValueChange = { caloriesText = it.filter { ch -> ch.isDigit() } },
-                    label = { Text("Calories") },
+                    onValueChange = {
+                        caloriesText = it.filter { ch -> ch.isDigit() }
+                        validation.markTouched("macros")
+                    },
+                    label = "Calories",
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.weight(1f)
                 )
-                TextField(
+                RamboostTextField(
                     value = proteinText,
-                    onValueChange = { proteinText = it.filter { ch -> ch.isDigit() } },
-                    label = { Text("Protein (g)") },
+                    onValueChange = {
+                        proteinText = it.filter { ch -> ch.isDigit() }
+                        validation.markTouched("macros")
+                    },
+                    label = "Protein (g)",
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.weight(1f)
                 )
@@ -113,15 +121,19 @@ fun AddMealScreen(
                 }
             }
 
-            TextField(
+            RamboostTextField(
                 value = notes,
                 onValueChange = { notes = it },
-                label = { Text("Notes (optional)") },
+                label = "Notes (optional)",
                 modifier = Modifier.fillMaxWidth()
             )
 
-            if (showValidation && !isValid) {
-                Text("Please enter calories or protein.", color = Color.Red)
+            if (showMacroError) {
+                Text(
+                    text = "Please enter calories or protein.",
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
             }
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -129,8 +141,8 @@ fun AddMealScreen(
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Button(
                     onClick = {
+                        validation.markSubmitAttempt()
                         if (!isValid) {
-                            showValidation = true
                             return@Button
                         }
                         viewModel.saveMeal(
@@ -142,7 +154,8 @@ fun AddMealScreen(
                         )
                         onNavigateBack()
                     },
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    enabled = isValid
                 ) {
                     Text("Save")
                 }

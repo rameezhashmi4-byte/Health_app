@@ -17,7 +17,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -31,6 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.pushprime.ui.components.RamboostTextField
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,6 +41,11 @@ fun NutritionGoalsScreen(
     val uiState by viewModel.uiState.collectAsState()
     var caloriesText by remember(uiState.calorieGoal) { mutableStateOf(uiState.calorieGoal.toString()) }
     var proteinText by remember(uiState.proteinGoal) { mutableStateOf(uiState.proteinGoal.toString()) }
+    val caloriesValue = caloriesText.toIntOrNull() ?: 0
+    val proteinValue = proteinText.toIntOrNull() ?: 0
+    val caloriesError = if (caloriesValue <= 0) "Enter calorie goal" else null
+    val proteinError = if (proteinValue <= 0) "Enter protein goal" else null
+    val isFormValid = caloriesValue > 0 && proteinValue > 0
 
     Scaffold(
         topBar = {
@@ -70,18 +75,22 @@ fun NutritionGoalsScreen(
                 fontWeight = FontWeight.Bold
             )
 
-            TextField(
+            RamboostTextField(
                 value = caloriesText,
                 onValueChange = { caloriesText = it.filter { ch -> ch.isDigit() } },
-                label = { Text("Calorie goal") },
+                label = "Calorie goal",
+                required = true,
+                errorText = caloriesError,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth()
             )
 
-            TextField(
+            RamboostTextField(
                 value = proteinText,
                 onValueChange = { proteinText = it.filter { ch -> ch.isDigit() } },
-                label = { Text("Protein goal (g)") },
+                label = "Protein goal (g)",
+                required = true,
+                errorText = proteinError,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth()
             )
@@ -89,12 +98,11 @@ fun NutritionGoalsScreen(
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
                 Button(
                     onClick = {
-                        val calories = caloriesText.toIntOrNull() ?: uiState.calorieGoal
-                        val protein = proteinText.toIntOrNull() ?: uiState.proteinGoal
-                        viewModel.saveGoals(calories, protein)
+                        viewModel.saveGoals(caloriesValue, proteinValue)
                         onNavigateBack()
                     },
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    enabled = isFormValid
                 ) {
                     Text("Save")
                 }

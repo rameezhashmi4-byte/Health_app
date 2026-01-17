@@ -34,7 +34,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -56,6 +55,7 @@ import androidx.core.content.FileProvider
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.pushprime.model.PoseTag
+import com.pushprime.ui.components.RamboostTextField
 import com.pushprime.ui.theme.PushPrimeColors
 import kotlinx.coroutines.launch
 import java.io.File
@@ -219,10 +219,10 @@ fun AddProgressPhotoScreen(
                     Text(dateFormat.format(takenAt))
                 }
 
-                TextField(
+                RamboostTextField(
                     value = notes,
                     onValueChange = { notes = it },
-                    label = { Text("Notes (optional)") },
+                    label = "Notes (optional)",
                     modifier = Modifier.fillMaxWidth()
                 )
 

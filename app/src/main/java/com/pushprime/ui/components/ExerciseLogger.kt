@@ -84,22 +84,20 @@ fun ExerciseLogger(
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 
-                OutlinedTextField(
+                RamboostTextField(
                     value = value,
                     onValueChange = { 
                         if (it.all { char -> char.isDigit() }) {
                             value = it
                         }
                     },
-                    label = { 
-                        Text(if (exercise.isTimeBased) "Duration (seconds)" else "Reps")
-                    },
+                    label = if (exercise.isTimeBased) "Duration (seconds)" else "Reps",
                     modifier = Modifier.fillMaxWidth(),
+                    required = true,
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Number
-                    ),
-                    shape = RoundedCornerShape(16.dp)
+                    )
                 )
                 
                 Spacer(modifier = Modifier.height(12.dp))

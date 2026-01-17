@@ -21,7 +21,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -42,13 +41,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.pushprime.data.OpenAiKeyStore
 import com.pushprime.data.VoiceCoachSettingsRepository
+import com.pushprime.ui.components.RamboostTextField
 import com.pushprime.ui.components.InfoCard
 import com.pushprime.ui.theme.PushPrimeColors
+import com.pushprime.ui.validation.FormValidation
+import com.pushprime.ui.validation.rememberFormValidationState
 import com.pushprime.voice.CoachFrequency
 import com.pushprime.voice.CoachPersonality
 import com.pushprime.voice.VoiceCoachPhrases
@@ -286,76 +289,32 @@ fun VoiceCoachSettingsScreen(
 
             if (settings.provider == VoiceProviderType.AI_OPENAI) {
                 item {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = PushPrimeColors.Surface)
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            Text(
-                                text = "OpenAI API Key",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Medium
-                            )
-                            OutlinedTextField(
-                                value = apiKeyInput,
-                                onValueChange = { apiKeyInput = it },
-                                modifier = Modifier.fillMaxWidth(),
-                                placeholder = { Text(if (hasSavedKey) "Saved \u2022\u2022\u2022\u2022" else "sk-...") },
-                                singleLine = true,
-                                visualTransformation = PasswordVisualTransformation()
-                            )
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Button(
-                                    onClick = {
-                                        val trimmed = apiKeyInput.trim()
-                                        if (trimmed.length < 10) {
-                                            scope.launch {
-                                                snackbarHostState.showSnackbar("Enter a valid OpenAI API key.")
-                                            }
-                                            return@Button
-                                        }
-                                        val result = keyStore.saveApiKey(trimmed)
-                                        if (result.isSuccess) {
-                                            apiKeyInput = ""
-                                            hasSavedKey = true
-                                            scope.launch {
-                                                snackbarHostState.showSnackbar("API key saved.")
-                                            }
-                                        } else {
-                                            scope.launch {
-                                                snackbarHostState.showSnackbar("Failed to save key.")
-                                            }
-                                        }
-                                    }
-                                ) {
-                                    Text("Verify & Save")
+                    OpenAiKeySection(
+                        apiKeyInput = apiKeyInput,
+                        hasSavedKey = hasSavedKey,
+                        onApiKeyChange = { apiKeyInput = it },
+                        onSave = { trimmed ->
+                            val result = keyStore.saveApiKey(trimmed)
+                            if (result.isSuccess) {
+                                apiKeyInput = ""
+                                hasSavedKey = true
+                                scope.launch {
+                                    snackbarHostState.showSnackbar("API key saved.")
                                 }
-                                if (hasSavedKey) {
-                                    TextButton(
-                                        onClick = {
-                                            keyStore.clearApiKey()
-                                            hasSavedKey = false
-                                            scope.launch {
-                                                snackbarHostState.showSnackbar("API key cleared.")
-                                            }
-                                        }
-                                    ) {
-                                        Text("Clear")
-                                    }
+                            } else {
+                                scope.launch {
+                                    snackbarHostState.showSnackbar("Failed to save key.")
                                 }
                             }
+                        },
+                        onClear = {
+                            keyStore.clearApiKey()
+                            hasSavedKey = false
+                            scope.launch {
+                                snackbarHostState.showSnackbar("API key cleared.")
+                            }
                         }
-                    }
+                    )
                 }
             }
 
@@ -390,6 +349,78 @@ private fun SectionTitle(text: String) {
         fontWeight = FontWeight.Bold,
         modifier = Modifier.padding(bottom = 8.dp)
     )
+}
+
+@Composable
+internal fun OpenAiKeySection(
+    apiKeyInput: String,
+    hasSavedKey: Boolean,
+    onApiKeyChange: (String) -> Unit,
+    onSave: (String) -> Unit,
+    onClear: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val validation = rememberFormValidationState()
+    val isApiKeyValid = FormValidation.hasMinLength(apiKeyInput, 10)
+    val showError = validation.shouldShowError("openai_key") && !isApiKeyValid
+
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = PushPrimeColors.Surface)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text(
+                text = "OpenAI API Key",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Medium
+            )
+            RamboostTextField(
+                value = apiKeyInput,
+                onValueChange = {
+                    onApiKeyChange(it)
+                    validation.markTouched("openai_key")
+                },
+                label = "API Key",
+                placeholder = if (hasSavedKey) "Saved \u2022\u2022\u2022\u2022" else "sk-...",
+                errorText = if (!isApiKeyValid) "Enter a valid OpenAI API key." else null,
+                showError = showError,
+                visualTransformation = PasswordVisualTransformation(),
+                fieldModifier = Modifier.testTag("voice_openai_key")
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Button(
+                    onClick = {
+                        validation.markSubmitAttempt()
+                        if (isApiKeyValid) {
+                            onSave(FormValidation.trim(apiKeyInput))
+                        }
+                    },
+                    enabled = isApiKeyValid,
+                    modifier = Modifier.testTag("voice_openai_save")
+                ) {
+                    Text("Verify & Save")
+                }
+                if (hasSavedKey) {
+                    TextButton(
+                        onClick = onClear,
+                        modifier = Modifier.testTag("voice_openai_clear")
+                    ) {
+                        Text("Clear")
+                    }
+                }
+            }
+        }
+    }
 }
 
 @Composable

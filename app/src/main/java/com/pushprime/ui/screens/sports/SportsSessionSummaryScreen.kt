@@ -17,7 +17,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -35,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import com.pushprime.model.Intensity
 import com.pushprime.model.SportType
 import com.pushprime.model.SportsSession
+import com.pushprime.ui.components.RamboostTextField
 import com.pushprime.ui.theme.PushPrimeColors
 import kotlin.math.roundToInt
 
@@ -129,14 +129,14 @@ fun SportsSessionSummaryScreen(
                 }
             }
 
-            OutlinedTextField(
+            RamboostTextField(
                 value = notes,
                 onValueChange = { notes = it },
-                label = { Text("Notes (optional)") },
-                modifier = Modifier
+                label = "Notes (optional)",
+                singleLine = false,
+                fieldModifier = Modifier
                     .fillMaxWidth()
-                    .height(140.dp),
-                shape = RoundedCornerShape(16.dp)
+                    .height(140.dp)
             )
 
             Spacer(modifier = Modifier.height(8.dp))

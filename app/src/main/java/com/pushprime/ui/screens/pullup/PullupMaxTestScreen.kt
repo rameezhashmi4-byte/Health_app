@@ -19,7 +19,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -33,6 +32,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.pushprime.ui.components.RamboostTextField
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,10 +42,11 @@ fun PullupMaxTestScreen(
 ) {
     var maxRepsText by remember { mutableStateOf("") }
     var formRating by remember { mutableStateOf<Int?>(null) }
-    var showValidation by remember { mutableStateOf(false) }
     val isNewPr by viewModel.isNewPr.collectAsState()
 
     val maxReps = maxRepsText.toIntOrNull() ?: 0
+    val maxRepsError = if (maxReps <= 0) "Enter a max reps value." else null
+    val isFormValid = maxReps > 0
 
     Scaffold(
         topBar = {
@@ -69,10 +70,14 @@ fun PullupMaxTestScreen(
                 .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            TextField(
+            RamboostTextField(
                 value = maxRepsText,
-                onValueChange = { maxRepsText = it.filter { ch -> ch.isDigit() } },
-                label = { Text("Max reps achieved") },
+                onValueChange = {
+                    maxRepsText = it.filter { ch -> ch.isDigit() }
+                },
+                label = "Max reps achieved",
+                required = true,
+                errorText = maxRepsError,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth()
             )
@@ -92,10 +97,6 @@ fun PullupMaxTestScreen(
                 }
             }
 
-            if (showValidation && maxReps <= 0) {
-                Text("Enter a max reps value.", color = Color.Red)
-            }
-
             if (isNewPr) {
                 Text("🔥 New PR!", color = Color(0xFFFF6D00), fontWeight = FontWeight.Bold)
             }
@@ -103,12 +104,12 @@ fun PullupMaxTestScreen(
             Button(
                 onClick = {
                     if (maxReps <= 0) {
-                        showValidation = true
                         return@Button
                     }
                     viewModel.saveMaxTest(maxReps, formRating)
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                enabled = isFormValid
             ) {
                 Text("Save Test")
             }

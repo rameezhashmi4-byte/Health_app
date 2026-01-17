@@ -35,7 +35,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -49,6 +48,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.pushprime.ui.components.RamboostTextField
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.pushprime.model.NutritionEntry
@@ -286,22 +286,28 @@ fun QuickAddDialog(
     onSave: (Int) -> Unit
 ) {
     var valueText by remember { mutableStateOf("") }
+    val value = valueText.toIntOrNull() ?: 0
+    val valueError = if (value <= 0) "Enter a value" else null
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(title, fontWeight = FontWeight.Bold) },
         text = {
-            TextField(
+            RamboostTextField(
                 value = valueText,
                 onValueChange = { valueText = it.filter { ch -> ch.isDigit() } },
-                placeholder = { Text("Enter value") },
+                label = "Value",
+                required = true,
+                errorText = valueError,
+                placeholder = "Enter value",
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
             )
         },
         confirmButton = {
-            TextButton(onClick = {
-                val value = valueText.toIntOrNull() ?: 0
-                if (value > 0) onSave(value)
-            }) {
+            val isFormValid = value > 0
+            TextButton(
+                onClick = { onSave(value) },
+                enabled = isFormValid
+            ) {
                 Text("Save")
             }
         },

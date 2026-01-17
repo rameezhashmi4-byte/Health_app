@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import com.pushprime.ai.PredictionHelper
 import com.pushprime.data.LocalStore
 import com.pushprime.model.User
+import com.pushprime.ui.components.RamboostTextField
 import com.pushprime.ui.theme.PushPrimeColors
 
 /**
@@ -115,16 +116,16 @@ fun CoachingScreen(
                         color = PushPrimeColors.OnSurface
                     )
                     Spacer(modifier = Modifier.height(12.dp))
-                    OutlinedTextField(
+                    RamboostTextField(
                         value = age,
                         onValueChange = { if (it.all { char -> char.isDigit() }) age = it },
-                        label = { Text("Enter your age") },
+                        label = "Enter your age",
+                        required = true,
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Number
-                        ),
-                        shape = RoundedCornerShape(20.dp)
+                        )
                     )
                 }
             }

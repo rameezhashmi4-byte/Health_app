@@ -23,7 +23,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -40,6 +39,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.pushprime.ui.components.RamboostTextField
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.platform.LocalContext
 import com.pushprime.coach.CoachSettings
@@ -186,17 +186,23 @@ fun AiCoachChatScreen(
             }
 
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-                TextField(
+                val isMessageValid = input.trim().isNotEmpty()
+                RamboostTextField(
                     value = input,
                     onValueChange = { input = it },
-                    placeholder = { Text("Ask your coach...") },
+                    label = "Message",
+                    placeholder = "Ask your coach...",
                     modifier = Modifier.weight(1f)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                IconButton(onClick = {
-                    viewModel.sendMessage(input)
-                    input = ""
-                }) {
+                IconButton(
+                    onClick = {
+                        val message = input.trim()
+                        viewModel.sendMessage(message)
+                        input = ""
+                    },
+                    enabled = isMessageValid
+                ) {
                     Icon(Icons.Default.Send, contentDescription = "Send")
                 }
             }

@@ -41,6 +41,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -73,9 +74,11 @@ import com.pushprime.model.UserProfile
 import com.pushprime.ui.components.DailyDataPoint
 import com.pushprime.ui.components.WeeklyTrendChart
 import com.pushprime.ui.screens.common.ErrorScreen
+import com.pushprime.ui.validation.FormValidation
 import kotlinx.coroutines.launch
 import java.time.ZoneId
 import java.util.Date
+import androidx.annotation.VisibleForTesting
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -672,7 +675,8 @@ private fun ActionsSection(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun EditProfileSheet(
+@VisibleForTesting
+internal fun EditProfileSheet(
     profile: UserProfile,
     isSaving: Boolean,
     onDismiss: () -> Unit,
@@ -684,11 +688,10 @@ private fun EditProfileSheet(
     var height by remember(profile) { mutableStateOf(profile.heightCm.takeIf { it > 0 }?.toInt()?.toString().orEmpty()) }
     var selectedGoal by remember(profile) { mutableStateOf(profile.goal) }
     var selectedExperience by remember(profile) { mutableStateOf(profile.experience) }
-    var attemptedSave by remember { mutableStateOf(false) }
 
     val weightValue = weight.toDoubleOrNull() ?: 0.0
     val heightValue = height.toDoubleOrNull() ?: profile.heightCm
-    val isNameValid = name.isNotBlank()
+    val isNameValid = !FormValidation.isBlank(name)
     val isWeightValid = weightValue > 0.0
     val canSave = isNameValid && isWeightValid && !isSaving
 
@@ -712,7 +715,9 @@ private fun EditProfileSheet(
                 value = name,
                 onValueChange = { name = it },
                 label = "Name",
-                error = if (attemptedSave && !isNameValid) "Name is required" else null
+                required = true,
+                errorText = if (!isNameValid) "Name is required" else null,
+                fieldModifier = Modifier.testTag("profile_edit_name")
             )
 
             DropdownField(
@@ -735,24 +740,26 @@ private fun EditProfileSheet(
                 value = weight,
                 onValueChange = { weight = it },
                 label = "Weight (kg)",
-                error = if (attemptedSave && !isWeightValid) "Enter a valid weight" else null
+                required = true,
+                errorText = if (!isWeightValid) "Enter a valid weight" else null,
+                fieldModifier = Modifier.testTag("profile_edit_weight")
             )
 
             RamboostTextField(
                 value = height,
                 onValueChange = { height = it },
                 label = "Height (cm)",
-                enabled = false
+                enabled = false,
+                fieldModifier = Modifier.testTag("profile_edit_height")
             )
 
             RamboostPrimaryButton(
                 text = "Save",
                 onClick = {
-                    attemptedSave = true
                     if (canSave) {
                         onSave(
                             ProfileEditInput(
-                                name = name.trim(),
+                                name = FormValidation.trim(name),
                                 goal = selectedGoal,
                                 experience = selectedExperience,
                                 weightKg = weightValue,
@@ -762,7 +769,8 @@ private fun EditProfileSheet(
                     }
                 },
                 enabled = canSave,
-                loading = isSaving
+                loading = isSaving,
+                modifier = Modifier.testTag("profile_edit_save")
             )
         }
     }

@@ -78,6 +78,28 @@ git checkout -b new-branch-name
 - Stories row should scroll horizontally
 - All screens should be accessible
 
+## QA Checklist
+
+### Validation Rules
+- Required fields must trim input before validation.
+- Required errors appear only after user touch or submit.
+- Minimum-length rules (e.g., API keys) use trimmed values.
+
+### Button Gating Rules
+- Continue/Save stays disabled when required fields are empty/invalid.
+- Enable buttons only when all required fields are valid.
+- Avoid enabling submit buttons via side effects.
+
+### Touched + Submit Behaviour
+- Touching a field should not show errors until blur/touch state is registered.
+- Submitting a form should show all relevant errors.
+- Error text should be concise and consistent across forms.
+
+### Typography Rules
+- Do not hardcode font sizes in UI; use `MaterialTheme.typography`.
+- Use themed weights and styles before custom text sizes.
+- Verify text styles in new screens during review.
+
 ### Performance
 - Calculations moved to background threads
 - State optimized with `remember` and `LaunchedEffect`

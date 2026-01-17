@@ -9,6 +9,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Error
@@ -18,11 +19,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -38,7 +41,10 @@ import com.google.firebase.auth.FirebaseAuthWeakPasswordException
 import com.pushprime.R
 import com.pushprime.auth.AuthMode
 import com.pushprime.auth.AuthViewModel
+import com.pushprime.ui.components.RamboostTextField
 import com.pushprime.ui.components.Spacing
+import com.pushprime.ui.validation.FormValidation
+import com.pushprime.ui.validation.rememberFormValidationState
 
 private enum class LoadingAction {
     None,
@@ -55,23 +61,17 @@ fun AuthScreen(
 ) {
     val context = LocalContext.current
     val activity = context as? Activity
+    val focusManager = LocalFocusManager.current
+    val passwordFocusRequester = remember { FocusRequester() }
 
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     
-    // Validation states
-    var emailTouched by remember { mutableStateOf(false) }
-    var passwordTouched by remember { mutableStateOf(false) }
-    var submittedOnce by remember { mutableStateOf(false) }
-    var emailHadFocus by remember { mutableStateOf(false) }
-    var passwordHadFocus by remember { mutableStateOf(false) }
-    
-    var emailError by remember { mutableStateOf<String?>(null) }
-    var passwordError by remember { mutableStateOf<String?>(null) }
     var authError by remember { mutableStateOf<String?>(null) }
     
     var loadingAction by remember { mutableStateOf(LoadingAction.None) }
     var passwordVisible by remember { mutableStateOf(false) }
+    val validation = rememberFormValidationState()
     
     val viewModelLoading by authViewModel.isLoading.collectAsState()
     val viewModelAuthError by authViewModel.authError.collectAsState()
@@ -114,23 +114,17 @@ fun AuthScreen(
         }
     }
 
-    fun validateFields(): Boolean {
-        val isEmailValid = email.isNotBlank() && Patterns.EMAIL_ADDRESS.matcher(email).matches()
-        emailError = if (!isEmailValid) "Enter a valid email address" else null
-        
-        val passwordMessage = when {
-            password.isBlank() -> "Password is required"
-            authMode == AuthMode.SIGN_UP && password.length < 6 -> "Password must be at least 6 characters"
-            else -> null
-        }
-        passwordError = passwordMessage
-        
-        return emailError == null && passwordError == null
-    }
+    val trimmedEmail = FormValidation.trim(email)
+    val isEmailInvalid = FormValidation.isBlank(trimmedEmail) ||
+        !Patterns.EMAIL_ADDRESS.matcher(trimmedEmail).matches()
+    val emailError = if (isEmailInvalid) "Enter a valid email address" else null
 
-    // Effect to clear errors when fields change
-    LaunchedEffect(email) { if (emailTouched || submittedOnce) validateFields() }
-    LaunchedEffect(password) { if (passwordTouched || submittedOnce) validateFields() }
+    val passwordError = when {
+        FormValidation.isBlank(password) -> "Password is required"
+        authMode == AuthMode.SIGN_UP && password.length < 6 -> "Password must be at least 6 characters"
+        else -> null
+    }
+    val isFormValid = !isEmailInvalid && passwordError == null
 
     val googleLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
@@ -273,84 +267,70 @@ fun AuthScreen(
                 Column(
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    OutlinedTextField(
+                    RamboostTextField(
                         value = email,
                         onValueChange = {
                             email = it
                             authViewModel.clearAuthError()
                         },
-                        label = { Text("Email") },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .onFocusChanged {
-                                if (it.isFocused) {
-                                    emailHadFocus = true
-                                } else if (emailHadFocus) {
-                                    emailTouched = true
-                                }
-                            },
-                        shape = RoundedCornerShape(16.dp),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                        singleLine = true,
-                        isError = emailError != null && (emailTouched || submittedOnce),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color.Black,
-                            focusedLabelColor = Color.Black,
-                            cursorColor = Color.Black
-                        )
+                        label = "Email",
+                        modifier = Modifier.fillMaxWidth(),
+                        required = true,
+                        errorText = emailError,
+                        showError = validation.shouldShowError("email"),
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Email,
+                            imeAction = ImeAction.Next
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onNext = { passwordFocusRequester.requestFocus() }
+                        ),
+                        onFocusChanged = { state ->
+                            if (!state.isFocused) {
+                                validation.markTouched("email")
+                            }
+                        }
                     )
-                    if (emailError != null && (emailTouched || submittedOnce)) {
-                        Text(
-                            emailError!!,
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(start = 8.dp)
-                        )
-                    }
 
                     Spacer(modifier = Modifier.height(Spacing.md))
-                        OutlinedTextField(
-                            value = password,
-                            onValueChange = {
-                                password = it
-                                authViewModel.clearAuthError()
-                            },
-                            label = { Text("Password") },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .onFocusChanged {
-                                    if (it.isFocused) {
-                                        passwordHadFocus = true
-                                    } else if (passwordHadFocus) {
-                                        passwordTouched = true
-                                    }
-                                },
-                            shape = RoundedCornerShape(16.dp),
-                            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                            trailingIcon = {
-                                IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                                    Icon(
-                                        imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                                        contentDescription = null
-                                    )
-                                }
-                            },
-                            singleLine = true,
-                            isError = passwordError != null && (passwordTouched || submittedOnce),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color.Black,
-                                focusedLabelColor = Color.Black,
-                                cursorColor = Color.Black
-                            )
-                        )
-                        if (passwordError != null && (passwordTouched || submittedOnce)) {
-                            Text(
-                                passwordError!!,
-                                color = MaterialTheme.colorScheme.error,
-                                style = MaterialTheme.typography.bodySmall,
-                                modifier = Modifier.padding(start = 8.dp)
-                            )
+                    RamboostTextField(
+                        value = password,
+                        onValueChange = {
+                            password = it
+                            authViewModel.clearAuthError()
+                        },
+                        label = "Password",
+                        modifier = Modifier.fillMaxWidth(),
+                        required = true,
+                        errorText = passwordError,
+                        showError = validation.shouldShowError("password"),
+                        visualTransformation = if (passwordVisible) {
+                            VisualTransformation.None
+                        } else {
+                            PasswordVisualTransformation()
+                        },
+                        trailingIcon = {
+                            IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                                Icon(
+                                    imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                                    contentDescription = null
+                                )
+                            }
+                        },
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Password,
+                            imeAction = ImeAction.Done
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onDone = { focusManager.clearFocus() }
+                        ),
+                        focusRequester = passwordFocusRequester,
+                        onFocusChanged = { state ->
+                            if (!state.isFocused) {
+                                validation.markTouched("password")
+                            }
                         }
+                    )
 
                         if (authMode == AuthMode.SIGN_IN) {
                             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
@@ -366,16 +346,16 @@ fun AuthScreen(
                         onClick = {
                             authError = null
                             authViewModel.clearAuthError()
-                            submittedOnce = true
-                            if (validateFields()) {
+                            validation.markSubmitAttempt()
+                            if (isFormValid) {
                                 loadingAction = LoadingAction.Email
-                                authViewModel.signInWithEmail(email, password) { result ->
+                                authViewModel.signInWithEmail(trimmedEmail, password) { result ->
                                     loadingAction = LoadingAction.None
                                     result.onFailure { authError = mapAuthError(it) }
                                 }
                             }
                         },
-                        enabled = !isLoading,
+                        enabled = isFormValid && !isLoading,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(56.dp),
@@ -445,13 +425,7 @@ fun AuthScreen(
                 TextButton(
                     onClick = { 
                         authViewModel.toggleAuthMode()
-                        submittedOnce = false
-                        emailTouched = false
-                        passwordTouched = false
-                        emailHadFocus = false
-                        passwordHadFocus = false
-                        emailError = null
-                        passwordError = null
+                        validation.reset()
                         authError = null
                         authViewModel.clearAuthError()
                     },

@@ -13,7 +13,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -32,6 +31,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.pushprime.model.QuickSessionTemplates
+import com.pushprime.ui.components.RamboostTextField
 import com.pushprime.ui.theme.PushPrimeColors
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -101,12 +101,12 @@ fun QuickSessionCompletionScreen(
                 Switch(checked = markAsWorkout, onCheckedChange = { markAsWorkout = it })
             }
 
-            OutlinedTextField(
+            RamboostTextField(
                 value = notes,
                 onValueChange = { notes = it },
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("Optional notes") },
-                shape = RoundedCornerShape(12.dp)
+                label = "Notes (optional)",
+                placeholder = "Optional notes"
             )
 
             Spacer(modifier = Modifier.height(8.dp))

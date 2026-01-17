@@ -75,6 +75,7 @@ fun ProgressCollageScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val isSaving by viewModel.isSaving.collectAsState()
+    val isFormValid = selectedIds.size == 4
 
     Scaffold(
         topBar = {
@@ -167,7 +168,7 @@ fun ProgressCollageScreen(
                         }
                     }
                 },
-                enabled = !isSaving,
+                enabled = isFormValid && !isSaving,
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
