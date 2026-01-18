@@ -284,7 +284,7 @@ fun RamboostApp(
             composable(Screen.Workout.route) {
                 WorkoutScreen(
                     onNavigateToWorkoutPlayer = { sessionId ->
-                        navController.navigate(Screen.WorkoutPlayer.createRoute(sessionId))
+                        navController.navigate(Screen.WorkoutPlayer.createRoute(sessionId?.toString()))
                     },
                     onNavigateToSports = {
                         navController.navigate(Screen.SportsModeSelector.route)
@@ -332,6 +332,9 @@ fun RamboostApp(
                     onNavigateBack = { navController.popBackStack() },
                     onFinishSession = { sessionId ->
                         navController.navigate(Screen.WorkoutGeneratorSummary.createRoute(planId, sessionId))
+                    },
+                    onNavigateToWorkoutPlayer = { sessionId ->
+                        navController.navigate(Screen.WorkoutPlayer.createRoute(sessionId))
                     }
                 )
             }
@@ -547,15 +550,16 @@ fun RamboostApp(
                     }
                 )
             ) { backStackEntry ->
-                val sessionIdStr = backStackEntry.arguments?.getString("sessionId")
-                val sessionId = sessionIdStr?.toLongOrNull()
-                
-                if (localStore != null) {
+                val sessionId = backStackEntry.arguments?.getString("sessionId")
+
+                if (database != null) {
+                    val workoutSessionRepository = com.pushprime.data.WorkoutSessionRepository(database.workoutSessionDao())
                     WorkoutPlayerScreen(
                         sessionId = sessionId,
                         localStore = localStore,
                         currentUserId = authViewModel.currentUser?.uid,
                         spotifyHelper = spotifyHelper,
+                        workoutSessionRepository = workoutSessionRepository,
                         onNavigateBack = {
                             navController.popBackStack()
                         }

@@ -7,6 +7,8 @@ A modern Android fitness app built with Kotlin and Jetpack Compose. Track push-u
 ### Core Features
 - **Push-Up Counter**: Track daily and weekly push-up sessions with live counter and timer
 - **Smart Coaching**: AI-based push-up predictions based on age, gender, and fitness level
+- **AI Workout Generator**: OpenAI-powered workout plans with strict JSON schemas (no broken parsing)
+- **AI Coach Chat**: Context-aware coaching responses using OpenAI Responses API
 - **Daily Motivation**: Inspirational quotes updated daily (web API with local fallback)
 - **Health News**: Curated health headlines from RSS feeds (WHO, NHS, Healthline)
 - **Leaderboards**: Compete locally with friends or globally via Firebase
@@ -38,10 +40,19 @@ app/src/main/java/com/pushprime/
 │   │   └── common/       # ErrorScreen
 │   ├── components/       # PushUpCounter, ProgressRing, LeaderboardCard, QuoteCard
 │   └── theme/           # RAMBOOST theme, colors, typography
-├── data/                # LocalStore, FirebaseHelper
-├── model/               # User, Session, LeaderboardEntry
+├── data/
+│   ├── ai/
+│   │   ├── openai/      # OpenAI Responses API integration
+│   │   │   ├── OpenAiModels.kt
+│   │   │   ├── OpenAiSchemas.kt
+│   │   │   ├── OpenAiResponsesService.kt
+│   │   │   ├── OpenAiWorkoutPlanGenerator.kt
+│   │   │   └── OpenAiCoachMessageGenerator.kt
+│   │   ├── EnhancedWorkoutGenerator.kt  # Smart fallback system
+│   │   └── AiErrorMessages.kt           # User-friendly errors
+├── model/               # User, Session, LeaderboardEntry, GeneratedWorkoutPlan
 ├── network/             # NewsService, QuoteService, VoipService
-├── ai/                  # PredictionHelper
+├── ai/                  # PredictionHelper (legacy)
 └── navigation/          # Navigation routes
 ```
 
@@ -178,6 +189,27 @@ The `PredictionHelper` uses logic-based predictions:
 - Mute/unmute controls
 - Countdown synchronization
 
+### AI Services (OpenAI Integration)
+- **OpenAI Responses API**: `POST /v1/responses` with strict JSON schemas
+- **Workout Plan Generator**: AI-powered personalized workout plans
+- **Coach Message Generator**: Context-aware coaching responses
+- **Enhanced Generator**: Smart fallback (AI → local templates)
+- **Error Handling**: User-friendly error messages, never crashes
+- **Storage**: Full JSON storage for workout plans (zero drift on replay)
+
+**Features:**
+- ✅ Structured outputs with `strict: true` (no markdown/broken JSON)
+- ✅ Type-safe Kotlin models for all API responses
+- ✅ Validation before returning to UI
+- ✅ Automatic fallback to offline templates
+- ✅ User-friendly error messages (no technical jargon)
+
+**Documentation:**
+- `OPENAI_RESPONSES_API.md` - Full documentation
+- `IMPLEMENTATION_SUMMARY.md` - Implementation details
+- `MIGRATION_GUIDE.md` - Migration instructions
+- `QUICK_REFERENCE.md` - Quick reference card
+
 ## 💾 Data Storage
 
 ### Local Storage (LocalStore)
@@ -199,7 +231,11 @@ The `PredictionHelper` uses logic-based predictions:
 - Firebase Firestore
 - Twilio Voice SDK
 - Retrofit (for API calls)
+- OkHttp (HTTP client for OpenAI)
 - Coroutines
+- Room Database (local storage)
+- DataStore (preferences)
+- Encrypted SharedPreferences (API keys)
 
 ## 🔧 Configuration
 
@@ -215,6 +251,15 @@ The `PredictionHelper` uses logic-based predictions:
 2. Get Account SID and Auth Token
 3. Set up backend service to generate access tokens
 4. Update `VoipService` with token endpoint
+
+### OpenAI Setup (for AI Features)
+1. Create OpenAI account at https://platform.openai.com
+2. Generate API key
+3. In app settings, enter your API key (stored securely)
+4. Select model (recommended: `gpt-4o-mini`)
+5. Optional: Customize base URL for proxies
+
+**Note:** AI features have automatic fallback to local templates if API is unavailable.
 
 ## 📝 License
 

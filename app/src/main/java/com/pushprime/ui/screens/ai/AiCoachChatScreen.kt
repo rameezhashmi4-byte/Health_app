@@ -1,5 +1,7 @@
 package com.pushprime.ui.screens.ai
 
+import android.content.res.Configuration
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -7,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -35,17 +38,18 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.pushprime.ui.components.AppTextField
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 import com.pushprime.coach.CoachSettings
 import com.pushprime.coach.VoiceProviderAdapter
 import com.pushprime.coach.VoiceProviderType
 import com.pushprime.data.CoachSettingsRepository
 import com.pushprime.data.OpenAiKeyStore
+import com.pushprime.ui.theme.PushPrimeTheme
 import com.pushprime.voice.VoiceCoachSettings
 import com.pushprime.voice.VoiceProviderFactory
 import com.pushprime.voice.VoiceProviderLifecycle
@@ -119,6 +123,38 @@ fun AiCoachChatScreen(
         }
     }
 
+    AiCoachChatContent(
+        messages = uiState.messages,
+        isLoading = uiState.isLoading,
+        speakReplies = coachSettings.speakReplies,
+        input = input,
+        onInputChange = { input = it },
+        onSpeakRepliesChange = { enabled ->
+            coroutineScope.launch { coachSettingsRepository.setSpeakReplies(enabled) }
+        },
+        onPromptSelected = { prompt -> input = prompt },
+        onSend = { message ->
+            viewModel.sendMessage(message)
+            input = ""
+        },
+        onNavigateBack = onNavigateBack,
+        onNavigateToSetup = onNavigateToSetup
+    )
+}
+
+@Composable
+private fun AiCoachChatContent(
+    messages: List<ChatMessage>,
+    isLoading: Boolean,
+    speakReplies: Boolean,
+    input: String,
+    onInputChange: (String) -> Unit,
+    onSpeakRepliesChange: (Boolean) -> Unit,
+    onPromptSelected: (String) -> Unit,
+    onSend: (String) -> Unit,
+    onNavigateBack: () -> Unit,
+    onNavigateToSetup: () -> Unit
+) {
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -138,19 +174,19 @@ fun AiCoachChatScreen(
                         Text(
                             text = "Speak replies",
                             style = MaterialTheme.typography.labelSmall,
-                            color = Color.Gray
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Switch(
-                            checked = coachSettings.speakReplies,
-                            onCheckedChange = { enabled ->
-                                coroutineScope.launch {
-                                    coachSettingsRepository.setSpeakReplies(enabled)
-                                }
-                            }
+                            checked = speakReplies,
+                            onCheckedChange = onSpeakRepliesChange
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        OutlinedButton(onClick = onNavigateToSetup) {
+                        OutlinedButton(
+                            onClick = onNavigateToSetup,
+                            modifier = Modifier.heightIn(min = 48.dp),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary)
+                        ) {
                             Text(
                                 text = "Setup",
                                 style = MaterialTheme.typography.labelLarge
@@ -159,11 +195,11 @@ fun AiCoachChatScreen(
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = Color.White
+                    containerColor = MaterialTheme.colorScheme.surface
                 )
             )
         },
-        containerColor = Color.White
+        containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -176,7 +212,7 @@ fun AiCoachChatScreen(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(uiState.messages) { message ->
+                items(messages) { message ->
                     MessageBubble(message)
                 }
             }
@@ -184,8 +220,11 @@ fun AiCoachChatScreen(
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
                 suggestedPrompts.forEach { prompt ->
                     OutlinedButton(
-                        onClick = { input = prompt },
-                        modifier = Modifier.weight(1f)
+                        onClick = { onPromptSelected(prompt) },
+                        modifier = Modifier
+                            .weight(1f)
+                            .heightIn(min = 48.dp),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary)
                     ) {
                         Text(prompt, style = MaterialTheme.typography.labelSmall)
                     }
@@ -196,26 +235,22 @@ fun AiCoachChatScreen(
                 val isMessageValid = input.trim().isNotEmpty()
                 AppTextField(
                     value = input,
-                    onValueChange = { input = it },
+                    onValueChange = onInputChange,
                     label = "Message",
                     placeholder = "Ask your coach...",
                     modifier = Modifier.weight(1f)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 IconButton(
-                    onClick = {
-                        val message = input.trim()
-                        viewModel.sendMessage(message)
-                        input = ""
-                    },
+                    onClick = { onSend(input.trim()) },
                     enabled = isMessageValid
                 ) {
                     Icon(Icons.Default.Send, contentDescription = "Send")
                 }
             }
 
-            if (uiState.isLoading) {
-                Text("Coach is thinking...", color = Color.Gray)
+            if (isLoading) {
+                Text("Coach is thinking...", color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }
@@ -224,8 +259,16 @@ fun AiCoachChatScreen(
 @Composable
 private fun MessageBubble(message: ChatMessage) {
     val isUser = message.role == ChatRole.USER
-    val background = if (isUser) Color.Black else Color(0xFFF6F6F6)
-    val textColor = if (isUser) Color.White else Color.Black
+    val bubbleColor = if (isUser) {
+        MaterialTheme.colorScheme.primary
+    } else {
+        MaterialTheme.colorScheme.surfaceVariant
+    }
+    val textColor = if (isUser) {
+        MaterialTheme.colorScheme.onPrimary
+    } else {
+        MaterialTheme.colorScheme.onSurfaceVariant
+    }
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = if (isUser) Arrangement.End else Arrangement.Start
@@ -237,10 +280,39 @@ private fun MessageBubble(message: ChatMessage) {
             Text(
                 text = message.content,
                 color = textColor,
+                style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier
-                    .background(background, RoundedCornerShape(12.dp))
+                    .background(bubbleColor, RoundedCornerShape(12.dp))
                     .padding(12.dp)
             )
         }
+    }
+}
+
+@Preview(name = "AI Coach Chat - Light", showBackground = true)
+@Preview(
+    name = "AI Coach Chat - Dark",
+    showBackground = true,
+    uiMode = Configuration.UI_MODE_NIGHT_YES
+)
+@Composable
+private fun AiCoachChatScreenPreview() {
+    PushPrimeTheme {
+        AiCoachChatContent(
+            messages = listOf(
+                ChatMessage(ChatRole.ASSISTANT, "Tell me your goal and how much time you have."),
+                ChatMessage(ChatRole.USER, "30 mins, fat loss, no equipment."),
+                ChatMessage(ChatRole.ASSISTANT, "Got it. Here’s a 30-min session: warm-up, circuit, finisher.")
+            ),
+            isLoading = false,
+            speakReplies = false,
+            input = "Build me a 30-min fat burn session",
+            onInputChange = {},
+            onSpeakRepliesChange = {},
+            onPromptSelected = {},
+            onSend = {},
+            onNavigateBack = {},
+            onNavigateToSetup = {}
+        )
     }
 }

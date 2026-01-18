@@ -1,6 +1,7 @@
 package com.pushprime.ui.screens.workout
 
 import android.app.Activity
+import android.content.Context
 import android.widget.Toast
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
@@ -50,6 +51,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -75,12 +77,19 @@ import com.pushprime.coach.VoiceProviderType
 import com.pushprime.data.AnalyticsHelper
 import com.pushprime.data.AppDatabase
 import com.pushprime.data.CoachSettingsRepository
+import com.pushprime.data.WorkoutPlanRepository
 import com.pushprime.data.LocalStore
 import com.pushprime.data.MusicSettingsRepository
 import com.pushprime.data.OpenAiKeyStore
+import com.pushprime.fitness.CaloriesEstimator
 import com.pushprime.model.ActivityType
+import com.pushprime.model.GeneratedWorkoutPlan
 import com.pushprime.model.Intensity
 import com.pushprime.model.SessionEntity
+import com.pushprime.model.SessionStatus
+import com.pushprime.model.WorkoutBlockType
+import com.pushprime.model.WorkoutSession
+import com.pushprime.model.WorkoutExerciseSession
 import com.pushprime.music.EnergyLevel
 import com.pushprime.music.MusicPhase
 import com.pushprime.music.MusicProviderManager
@@ -98,6 +107,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.Locale
+import kotlin.math.roundToInt
 
 /**
  * Workout Player Screen
@@ -106,11 +116,13 @@ import java.util.Locale
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WorkoutPlayerScreen(
-    sessionId: Long?,
+    sessionId: String?,
     localStore: LocalStore,
     currentUserId: String?,
     spotifyHelper: com.pushprime.data.SpotifyHelper?,
+    workoutSessionRepository: com.pushprime.data.WorkoutSessionRepository,
     onNavigateBack: () -> Unit,
+    onFinishWorkoutSession: ((Long) -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -168,55 +180,147 @@ fun WorkoutPlayerScreen(
     val sessions by (sessionDao?.getAllSessions() ?: flowOf(emptyList()))
         .collectAsState(initial = emptyList())
 
-    val workoutPlan = remember {
-        listOf(
-            WorkoutExercise(
-                name = "Push-ups",
-                targetReps = 18,
-                targetSeconds = 40,
-                restSeconds = 20,
-                cue = "Keep core tight"
-            ),
-            WorkoutExercise(
-                name = "Squats",
-                targetReps = 20,
-                targetSeconds = 45,
-                restSeconds = 20,
-                cue = "Drive through heels"
-            ),
-            WorkoutExercise(
-                name = "Plank",
-                targetReps = null,
-                targetSeconds = 35,
-                restSeconds = 20,
-                cue = "Flat back, steady breath"
-            ),
-            WorkoutExercise(
-                name = "Mountain Climbers",
-                targetReps = 24,
-                targetSeconds = 35,
-                restSeconds = 0,
-                cue = "Light on your feet"
-            )
-        )
+    var workoutSession by remember { mutableStateOf<WorkoutSession?>(null) }
+    var isLoadingSession by remember { mutableStateOf(true) }
+
+    // Load session by sessionId
+    LaunchedEffect(sessionId) {
+        if (sessionId.isNullOrBlank() || sessionId == "new") {
+            // Quick start: create a lightweight default session.
+            try {
+                val defaultExercises = defaultQuickSessionExercises()
+                val created = WorkoutSession.create(
+                    userId = currentUserId ?: "anonymous",
+                    planId = 0L,
+                    exercises = defaultExercises
+                )
+                val id = workoutSessionRepository.createSession(created)
+                workoutSession = created.copy(id = id)
+            } catch (_: Exception) {
+                workoutSession = null
+            } finally {
+                isLoadingSession = false
+            }
+        } else {
+            try {
+                val loadedSession = workoutSessionRepository.getSessionBySessionId(sessionId)
+                if (loadedSession != null) {
+                    // Check for mismatch - if exercises are empty or differ from plan
+                    val exercises = loadedSession.getExercises()
+                    if (exercises.isEmpty() || exercisesDifferFromPlan(context, loadedSession.planId, exercises)) {
+                        // Rebuild session from saved plan
+                        val rebuiltSession = rebuildSessionFromPlan(context, loadedSession)
+                        if (rebuiltSession != null) {
+                            workoutSessionRepository.updateSession(rebuiltSession)
+                            workoutSession = rebuiltSession
+                        } else {
+                            workoutSession = loadedSession // Keep original if rebuild fails
+                        }
+                    } else {
+                        workoutSession = loadedSession
+                    }
+                }
+            } catch (e: Exception) {
+                // Handle error - could not load session
+            } finally {
+                isLoadingSession = false
+            }
+        }
     }
 
-    val expectedDurationSeconds = remember(workoutPlan) {
-        workoutPlan.sumOf { it.targetSeconds + it.restSeconds }.coerceAtLeast(1)
+    val workoutExercises = remember(workoutSession) {
+        workoutSession?.getExercises()?.map { exerciseSession ->
+            WorkoutExercise(
+                name = exerciseSession.name,
+                targetReps = exerciseSession.targetReps,
+                targetSeconds = exerciseSession.targetSeconds ?: 0,
+                restSeconds = exerciseSession.restSeconds,
+                cue = exerciseSession.cue,
+                blockType = exerciseSession.blockType,
+                intensityTag = exerciseSession.intensityTag,
+                caloriesEstimate70 = exerciseSession.caloriesEstimate
+            )
+        } ?: emptyList()
+    }
+
+    val expectedDurationSeconds = remember(workoutExercises) {
+        workoutExercises.sumOf { it.targetSeconds + it.restSeconds }.coerceAtLeast(1)
     }
 
     var phase by remember { mutableStateOf(WorkoutPhase.COUNTDOWN) }
     var exerciseIndex by remember { mutableStateOf(0) }
     var countdownSeconds by remember { mutableStateOf(3) }
-    var activeSecondsRemaining by remember { mutableStateOf(workoutPlan.first().targetSeconds) }
+    var activeSecondsRemaining by remember { mutableStateOf(0) }
     var activeSecondsElapsed by remember { mutableStateOf(0) }
-    var restSecondsRemaining by remember { mutableStateOf(workoutPlan.first().restSeconds) }
+    var restSecondsRemaining by remember { mutableStateOf(0) }
     var activeReps by remember { mutableStateOf(0) }
     var totalReps by remember { mutableStateOf(0) }
     var workoutElapsedSeconds by remember { mutableStateOf(0) }
     var completedExercises by remember { mutableStateOf<List<CompletedExercise>>(emptyList()) }
     var isPaused by remember { mutableStateOf(false) }
     var sessionStartTime by remember { mutableStateOf<Long?>(null) }
+
+    val weightKg = remember(profile) { CaloriesEstimator.resolveWeightKg(profile?.weightKg) }
+    val caloriesByIndex = remember { mutableStateMapOf<Int, Double>() }
+
+    val metByIndex = remember(workoutExercises) {
+        workoutExercises.map { exercise ->
+            CaloriesEstimator.estimateMet(
+                exerciseName = exercise.name,
+                intensityTag = exercise.intensityTag,
+                blockType = exercise.blockType
+            )
+        }
+    }
+
+    fun baselineCaloriesForUser(exercise: WorkoutExercise): Int {
+        val fromJson = CaloriesEstimator.scaleCaloriesFrom70Kg(exercise.caloriesEstimate70, weightKg)
+        if (fromJson != null) return fromJson
+        val met = CaloriesEstimator.estimateMet(exercise.name, exercise.intensityTag, exercise.blockType)
+        return CaloriesEstimator.kcalForSeconds(
+            met = met,
+            weightKg = weightKg,
+            durationSeconds = (exercise.targetSeconds + exercise.restSeconds).coerceAtLeast(1)
+        ).coerceAtLeast(1)
+    }
+
+    val totalCaloriesActual = remember(caloriesByIndex) {
+        caloriesByIndex.values.sum().roundToInt().coerceAtLeast(0)
+    }
+
+    val totalCaloriesDisplay = remember(
+        totalCaloriesActual,
+        workoutExercises,
+        exerciseIndex,
+        phase,
+        weightKg
+    ) {
+        if (workoutExercises.isEmpty()) 0 else {
+            workoutExercises.indices.sumOf { idx ->
+                val actual = caloriesByIndex[idx]?.roundToInt()
+                when {
+                    actual != null && actual > 0 -> actual
+                    idx < exerciseIndex -> actual ?: 0
+                    idx == exerciseIndex && phase != WorkoutPhase.COUNTDOWN -> (actual ?: 0).coerceAtLeast(0)
+                    else -> baselineCaloriesForUser(workoutExercises[idx])
+                }
+            }.coerceAtLeast(0)
+        }
+    }
+
+    // Initialize timer/calorie state once exercises are loaded.
+    LaunchedEffect(workoutExercises, isLoadingSession) {
+        if (!isLoadingSession && workoutExercises.isNotEmpty() && activeSecondsRemaining == 0 && phase == WorkoutPhase.COUNTDOWN) {
+            activeSecondsRemaining = workoutExercises.first().targetSeconds
+            restSecondsRemaining = workoutExercises.first().restSeconds
+            activeSecondsElapsed = 0
+            activeReps = 0
+            exerciseIndex = 0
+            completedExercises = emptyList()
+            caloriesByIndex.clear()
+            workoutElapsedSeconds = 0
+        }
+    }
 
     LaunchedEffect(Unit) {
         coachOrchestrator.resetSession()
@@ -274,14 +378,14 @@ fun WorkoutPlayerScreen(
     }
     val isPersonalBest = totalReps > 0 && totalReps > personalBest
 
-    val currentExercise = workoutPlan.getOrNull(exerciseIndex)
-    val nextExercise = workoutPlan.getOrNull(exerciseIndex + 1)
-    val totalPlannedSeconds = remember(workoutPlan) {
-        workoutPlan.sumOf { it.targetSeconds + it.restSeconds }
+    val currentExercise = workoutExercises.getOrNull(exerciseIndex)
+    val nextExercise = workoutExercises.getOrNull(exerciseIndex + 1)
+    val totalPlannedSeconds = remember(workoutExercises) {
+        workoutExercises.sumOf { it.targetSeconds + it.restSeconds }
     }
 
     fun resetForExercise(index: Int) {
-        val exercise = workoutPlan.getOrNull(index) ?: return
+        val exercise = workoutExercises.getOrNull(index) ?: return
         activeSecondsRemaining = exercise.targetSeconds
         activeSecondsElapsed = 0
         activeReps = 0
@@ -289,7 +393,7 @@ fun WorkoutPlayerScreen(
     }
 
     fun moveToNextExercise() {
-        if (exerciseIndex >= workoutPlan.lastIndex) {
+        if (exerciseIndex >= workoutExercises.lastIndex) {
             phase = WorkoutPhase.COMPLETE
             return
         }
@@ -304,13 +408,40 @@ fun WorkoutPlayerScreen(
         val repsLogged = if (skipped) 0 else activeReps
 
         completedExercises = completedExercises + CompletedExercise(
+            index = exerciseIndex,
             name = exercise.name,
             reps = repsLogged,
             seconds = elapsedSeconds
         )
         totalReps += repsLogged
 
-        if (exerciseIndex >= workoutPlan.lastIndex) {
+        // Update session in database
+        workoutSession?.let { session ->
+            val updatedExercises = session.getExercises().toMutableList()
+            if (exerciseIndex < updatedExercises.size) {
+                updatedExercises[exerciseIndex] = updatedExercises[exerciseIndex].copy(
+                    completedReps = repsLogged,
+                    completedSeconds = elapsedSeconds,
+                    skipped = skipped
+                )
+                val updatedSession = session.copy(
+                    exercisesJson = "", // Will be set by withExercises
+                    currentExerciseIndex = exerciseIndex + 1,
+                    totalElapsedSeconds = workoutElapsedSeconds
+                ).withExercises(updatedExercises)
+
+                coroutineScope.launch {
+                    try {
+                        workoutSessionRepository.updateSession(updatedSession)
+                        workoutSession = updatedSession
+                    } catch (e: Exception) {
+                        // Handle error updating session
+                    }
+                }
+            }
+        }
+
+        if (exerciseIndex >= workoutExercises.lastIndex) {
             phase = WorkoutPhase.COMPLETE
             return
         }
@@ -420,6 +551,9 @@ fun WorkoutPlayerScreen(
                 activeSecondsRemaining -= 1
                 activeSecondsElapsed += 1
                 workoutElapsedSeconds += 1
+                val met = metByIndex.getOrNull(exerciseIndex) ?: 5.0
+                val add = (met * weightKg) / 3600.0
+                caloriesByIndex[exerciseIndex] = (caloriesByIndex[exerciseIndex] ?: 0.0) + add
             }
             if (phase == WorkoutPhase.ACTIVE && activeSecondsRemaining <= 0) {
                 completeExercise(skipped = false)
@@ -433,6 +567,8 @@ fun WorkoutPlayerScreen(
                 delay(1000)
                 restSecondsRemaining -= 1
                 workoutElapsedSeconds += 1
+                val add = (1.3 * weightKg) / 3600.0
+                caloriesByIndex[exerciseIndex] = (caloriesByIndex[exerciseIndex] ?: 0.0) + add
             }
             if (phase == WorkoutPhase.REST) {
                 moveToNextExercise()
@@ -473,7 +609,12 @@ fun WorkoutPlayerScreen(
                             style = MaterialTheme.typography.headlineMedium
                         )
                         Text(
-                            text = "${exerciseIndex + 1} of ${workoutPlan.size}",
+                            text = "${exerciseIndex + 1} of ${workoutExercises.size}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = PushPrimeColors.OnSurfaceVariant
+                        )
+                        Text(
+                            text = "Calories: ~$totalCaloriesDisplay kcal",
                             style = MaterialTheme.typography.bodySmall,
                             color = PushPrimeColors.OnSurfaceVariant
                         )
@@ -564,6 +705,34 @@ fun WorkoutPlayerScreen(
                 .padding(paddingValues)
                 .background(PushPrimeColors.Background)
         ) {
+            if (isLoadingSession) {
+                // Loading state
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            } else if (workoutSession == null || workoutExercises.isEmpty()) {
+                // Error state - no session found
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        Text(
+                            text = "Session not found",
+                            style = MaterialTheme.typography.headlineMedium
+                        )
+                        Button(onClick = onNavigateBack) {
+                            Text("Go Back")
+                        }
+                    }
+                }
+            } else {
             CoachControlBar(
                 isCoachEnabled = coachSettings.hybridEnabled,
                 isMuted = coachMuted,
@@ -628,6 +797,8 @@ fun WorkoutPlayerScreen(
                             completedExercises = completedExercises,
                             totalReps = totalReps,
                             totalTimeSeconds = workoutElapsedSeconds,
+                            totalCaloriesKcal = totalCaloriesActual,
+                            caloriesByIndex = caloriesByIndex,
                             isPersonalBest = isPersonalBest,
                             onFinish = { stopSession() }
                         )
@@ -659,6 +830,7 @@ fun WorkoutPlayerScreen(
                     .align(Alignment.BottomCenter)
                     .padding(16.dp)
             )
+            }
         }
     }
 }
@@ -885,6 +1057,8 @@ private fun CompletionContent(
     completedExercises: List<CompletedExercise>,
     totalReps: Int,
     totalTimeSeconds: Int,
+    totalCaloriesKcal: Int,
+    caloriesByIndex: Map<Int, Double>,
     isPersonalBest: Boolean,
     onFinish: () -> Unit
 ) {
@@ -933,6 +1107,11 @@ private fun CompletionContent(
                     modifier = Modifier.weight(1f)
                 )
             }
+            StatCard(
+                label = "Calories",
+                value = "~$totalCaloriesKcal kcal",
+                modifier = Modifier.fillMaxWidth()
+            )
             if (isPersonalBest) {
                 Card(
                     colors = CardDefaults.cardColors(
@@ -972,13 +1151,17 @@ private fun CompletionContent(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         completedExercises.forEachIndexed { index, exercise ->
+                            val calories = (caloriesByIndex[exercise.index] ?: 0.0).roundToInt()
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Text(exercise.name, style = MaterialTheme.typography.bodyMedium)
                                 Text(
-                                    text = if (exercise.reps > 0) "${exercise.reps} reps" else "${exercise.seconds}s",
+                                    text = buildString {
+                                        append(if (exercise.reps > 0) "${exercise.reps} reps" else "${exercise.seconds}s")
+                                        append(" • ~$calories kcal")
+                                    },
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = PushPrimeColors.OnSurfaceVariant
                                 )
@@ -1079,7 +1262,10 @@ private data class WorkoutExercise(
     val targetReps: Int?,
     val targetSeconds: Int,
     val restSeconds: Int,
-    val cue: String
+    val cue: String,
+    val blockType: WorkoutBlockType? = null,
+    val intensityTag: String? = null,
+    val caloriesEstimate70: Int? = null
 ) {
     fun targetLabel(): String {
         return targetReps?.let { "Target: $it reps" } ?: "Target: $targetSeconds sec"
@@ -1087,10 +1273,76 @@ private data class WorkoutExercise(
 }
 
 private data class CompletedExercise(
+    val index: Int,
     val name: String,
     val reps: Int,
     val seconds: Int
 )
+
+private fun defaultQuickSessionExercises(): List<WorkoutExerciseSession> {
+    return listOf(
+        WorkoutExerciseSession(name = "Jumping jacks", targetSeconds = 30, restSeconds = 15, blockType = WorkoutBlockType.WARMUP),
+        WorkoutExerciseSession(name = "Bodyweight squats", targetReps = 12, restSeconds = 20, blockType = WorkoutBlockType.MAIN),
+        WorkoutExerciseSession(name = "Push-ups", targetReps = 10, restSeconds = 20, blockType = WorkoutBlockType.MAIN),
+        WorkoutExerciseSession(name = "Plank", targetSeconds = 30, restSeconds = 15, blockType = WorkoutBlockType.FINISHER)
+    )
+}
+
+private fun expandPlanToSessionExercises(plan: GeneratedWorkoutPlan): List<WorkoutExerciseSession> {
+    return plan.blocks.flatMap { block ->
+        block.exercises.map { exercise ->
+            WorkoutExerciseSession(
+                name = exercise.name,
+                targetReps = exercise.reps,
+                targetSeconds = exercise.seconds,
+                restSeconds = exercise.restSeconds,
+                cue = exercise.notes.orEmpty(),
+                blockType = block.type,
+                intensityTag = exercise.intensityTag,
+                caloriesEstimate = null
+            )
+        }
+    }
+}
+
+private suspend fun exercisesDifferFromPlan(
+    context: Context,
+    planId: Long,
+    sessionExercises: List<WorkoutExerciseSession>
+): Boolean {
+    return try {
+        val database = AppDatabase.getDatabase(context)
+        val planRepository = WorkoutPlanRepository(database.workoutPlanDao())
+        val plan = planRepository.getPlan(planId) ?: return true
+        val planExercises = expandPlanToSessionExercises(plan)
+
+        // Compare exercises (simplified check - compare names and targets)
+        if (planExercises.size != sessionExercises.size) return true
+
+        planExercises.zip(sessionExercises).any { (planExercise, sessionExercise) ->
+            planExercise.name != sessionExercise.name ||
+                planExercise.targetReps != sessionExercise.targetReps ||
+                planExercise.targetSeconds != sessionExercise.targetSeconds ||
+                planExercise.restSeconds != sessionExercise.restSeconds ||
+                planExercise.intensityTag != sessionExercise.intensityTag ||
+                planExercise.caloriesEstimate != sessionExercise.caloriesEstimate
+        }
+    } catch (_: Exception) {
+        true // Assume mismatch on error
+    }
+}
+
+private suspend fun rebuildSessionFromPlan(context: Context, originalSession: WorkoutSession): WorkoutSession? {
+    return try {
+        val database = AppDatabase.getDatabase(context)
+        val planRepository = WorkoutPlanRepository(database.workoutPlanDao())
+        val plan = planRepository.getPlan(originalSession.planId) ?: return null
+        val exercises = expandPlanToSessionExercises(plan)
+        originalSession.withExercises(exercises)
+    } catch (_: Exception) {
+        null
+    }
+}
 
 private enum class WorkoutPhase {
     COUNTDOWN,

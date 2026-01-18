@@ -24,7 +24,7 @@ sealed class Screen(val route: String) {
     
     // Nested Routes
     object WorkoutPlayer : Screen("workout_player/{sessionId}") {
-        fun createRoute(sessionId: Long? = null) = "workout_player/${sessionId ?: "new"}"
+        fun createRoute(sessionId: String?) = "workout_player/${sessionId ?: "new"}"
     }
 
     object WorkoutGeneratorSetup : Screen("workout_generator/setup")

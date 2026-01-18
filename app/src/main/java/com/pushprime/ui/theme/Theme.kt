@@ -18,12 +18,12 @@ import androidx.core.view.WindowCompat
  */
 private val PushPrimeLightColorScheme = lightColorScheme(
     primary = PushPrimeColors.Primary,
-    onPrimary = PushPrimeColors.OnBackground,
+    onPrimary = PushPrimeColors.OnPrimary,
     primaryContainer = PushPrimeColors.PrimaryLight,
     onPrimaryContainer = PushPrimeColors.OnBackground,
     
     secondary = PushPrimeColors.Secondary,
-    onSecondary = Color(0xFFFFFFFF),
+    onSecondary = PushPrimeColors.OnBackground,
     secondaryContainer = PushPrimeColors.SecondaryVariant.copy(alpha = 0.1f),
     onSecondaryContainer = PushPrimeColors.OnBackground,
     

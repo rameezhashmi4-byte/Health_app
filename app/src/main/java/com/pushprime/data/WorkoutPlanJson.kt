@@ -84,6 +84,7 @@ object WorkoutPlanJson {
         json.put("notes", exercise.notes)
         json.put("intensityTag", exercise.intensityTag)
         json.put("difficultyTag", exercise.difficultyTag)
+        exercise.caloriesEstimate?.let { json.put("caloriesEstimate", it) }
         return json
     }
 
@@ -96,7 +97,8 @@ object WorkoutPlanJson {
             restSeconds = json.optInt("restSeconds", 0),
             notes = json.optString("notes").takeIf { it.isNotBlank() },
             intensityTag = json.optString("intensityTag").takeIf { it.isNotBlank() },
-            difficultyTag = json.optString("difficultyTag").takeIf { it.isNotBlank() }
+            difficultyTag = json.optString("difficultyTag").takeIf { it.isNotBlank() },
+            caloriesEstimate = json.optInt("caloriesEstimate").takeIf { json.has("caloriesEstimate") }
         )
     }
 }

@@ -75,7 +75,12 @@ class AiCoachViewModel @Inject constructor(
                     if (key.isNullOrBlank()) {
                         BasicCoachProvider()
                     } else {
-                        OpenAiCoachProvider(apiKey = key, modelName = settings.modelName, client = client)
+                        OpenAiCoachProvider(
+                            apiKey = key,
+                            modelName = settings.modelName,
+                            baseUrl = settings.baseUrl,
+                            client = client
+                        )
                     }
                 }
                 else -> BasicCoachProvider()
