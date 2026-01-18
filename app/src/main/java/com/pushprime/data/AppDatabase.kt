@@ -19,6 +19,7 @@ import com.pushprime.model.ProgressPhotoEntity
 import com.pushprime.model.QuickSessionLog
 import com.pushprime.model.SessionEntity
 import com.pushprime.model.SetEntity
+import com.pushprime.model.WorkoutSession
 
 /**
  * App Database
@@ -41,9 +42,10 @@ import com.pushprime.model.SetEntity
         QuickSessionLog::class,
         NutritionEntry::class,
         PullupSession::class,
-        PullupMaxTest::class
+        PullupMaxTest::class,
+        WorkoutSession::class
     ],
-    version = 12,
+    version = 13,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -62,6 +64,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun nutritionDao(): NutritionDao
     abstract fun pullupSessionDao(): PullupSessionDao
     abstract fun pullupMaxTestDao(): PullupMaxTestDao
+    abstract fun workoutSessionDao(): WorkoutSessionDao
     
     companion object {
         @Volatile
@@ -83,7 +86,8 @@ abstract class AppDatabase : RoomDatabase() {
                         MIGRATION_8_9,
                         MIGRATION_9_10,
                         MIGRATION_10_11,
-                        MIGRATION_11_12
+                        MIGRATION_11_12,
+                        MIGRATION_12_13
                     )
                     .fallbackToDestructiveMigration() // Keep safety net
                     .build()
@@ -272,6 +276,26 @@ abstract class AppDatabase : RoomDatabase() {
                         maxReps INTEGER NOT NULL,
                         formRating INTEGER,
                         PRIMARY KEY(id)
+                    )
+                    """.trimIndent()
+                )
+            }
+        }
+
+        private val MIGRATION_12_13 = object : androidx.room.migration.Migration(12, 13) {
+            override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+                database.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS workout_sessions (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        sessionId TEXT NOT NULL,
+                        userId TEXT NOT NULL,
+                        planId INTEGER NOT NULL,
+                        exercisesJson TEXT NOT NULL,
+                        startedAt INTEGER NOT NULL,
+                        status TEXT NOT NULL,
+                        currentExerciseIndex INTEGER NOT NULL,
+                        totalElapsedSeconds INTEGER NOT NULL
                     )
                     """.trimIndent()
                 )

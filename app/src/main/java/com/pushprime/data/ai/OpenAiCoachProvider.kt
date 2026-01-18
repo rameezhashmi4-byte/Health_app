@@ -1,94 +1,66 @@
 package com.pushprime.data.ai
 
+import android.util.Log
+import com.pushprime.data.ai.openai.OpenAiCoachMessageGenerator
+import com.pushprime.data.ai.openai.OpenAiException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
-import org.json.JSONArray
-import org.json.JSONObject
 
+/**
+ * OpenAI Coach Provider using Responses API with strict JSON schema
+ * Ensures valid JSON with no markdown or broken parsing
+ */
 class OpenAiCoachProvider(
     private val apiKey: String,
     private val modelName: String,
+    private val baseUrl: String = "https://api.openai.com",
     private val client: OkHttpClient = OkHttpClient()
 ) : AiCoachProvider {
+
+    private val generator = OpenAiCoachMessageGenerator(apiKey, modelName, baseUrl, client)
+
+    companion object {
+        private const val TAG = "OpenAiCoachProvider"
+    }
+
     override suspend fun sendMessage(userMessage: String, contextSummary: String): String {
         return withContext(Dispatchers.IO) {
-            val payload = JSONObject().apply {
-                put("model", modelName)
-                put(
-                    "input",
-                    JSONArray().apply {
-                        put(
-                            JSONObject().apply {
-                                put("role", "system")
-                                put(
-                                    "content",
-                                    JSONArray().apply {
-                                        put(
-                                            JSONObject().apply {
-                                                put("type", "text")
-                                                put(
-                                                    "text",
-                                                    "You are a concise fitness coach for RAMBOOST. " +
-                                                        "Use the context summary to personalize. " +
-                                                        "Context: $contextSummary"
-                                                )
-                                            }
-                                        )
-                                    }
-                                )
+            try {
+                val result = generator.generateCoachMessage(userMessage, contextSummary)
+                
+                result.fold(
+                    onSuccess = { coachMessage ->
+                        // Validate the message
+                        generator.validateCoachMessage(coachMessage).fold(
+                            onSuccess = { coachMessage.message },
+                            onFailure = { error ->
+                                Log.e(TAG, "Invalid coach message", error)
+                                "Sorry, I couldn't generate a proper response. Please try again."
                             }
                         )
-                        put(
-                            JSONObject().apply {
-                                put("role", "user")
-                                put(
-                                    "content",
-                                    JSONArray().apply {
-                                        put(
-                                            JSONObject().apply {
-                                                put("type", "text")
-                                                put("text", userMessage)
-                                            }
-                                        )
-                                    }
-                                )
-                            }
-                        )
+                    },
+                    onFailure = { error ->
+                        Log.e(TAG, "Failed to generate message", error)
+                        formatUserFriendlyError(error)
                     }
                 )
-            }
-
-            val request = Request.Builder()
-                .url("https://api.openai.com/v1/responses")
-                .addHeader("Authorization", "Bearer $apiKey")
-                .addHeader("Content-Type", "application/json")
-                .post(payload.toString().toRequestBody("application/json".toMediaType()))
-                .build()
-
-            client.newCall(request).execute().use { response ->
-                val body = response.body?.string().orEmpty()
-                if (!response.isSuccessful) {
-                    return@withContext "AI request failed (${response.code})."
-                }
-                parseResponseText(body) ?: "AI response was empty."
+            } catch (e: Exception) {
+                Log.e(TAG, "Unexpected error", e)
+                "Connection error. Please check your internet and try again."
             }
         }
     }
 
-    private fun parseResponseText(raw: String): String? {
-        return try {
-            val json = JSONObject(raw)
-            val output = json.optJSONArray("output") ?: return null
-            if (output.length() == 0) return null
-            val content = output.getJSONObject(0).optJSONArray("content") ?: return null
-            if (content.length() == 0) return null
-            content.getJSONObject(0).optString("text", null)
-        } catch (_: Exception) {
-            null
+    private fun formatUserFriendlyError(error: Throwable): String {
+        return when (error) {
+            is OpenAiException -> when (error.httpCode) {
+                401 -> "Invalid API key. Please check your OpenAI settings."
+                404 -> "API endpoint not found. Please check your base URL in settings."
+                429 -> "Rate limit exceeded. Please wait a moment and try again."
+                else -> "AI service temporarily unavailable. Please try again."
+            }
+            else -> "Could not connect to AI coach. Please check your internet connection."
         }
     }
 }

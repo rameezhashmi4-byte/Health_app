@@ -1,5 +1,6 @@
 package com.pushprime.data
 
+import com.pushprime.fitness.CaloriesEstimator
 import com.pushprime.model.EquipmentOption
 import com.pushprime.model.GeneratedExercise
 import com.pushprime.model.GeneratedWorkoutPlan
@@ -28,9 +29,69 @@ class WorkoutGenerator {
         val plan = templatePlan ?: buildDynamicPlan(inputs, random, avoidExerciseNames)
         val signature = plan.blocks.flatMap { block -> block.exercises.map { it.name } }.toSet()
         if (avoidExerciseNames.isEmpty() || signature != avoidExerciseNames) {
-            return plan
+            return withCaloriesEstimates(plan)
         }
-        return buildDynamicPlan(inputs, random, avoidExerciseNames)
+        return withCaloriesEstimates(buildDynamicPlan(inputs, random, avoidExerciseNames))
+    }
+
+    private fun withCaloriesEstimates(plan: GeneratedWorkoutPlan): GeneratedWorkoutPlan {
+        return plan.copy(
+            blocks = plan.blocks.map { block ->
+                block.copy(
+                    exercises = block.exercises.map { exercise ->
+                        if ((exercise.caloriesEstimate ?: 0) > 0) {
+                            exercise
+                        } else {
+                            val seconds = plannedSecondsForExercise(exercise)
+                            val met = CaloriesEstimator.estimateMet(
+                                exerciseName = exercise.name,
+                                intensityTag = exercise.intensityTag,
+                                blockType = block.type
+                            )
+                            val kcal70 = CaloriesEstimator.kcalForSeconds(
+                                met = met,
+                                weightKg = 70.0,
+                                durationSeconds = seconds
+                            ).coerceAtLeast(1)
+                            exercise.copy(caloriesEstimate = kcal70)
+                        }
+                    }
+                )
+            }
+        )
+    }
+
+    private fun plannedSecondsForExercise(exercise: GeneratedExercise): Int {
+        val sets = exercise.sets?.coerceAtLeast(1) ?: 1
+        val activeSeconds = when {
+            exercise.seconds != null -> sets * exercise.seconds.coerceAtLeast(0)
+            exercise.reps != null -> sets * exercise.reps.coerceAtLeast(0) * repSeconds(exercise.intensityTag)
+            else -> 60
+        }
+
+        // Treat rest as between sets when sets are present; otherwise as between-exercise rest.
+        val restSeconds = if (exercise.sets != null && sets > 1) {
+            (sets - 1) * exercise.restSeconds.coerceAtLeast(0)
+        } else {
+            exercise.restSeconds.coerceAtLeast(0)
+        }
+
+        return (activeSeconds + restSeconds).coerceAtLeast(1)
+    }
+
+    private fun repSeconds(intensityTag: String?): Int {
+        val tag = intensityTag?.lowercase()
+        return when {
+            tag == null -> 3
+            tag.contains("light") -> 3
+            tag.contains("moderate") -> 3
+            tag.contains("heavy") -> 4
+            tag.contains("strong") -> 4
+            tag.contains("high") -> 2
+            tag.contains("max") -> 2
+            tag.contains("interval") -> 2
+            else -> 3
+        }
     }
 
     private fun buildTemplatePlan(

@@ -1,5 +1,6 @@
 package com.pushprime.ui.screens.workout
 
+import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -35,11 +36,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.pushprime.model.GeneratedExercise
+import com.pushprime.model.GeneratedWorkoutPlan
 import com.pushprime.model.WorkoutBlock
-import com.pushprime.ui.theme.PushPrimeColors
+import com.pushprime.model.WorkoutBlockType
+import com.pushprime.model.WorkoutGoal
+import com.pushprime.model.EquipmentOption
+import com.pushprime.ui.theme.PushPrimeTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -51,6 +57,24 @@ fun WorkoutGeneratorPreviewScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
+    WorkoutGeneratorPreviewContent(
+        uiState = uiState,
+        onNavigateBack = onNavigateBack,
+        onStartSession = onStartSession,
+        onRegenerate = viewModel::regeneratePlan,
+        onSavePlan = viewModel::savePlan
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun WorkoutGeneratorPreviewContent(
+    uiState: WorkoutGeneratorPreviewState,
+    onNavigateBack: () -> Unit,
+    onStartSession: () -> Unit,
+    onRegenerate: () -> Unit,
+    onSavePlan: () -> Unit
+) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -66,12 +90,12 @@ fun WorkoutGeneratorPreviewScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { viewModel.regeneratePlan() }, enabled = !uiState.isRegenerating) {
+                    IconButton(onClick = onRegenerate, enabled = !uiState.isRegenerating) {
                         Icon(Icons.Default.Refresh, contentDescription = "Regenerate")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = PushPrimeColors.Surface
+                    containerColor = MaterialTheme.colorScheme.surface
                 )
             )
         }
@@ -104,7 +128,7 @@ fun WorkoutGeneratorPreviewScreen(
                             Text(
                                 text = "${targetPlan.totalDurationMinutes} min • ${targetPlan.goal.displayName} • ${targetPlan.equipment.displayName}",
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = PushPrimeColors.OnSurfaceVariant
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
@@ -130,7 +154,7 @@ fun WorkoutGeneratorPreviewScreen(
                             )
                         }
                         OutlinedButton(
-                            onClick = { viewModel.regeneratePlan() },
+                            onClick = onRegenerate,
                             modifier = Modifier.fillMaxWidth().height(52.dp),
                             enabled = !uiState.isRegenerating
                         ) {
@@ -142,7 +166,7 @@ fun WorkoutGeneratorPreviewScreen(
                             )
                         }
                         OutlinedButton(
-                            onClick = { viewModel.savePlan() },
+                            onClick = onSavePlan,
                             modifier = Modifier.fillMaxWidth().height(52.dp),
                             enabled = !uiState.isSaved
                         ) {
@@ -163,7 +187,7 @@ fun WorkoutGeneratorPreviewScreen(
 @Composable
 private fun WorkoutBlockCard(block: WorkoutBlock) {
     Card(
-        colors = CardDefaults.cardColors(containerColor = PushPrimeColors.Surface),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp)
     ) {
         Column(
@@ -182,7 +206,7 @@ private fun WorkoutBlockCard(block: WorkoutBlock) {
                     Text(
                         text = "${it} min",
                         style = MaterialTheme.typography.bodySmall,
-                        color = PushPrimeColors.OnSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -204,7 +228,7 @@ private fun ExerciseRow(exercise: GeneratedExercise) {
             Text(
                 text = formatExerciseTarget(exercise),
                 style = MaterialTheme.typography.bodySmall,
-                color = PushPrimeColors.OnSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
         Row(
@@ -214,14 +238,14 @@ private fun ExerciseRow(exercise: GeneratedExercise) {
             Text(
                 text = "Rest ${exercise.restSeconds}s",
                 style = MaterialTheme.typography.bodySmall,
-                color = PushPrimeColors.OnSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             val note = exercise.notes ?: exercise.difficultyTag
             if (!note.isNullOrBlank()) {
                 Text(
                     text = note,
                     style = MaterialTheme.typography.bodySmall,
-                    color = PushPrimeColors.OnSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -235,5 +259,59 @@ private fun formatExerciseTarget(exercise: GeneratedExercise): String {
         exercise.reps != null && exercise.sets != null -> "${exercise.sets} x ${exercise.reps}"
         exercise.reps != null -> "${exercise.reps} reps"
         else -> "Custom"
+    }
+}
+
+@Preview(name = "Start Session - Light", showBackground = true)
+@Preview(
+    name = "Start Session - Dark",
+    showBackground = true,
+    uiMode = Configuration.UI_MODE_NIGHT_YES
+)
+@Composable
+private fun WorkoutGeneratorPreviewScreenPreview() {
+    PushPrimeTheme {
+        WorkoutGeneratorPreviewContent(
+            uiState = WorkoutGeneratorPreviewState(
+                plan = GeneratedWorkoutPlan(
+                    id = 1,
+                    title = "30-Min Fat Burn",
+                    totalDurationMinutes = 30,
+                    goal = WorkoutGoal.LOSE_FAT,
+                    timeMinutes = 30,
+                    equipment = EquipmentOption.HOME,
+                    focus = null,
+                    style = null,
+                    blocks = listOf(
+                        WorkoutBlock(
+                            type = WorkoutBlockType.WARMUP,
+                            title = "Warm-up",
+                            durationMinutes = 5,
+                            exercises = listOf(
+                                GeneratedExercise(name = "Jumping jacks", seconds = 30, restSeconds = 15),
+                                GeneratedExercise(name = "Bodyweight squats", reps = 12, sets = 2, restSeconds = 30)
+                            )
+                        ),
+                        WorkoutBlock(
+                            type = WorkoutBlockType.MAIN,
+                            title = "Main Circuit",
+                            durationMinutes = 20,
+                            exercises = listOf(
+                                GeneratedExercise(name = "Push-ups", reps = 10, sets = 3, restSeconds = 30),
+                                GeneratedExercise(name = "Mountain climbers", seconds = 40, restSeconds = 20),
+                                GeneratedExercise(name = "Reverse lunges", reps = 10, sets = 2, restSeconds = 30)
+                            )
+                        )
+                    )
+                ),
+                isLoading = false,
+                isSaved = false,
+                isRegenerating = false
+            ),
+            onNavigateBack = {},
+            onStartSession = {},
+            onRegenerate = {},
+            onSavePlan = {}
+        )
     }
 }

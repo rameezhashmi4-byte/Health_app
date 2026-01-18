@@ -27,7 +27,12 @@ data class GeneratedExercise(
     val restSeconds: Int = 0,
     val notes: String? = null,
     val intensityTag: String? = null,
-    val difficultyTag: String? = null
+    val difficultyTag: String? = null,
+    /**
+     * Baseline calorie estimate for this exercise assuming a 70kg user.
+     * Live session estimation should refine this based on actual time spent.
+     */
+    val caloriesEstimate: Int? = null
 )
 
 data class GeneratedWorkoutPlanSummary(

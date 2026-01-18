@@ -15,9 +15,16 @@ import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import javax.inject.Inject
 
+data class TestResult(
+    val success: Boolean,
+    val message: String,
+    val baseUrl: String
+)
+
 data class AiCoachSetupState(
     val statusMessage: String? = null,
-    val isVerifying: Boolean = false
+    val isVerifying: Boolean = false,
+    val testResult: TestResult? = null
 )
 
 @HiltViewModel
@@ -43,7 +50,51 @@ class AiCoachSetupViewModel @Inject constructor(
         }
     }
 
+    fun updateBaseUrl(baseUrl: String) {
+        viewModelScope.launch {
+            settingsRepository.updateBaseUrl(baseUrl)
+        }
+    }
+
     fun getSavedKey(): String? = secureStore.getOpenAiKey()
+
+    fun testAiCoach() {
+        val apiKey = secureStore.getOpenAiKey()
+        if (apiKey.isNullOrBlank()) {
+            _state.value = _state.value.copy(statusMessage = "No API key saved.")
+            return
+        }
+
+        viewModelScope.launch {
+            _state.value = _state.value.copy(isVerifying = true, statusMessage = "Testing AI Coach...")
+            val currentSettings = settingsRepository.settings.first()
+            val provider = OpenAiCoachProvider(
+                apiKey = apiKey,
+                modelName = currentSettings.modelName,
+                baseUrl = currentSettings.baseUrl,
+                client = client
+            )
+
+            val reply = try {
+                provider.sendMessage("Say hello", "Test diagnostics")
+            } catch (e: Exception) {
+                "Error: ${e.localizedMessage}"
+            }
+
+            val isSuccess = !reply.contains("failed", ignoreCase = true) && 
+                           !reply.contains("misconfigured", ignoreCase = true) &&
+                           !reply.contains("error", ignoreCase = true)
+
+            _state.value = _state.value.copy(
+                isVerifying = false,
+                testResult = TestResult(
+                    success = isSuccess,
+                    message = reply,
+                    baseUrl = currentSettings.baseUrl
+                )
+            )
+        }
+    }
 
     fun verifyAndSaveKey(apiKey: String) {
         if (apiKey.isBlank()) {
@@ -52,14 +103,25 @@ class AiCoachSetupViewModel @Inject constructor(
         }
         viewModelScope.launch {
             _state.value = AiCoachSetupState(statusMessage = "Verifying...", isVerifying = true)
-            val modelName = settingsRepository.settings.first().modelName
-            val provider = OpenAiCoachProvider(apiKey = apiKey, modelName = modelName, client = client)
+            val currentSettings = settingsRepository.settings.first()
+            val provider = OpenAiCoachProvider(
+                apiKey = apiKey,
+                modelName = currentSettings.modelName,
+                baseUrl = currentSettings.baseUrl,
+                client = client
+            )
             val result = runCatching { provider.sendMessage("Ping", "Verification request") }
-            if (result.isSuccess) {
+            val reply = result.getOrElse { "Error: ${it.localizedMessage}" }
+            
+            val isSuccess = !reply.contains("failed", ignoreCase = true) && 
+                           !reply.contains("misconfigured", ignoreCase = true) &&
+                           !reply.contains("error", ignoreCase = true)
+
+            if (isSuccess) {
                 secureStore.saveOpenAiKey(apiKey)
                 _state.value = AiCoachSetupState(statusMessage = "Verified & saved.", isVerifying = false)
             } else {
-                _state.value = AiCoachSetupState(statusMessage = "Verification failed.", isVerifying = false)
+                _state.value = AiCoachSetupState(statusMessage = reply, isVerifying = false)
             }
         }
     }
